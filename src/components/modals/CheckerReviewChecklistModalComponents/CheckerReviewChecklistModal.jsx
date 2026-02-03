@@ -1,3 +1,4 @@
+// export default CheckerReviewChecklistModal;
 import React, { useState, useEffect, useMemo } from "react";
 import { message } from "antd";
 import {
@@ -13,6 +14,7 @@ import ProgressSection from "./ProgressSection";
 import ChecklistDetails from "./ChecklistDetails";
 import DocumentSidebar from "./DocumentSidebar";
 import HeaderSection from "./HeaderSection";
+import SupportingDocsSection from "./SupportingDocsSection";
 import { calculateDocumentStats } from "../../../utils/checklistUtils";
 import { downloadChecklistAsPDF } from "../../../utils/pdfExport";
 
@@ -22,27 +24,13 @@ const CheckerReviewChecklistModal = ({
   onClose,
   isReadOnly = false,
   readOnly = false,
-  sidebarWidth = 300,
-  sidebarCollapsed = false,
 }) => {
   const effectiveReadOnly = isReadOnly || readOnly;
-  const sidebarOffset = sidebarCollapsed ? 80 : (sidebarWidth || 300);
   const [docs, setDocs] = useState([]);
+  const [supportingDocs, setSupportingDocs] = useState([]);
   const [checkerComment, setCheckerComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
-
-  // Manage body scroll when modal opens
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
@@ -96,6 +84,11 @@ const CheckerReviewChecklistModal = ({
         deferralNo: doc.deferralNo || null,
       })),
     );
+
+    // Update supporting docs
+    if (checklist?.supportingDocs && Array.isArray(checklist.supportingDocs)) {
+      setSupportingDocs(checklist.supportingDocs);
+    }
   }, [checklist, effectiveReadOnly]);
 
   const handlePdfDownload = async () => {
@@ -323,25 +316,8 @@ const CheckerReviewChecklistModal = ({
   if (!open) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 overflow-auto bg-black/40 flex justify-center items-start pt-10" 
-      style={{ 
-        position: "fixed",
-        top: 0,
-        left: `${sidebarOffset}px`,
-        right: 0,
-        bottom: 0,
-        zIndex: 50,
-        transition: "left 0.2s cubic-bezier(0.2, 0, 0, 1) 0s"
-      }}
-    >
-      <div 
-        className="review-checklist-modal w-[95%] max-w-7xl bg-white rounded-xl shadow-2xl overflow-hidden my-6"
-        style={{
-          position: "relative",
-          zIndex: 51
-        }}
-      >
+    <div className="fixed inset-0 z-50 overflow-auto bg-black/40 flex justify-center items-start pt-10">
+      <div className="review-checklist-modal w-[95%] max-w-7xl bg-white rounded-xl shadow-2xl overflow-hidden my-6">
         {/* Header Section with Gradient */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
           <HeaderSection
@@ -384,6 +360,9 @@ const CheckerReviewChecklistModal = ({
             handleDocReset={handleDocReset}
           />
 
+          {/* Supporting Documents - Hidden as they now appear in View Documents sidebar */}
+          {/* <SupportingDocsSection supportingDocs={supportingDocs} /> */}
+
           <CommentSection
             comments={comments}
             commentsLoading={commentsLoading}
@@ -393,9 +372,6 @@ const CheckerReviewChecklistModal = ({
           />
 
           <ActionButtons
-            checklist={checklist}
-            docs={docs}
-            comments={comments}
             effectiveReadOnly={effectiveReadOnly}
             isGeneratingPDF={isGeneratingPDF}
             isSavingDraft={isSavingDraft}

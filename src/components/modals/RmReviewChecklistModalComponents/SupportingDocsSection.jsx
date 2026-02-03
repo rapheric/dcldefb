@@ -1,5 +1,95 @@
+// import React from "react";
+// import { Card, Button, Space } from "antd";
+// import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
+// import dayjs from "dayjs";
+
+// const SupportingDocsSection = ({
+//   supportingDocs,
+//   handleDeleteSupportingDoc,
+//   getFullUrl,
+//   isActionAllowed,
+//   readOnly,
+// }) => {
+//   if (supportingDocs.length === 0) return null;
+
+//   return (
+//     <div style={{ marginTop: 20 }}>
+//       <div style={{ marginTop: 12 }}>
+//         <h4
+//           style={{
+//             color: "#164679",
+//             fontSize: 14,
+//             marginBottom: 8,
+//           }}
+//         >
+//           📎 Supporting Documents ({supportingDocs.length})
+//         </h4>
+//         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+//           {supportingDocs.map((doc) => (
+//             <Card size="small" key={doc.id} style={{ borderRadius: 6 }}>
+//               <div
+//                 style={{
+//                   display: "flex",
+//                   justifyContent: "space-between",
+//                   alignItems: "center",
+//                 }}
+//               >
+//                 <div>
+//                   <strong style={{ fontSize: 13 }}>{doc.name}</strong>
+//                   <div
+//                     style={{
+//                       fontSize: 11,
+//                       color: "#666",
+//                       marginTop: 2,
+//                     }}
+//                   >
+//                     Uploaded:{" "}
+//                     {dayjs(doc.uploadedAt).format("DD MMM YYYY HH:mm")}
+//                   </div>
+//                 </div>
+//                 <Space>
+//                   <Button
+//                     size="small"
+//                     icon={<EyeOutlined />}
+//                     onClick={() =>
+//                       window.open(
+//                         getFullUrl(doc.fileUrl || doc.uploadData?.fileUrl),
+//                         "_blank"
+//                       )
+//                     }
+//                   >
+//                     View
+//                   </Button>
+//                   {!readOnly && (
+//                     <Button
+//                       size="small"
+//                       danger
+//                       icon={<DeleteOutlined />}
+//                       onClick={() =>
+//                         handleDeleteSupportingDoc(
+//                           doc.uploadData._id || doc.id,
+//                           doc.name
+//                         )
+//                       }
+//                       disabled={!isActionAllowed}
+//                     >
+//                       Delete
+//                     </Button>
+//                   )}
+//                 </Space>
+//               </div>
+//             </Card>
+//           ))}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default SupportingDocsSection;
+
 import React from "react";
-import { Card, Button, Space } from "antd";
+import { Card, Button, Space, Tag } from "antd";
 import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -10,7 +100,35 @@ const SupportingDocsSection = ({
   isActionAllowed,
   readOnly,
 }) => {
-  if (supportingDocs.length === 0) return null;
+  if (!supportingDocs || supportingDocs.length === 0) return null;
+
+  // Function to get role tag color
+  const getRoleTagColor = (role) => {
+    switch (role?.toLowerCase()) {
+      case "rm":
+        return "orange";
+      case "co_creator":
+        return "blue";
+      case "checker":
+        return "purple";
+      default:
+        return "default";
+    }
+  };
+
+  // Function to get role display name
+  const getRoleDisplayName = (role) => {
+    switch (role?.toLowerCase()) {
+      case "rm":
+        return "RM Upload";
+      case "co_creator":
+        return "CO Upload";
+      case "checker":
+        return "Checker Upload";
+      default:
+        return "Supporting";
+    }
+  };
 
   return (
     <div style={{ marginTop: 20 }}>
@@ -22,11 +140,15 @@ const SupportingDocsSection = ({
             marginBottom: 8,
           }}
         >
-          📎 Supporting Documents ({supportingDocs.length})
+          📎 Supporting Documents & Other Uploads ({supportingDocs.length})
         </h4>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {supportingDocs.map((doc) => (
-            <Card size="small" key={doc.id} style={{ borderRadius: 6 }}>
+            <Card
+              size="small"
+              key={doc._id || doc.id}
+              style={{ borderRadius: 6 }}
+            >
               <div
                 style={{
                   display: "flex",
@@ -34,17 +156,42 @@ const SupportingDocsSection = ({
                   alignItems: "center",
                 }}
               >
-                <div>
-                  <strong style={{ fontSize: 13 }}>{doc.name}</strong>
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 4,
+                    }}
+                  >
+                    <strong style={{ fontSize: 13 }}>
+                      {doc.fileName || doc.name}
+                    </strong>
+                    <Tag
+                      size="small"
+                      color={getRoleTagColor(doc.uploadedByRole)}
+                    >
+                      {getRoleDisplayName(doc.uploadedByRole)}
+                    </Tag>
+                  </div>
                   <div
                     style={{
                       fontSize: 11,
                       color: "#666",
                       marginTop: 2,
+                      display: "flex",
+                      gap: 12,
+                      flexWrap: "wrap",
                     }}
                   >
-                    Uploaded:{" "}
-                    {dayjs(doc.uploadedAt).format("DD MMM YYYY HH:mm")}
+                    <span>
+                      📅 {dayjs(doc.uploadedAt).format("DD MMM YYYY HH:mm")}
+                    </span>
+                    {doc.fileSize && (
+                      <span>📦 {(doc.fileSize / 1024).toFixed(2)} KB</span>
+                    )}
+                    {doc.fileType && <span>📄 {doc.fileType}</span>}
                   </div>
                 </div>
                 <Space>
@@ -54,7 +201,7 @@ const SupportingDocsSection = ({
                     onClick={() =>
                       window.open(
                         getFullUrl(doc.fileUrl || doc.uploadData?.fileUrl),
-                        "_blank"
+                        "_blank",
                       )
                     }
                   >
@@ -67,8 +214,8 @@ const SupportingDocsSection = ({
                       icon={<DeleteOutlined />}
                       onClick={() =>
                         handleDeleteSupportingDoc(
-                          doc.uploadData._id || doc.id,
-                          doc.name
+                          doc._id || doc.uploadData?._id || doc.id,
+                          doc.fileName || doc.name,
                         )
                       }
                       disabled={!isActionAllowed}

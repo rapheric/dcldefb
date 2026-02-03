@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Drawer,
-  Card,
-  Tag,
-  Collapse,
-  Button,
-} from "antd";
+import { Drawer, Card, Tag, Collapse, Button } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { formatFileSize } from "../../../utils/uploadUtils";
@@ -19,7 +13,7 @@ const DocumentSidebar = ({
   getFullUrl,
 }) => {
   const uploadedDocs = documents.filter(
-    (d) => d.uploadData && d.uploadData.status !== "deleted"
+    (d) => d.uploadData && d.uploadData.status !== "deleted",
   );
 
   const allDocs = [...uploadedDocs, ...supportingDocs];
@@ -69,107 +63,180 @@ const DocumentSidebar = ({
                   {category} ({docs.length})
                 </b>
               ),
-              children: docs.map((doc, idx) => (
-                <Card
-                  key={idx}
-                  size="small"
-                  style={{
-                    borderRadius: 10,
-                    marginBottom: 12,
-                    border: "1px solid #e5e7eb",
-                  }}
-                >
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
+              children: docs.map((doc, idx) => {
+                // Check if this is a supporting doc (has uploadedByRole) or regular doc (has uploadData)
+                const isSupportingDoc = !!doc.uploadedByRole || !!doc.fileName;
+
+                return (
+                  <Card
+                    key={idx}
+                    size="small"
+                    style={{
+                      borderRadius: 10,
+                      marginBottom: 12,
+                      border: "1px solid #e5e7eb",
+                    }}
                   >
-                    <b>{doc.uploadData?.fileName || doc.name}</b>
-                    <Tag
-                      color={
-                        doc.uploadData?.status === "active" ? "green" : "red"
-                      }
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
                     >
-                      {doc.uploadData?.status === "active"
-                        ? "Active"
-                        : "Deleted"}
-                    </Tag>
-                  </div>
-
-                  <div
-                    style={{ fontSize: 11, color: "#6b7280", marginBottom: 6 }}
-                  >
-                    ID: {doc.uploadData?._id || doc._id || "—"}
-                  </div>
-
-                  <div style={{ fontSize: 12, color: "#374151" }}>
-                    🕒{" "}
-                    {doc.uploadData?.createdAt
-                      ? dayjs(doc.uploadData.createdAt).format(
-                          "DD MMM YYYY HH:mm:ss"
-                        )
-                      : "N/A"}
-                    {"  •  "}
-                    {doc.uploadData?.fileSize
-                      ? formatFileSize(doc.uploadData.fileSize)
-                      : "N/A"}
-                    {"  •  "}
-                    {doc.uploadData?.fileType || "Unknown"}
-                  </div>
-
-                  <div style={{ marginTop: 6 }}>
-                    <Tag color="purple">{doc.category}</Tag>
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 10,
-                      paddingLeft: 10,
-                      borderLeft: "3px solid #84cc16",
-                      fontSize: 12,
-                    }}
-                  >
-                    <div>
-                      Uploaded by{" "}
-                      <b>{doc.uploadData?.uploadedBy || "Current User"}</b>
-                    </div>
-                    <div style={{ color: "#6b7280" }}>
-                      {doc.uploadData?.createdAt
-                        ? dayjs(doc.uploadData.createdAt).format(
-                            "DD MMM YYYY HH:mm:ss"
-                          )
-                        : ""}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginTop: 10,
-                      fontSize: 12,
-                    }}
-                  >
-                    <div>
-                      👤 Document:{" "}
-                      <b>{doc.uploadData?.documentName || doc.name}</b>
-                    </div>
-
-                    {doc.uploadData?.status === "active" && (
-                      <Button
-                        type="link"
-                        icon={<DownloadOutlined />}
-                        onClick={() =>
-                          window.open(
-                            getFullUrl(doc.uploadData?.fileUrl || doc.fileUrl),
-                            "_blank"
-                          )
+                      <b>
+                        {isSupportingDoc
+                          ? doc.fileName
+                          : doc.uploadData?.fileName || doc.name}
+                      </b>
+                      <Tag
+                        color={
+                          isSupportingDoc
+                            ? "blue"
+                            : doc.uploadData?.status === "active"
+                              ? "green"
+                              : "red"
                         }
                       >
-                        Download
-                      </Button>
-                    )}
-                  </div>
-                </Card>
-              )),
+                        {isSupportingDoc
+                          ? "Supporting"
+                          : doc.uploadData?.status === "active"
+                            ? "Active"
+                            : "Deleted"}
+                      </Tag>
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#6b7280",
+                        marginBottom: 6,
+                      }}
+                    >
+                      ID: {doc._id || doc.uploadData?._id || "—"}
+                    </div>
+
+                    <div style={{ fontSize: 12, color: "#374151" }}>
+                      🕒{" "}
+                      {isSupportingDoc
+                        ? doc.uploadedAt
+                          ? dayjs(doc.uploadedAt).format("DD MMM YYYY HH:mm:ss")
+                          : "N/A"
+                        : doc.uploadData?.createdAt
+                          ? dayjs(doc.uploadData.createdAt).format(
+                              "DD MMM YYYY HH:mm:ss",
+                            )
+                          : "N/A"}
+                      {"  •  "}
+                      {isSupportingDoc
+                        ? doc.fileSize
+                          ? formatFileSize(doc.fileSize)
+                          : "N/A"
+                        : doc.uploadData?.fileSize
+                          ? formatFileSize(doc.uploadData.fileSize)
+                          : "N/A"}
+                      {"  •  "}
+                      {isSupportingDoc
+                        ? doc.fileType || "Unknown"
+                        : doc.uploadData?.fileType || "Unknown"}
+                    </div>
+
+                    <div style={{ marginTop: 6 }}>
+                      {isSupportingDoc ? (
+                        <Tag
+                          color={
+                            doc.uploadedByRole === "rm"
+                              ? "orange"
+                              : doc.uploadedByRole === "co_creator"
+                                ? "blue"
+                                : doc.uploadedByRole === "checker"
+                                  ? "purple"
+                                  : "default"
+                          }
+                        >
+                          {doc.uploadedByRole === "rm"
+                            ? "RM Upload"
+                            : doc.uploadedByRole === "co_creator"
+                              ? "CO Upload"
+                              : doc.uploadedByRole === "checker"
+                                ? "Checker Upload"
+                                : "Supporting"}
+                        </Tag>
+                      ) : (
+                        <Tag color="purple">{doc.category}</Tag>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 10,
+                        paddingLeft: 10,
+                        borderLeft: "3px solid #84cc16",
+                        fontSize: 12,
+                      }}
+                    >
+                      <div>
+                        Uploaded by{" "}
+                        <b>
+                          {isSupportingDoc
+                            ? doc.uploadedBy?.name || "Current User"
+                            : doc.uploadData?.uploadedBy || "Current User"}
+                        </b>
+                      </div>
+                      <div style={{ color: "#6b7280" }}>
+                        {isSupportingDoc
+                          ? doc.uploadedAt
+                            ? dayjs(doc.uploadedAt).format(
+                                "DD MMM YYYY HH:mm:ss",
+                              )
+                            : ""
+                          : doc.uploadData?.createdAt
+                            ? dayjs(doc.uploadData.createdAt).format(
+                                "DD MMM YYYY HH:mm:ss",
+                              )
+                            : ""}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginTop: 10,
+                        fontSize: 12,
+                      }}
+                    >
+                      <div>
+                        👤 Document:{" "}
+                        <b>
+                          {isSupportingDoc
+                            ? doc.fileName
+                            : doc.uploadData?.documentName || doc.name}
+                        </b>
+                      </div>
+
+                      {(isSupportingDoc ||
+                        doc.uploadData?.status === "active") && (
+                        <Button
+                          type="link"
+                          icon={<DownloadOutlined />}
+                          onClick={() =>
+                            window.open(
+                              getFullUrl(
+                                isSupportingDoc
+                                  ? doc.fileUrl
+                                  : doc.uploadData?.fileUrl || doc.fileUrl,
+                              ),
+                              "_blank",
+                            )
+                          }
+                        >
+                          Download
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              }),
             },
           ]}
         />

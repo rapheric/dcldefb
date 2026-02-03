@@ -3,6 +3,9 @@ import React from "react";
 import { Avatar, Tag, Spin } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 
+/* ---------------------------
+   Role badge helper
+---------------------------- */
 const getRoleTag = (role) => {
   switch ((role || "").toLowerCase()) {
     case "rm":
@@ -11,14 +14,43 @@ const getRoleTag = (role) => {
       return <Tag color="green">CO</Tag>;
     case "cocreator":
       return <Tag color="purple">CREATOR</Tag>;
-    case "system":
-      return <Tag color="default">SYSTEM</Tag>;
     default:
       return <Tag>{role || "UNKNOWN"}</Tag>;
   }
 };
 
-const CommentHistory = ({ comments, isLoading }) => {
+/* ---------------------------
+   System message detector
+   (status & workflow text)
+---------------------------- */
+const isSystemGeneratedMessage = (text = "") => {
+  const message = text.toLowerCase();
+
+  const systemPatterns = [
+    // workflow / status transitions
+    "checklist submitted",
+    "submitted back",
+    "submitted to",
+    "returned to",
+    "approved",
+    "rejected",
+    "completed",
+    "initiated",
+    "status updated",
+
+    // auto activity
+    "document uploaded",
+    "checklist created",
+    "draft saved",
+  ];
+
+  return systemPatterns.some((pattern) => message.includes(pattern));
+};
+
+/* ---------------------------
+   Component
+---------------------------- */
+const CommentHistory = ({ comments = [], isLoading }) => {
   if (isLoading) {
     return (
       <div style={{ padding: 12, display: "flex", justifyContent: "center" }}>
@@ -27,35 +59,22 @@ const CommentHistory = ({ comments, isLoading }) => {
     );
   }
 
-  // Filter out system comments and status messages
-  const filteredComments = (comments || []).filter((item) => {
+  /* ---------------------------
+     FINAL FILTER LOGIC
+     Only REAL human comments survive
+  ---------------------------- */
+  const filteredComments = comments.filter((item) => {
     const role = (item.userId?.role || item.role || "").toLowerCase();
-    const message = (item.message || item.comment || "").toLowerCase();
+    const message = item.message || item.comment || "";
 
-    // 1. Filter by role
+    // 1. Remove system role completely
     if (role === "system") return false;
 
-    // 2. Filter by message content (system auto-generated messages)
-    const systemPatterns = [
-      "submitted to co-checker",
-      "submitted to rm",
-      "submitted to checker",
-      "checklist approved",
-      "checklist rejected",
-      "checklist completed",
-      "returned to creator",
-      "checklist initiated",
-      "status updated",
-      "document uploaded",
-      "checklist created",
-    ];
+    // 2. Remove auto-generated workflow/status messages
+    if (isSystemGeneratedMessage(message)) return false;
 
-    // Check if message matches any system pattern
-    const isSystemMessage = systemPatterns.some((pattern) =>
-      message.includes(pattern)
-    );
-
-    if (isSystemMessage) return false;
+    // 3. Remove empty / whitespace-only comments
+    if (!message.trim()) return false;
 
     return true;
   });
@@ -88,10 +107,9 @@ const CommentHistory = ({ comments, isLoading }) => {
             gap: "8px",
             fontSize: "12px",
             color: "#374151",
-            padding: "4px 6px",
+            padding: "6px 8px",
             borderRadius: "6px",
             background: "#f9fafb",
-            whiteSpace: "nowrap",
           }}
         >
           {/* Avatar */}
@@ -102,12 +120,12 @@ const CommentHistory = ({ comments, isLoading }) => {
           />
 
           {/* Name */}
-          <span style={{ fontWeight: 600 }}>
-            {item.userId?.name || item.user || "System"}
+          <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+            {item.userId?.name || item.user}
           </span>
 
           {/* Role */}
-          {getRoleTag(item.userId?.role || item.role || "system")}
+          {getRoleTag(item.userId?.role || item.role)}
 
           {/* Comment */}
           <span
@@ -115,6 +133,7 @@ const CommentHistory = ({ comments, isLoading }) => {
               color: "#4b5563",
               overflow: "hidden",
               textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
               flex: 1,
             }}
             title={item.message || item.comment}
