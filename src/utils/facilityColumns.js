@@ -12,7 +12,7 @@ export default function getFacilityColumns() {
       title: "Facility Type",
       dataIndex: "facilityType",
       key: "facilityType",
-      render: (t) => React.createElement(Text, { strong: true }, t || "N/A"),
+      render: (t, record) => React.createElement(Text, { strong: true }, t || record.type || record.name || "N/A"),
     },
     {
       title: "Sanctioned (KES '000)",

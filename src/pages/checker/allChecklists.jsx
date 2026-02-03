@@ -175,6 +175,7 @@ const LIGHT_YELLOW = "#fcd716";
 const AllChecklists = ({ userId }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedChecklist, setSelectedChecklist] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const { data: checklists = [], refetch } =
     useGetAllCoCreatorChecklistsQuery();
@@ -336,6 +337,8 @@ const AllChecklists = ({ userId }) => {
             setSelectedChecklist(null);
             refetch();
           }}
+          sidebarWidth={300}
+          sidebarCollapsed={sidebarCollapsed}
         />
       )}
     </div>

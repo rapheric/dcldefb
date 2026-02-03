@@ -8,6 +8,9 @@ import PDFGenerator from "./PDFGenerator";
 import { ACCENT_LIME, PRIMARY_BLUE } from "../../../utils/constants";
 
 const ActionButtons = ({
+  checklist,
+  docs,
+  comments,
   effectiveReadOnly,
   isGeneratingPDF,
   isSavingDraft,

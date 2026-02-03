@@ -137,11 +137,13 @@ const DocumentSidebar = ({ documents, open, onClose }) => {
       open={open}
       width={380}
       className="document-sidebar"
-      headerStyle={{
-        borderBottom: `2px solid #b5d334`,
-        background: "white",
+      styles={{
+        header: {
+          borderBottom: `2px solid #b5d334`,
+          background: "white",
+        },
+        body: { padding: "16px" }
       }}
-      bodyStyle={{ padding: "16px" }}
     >
       <div style={{ marginBottom: "16px" }}>
         <Text type="secondary" style={{ fontSize: "12px" }}>

@@ -532,7 +532,11 @@ const Deferrals = ({ userId }) => {
       const my = await deferralApi.getMyDeferrals(token);
       const myDeferrals = Array.isArray(my) ? my : [];
 
-      // Combine: all pending deferrals + this creator's approved/rejected/closed
+      // Also get approved deferrals to ensure we see deferrals we approved as CO Checker
+      const approvedDeferrals = await deferralApi.getApprovedDeferrals(token);
+      const allApproved = Array.isArray(approvedDeferrals) ? approvedDeferrals : [];
+
+      // Combine: all pending deferrals + this checker's approved/rejected/closed + all approved deferrals
       const approved = myDeferrals.filter((d) =>
         ["approved", "deferral_approved"].includes(
           (d.status || "").toLowerCase(),
@@ -552,17 +556,28 @@ const Deferrals = ({ userId }) => {
         ].includes((d.status || "").toLowerCase()),
       );
 
-      const combined = [...all, ...approved, ...rejected, ...closed];
+      // Merge approved deferrals from both sources and deduplicate by _id
+      const allApprovedMerged = [...approved, ...allApproved];
+      const uniqueApproved = Array.from(
+        new Map(allApprovedMerged.map(d => [d._id, d])).values()
+      );
 
-      if (!Array.isArray(combined)) return [];
-      console.debug("loadDeferrals (creator)", {
+      const combined = [...all, ...uniqueApproved, ...rejected, ...closed];
+
+      // Deduplicate the final combined array by _id
+      const uniqueCombined = Array.from(
+        new Map(combined.map(d => [d._id, d])).values()
+      );
+
+      if (!Array.isArray(uniqueCombined)) return [];
+      console.debug("loadDeferrals (checker)", {
         pending: pending.length,
-        approved: approved.length,
+        approved: uniqueApproved.length,
         rejected: rejected.length,
         closed: closed.length,
-        total: combined.length,
+        total: uniqueCombined.length,
       });
-      return combined;
+      return uniqueCombined;
     } catch (error) {
       console.error("Error fetching deferrals:", error);
       message.error("Failed to load deferrals");

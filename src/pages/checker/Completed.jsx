@@ -41,6 +41,7 @@ const Completed = ({ userId }) => {
   const [selectedChecklist, setSelectedChecklist] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const {
     data: checklists = [],
@@ -301,6 +302,8 @@ const Completed = ({ userId }) => {
             setSelectedChecklist(null);
             refetch();
           }}
+          sidebarWidth={300}
+          sidebarCollapsed={sidebarCollapsed}
         />
       )}
     </div>

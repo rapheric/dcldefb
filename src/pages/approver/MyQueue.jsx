@@ -129,85 +129,142 @@
 //   );
 // };
 
-// // Helper function to remove role from username in brackets
-// const formatUsername = (username) => {
-//   if (!username) return "System";
-//   return username.replace(/\s*\([^)]*\)\s*$/, '').trim();
-// };
+// Helper function to remove role from username in brackets
+const formatUsername = (username) => {
+  if (!username) return "System";
+  return username.replace(/\s*\([^)]*\)\s*$/, '').trim();
+};
 
-// const CommentTrail = ({ history, isLoading }) => {
-//   if (isLoading) return <Spin className="block m-5" />;
-//   if (!history || history.length === 0)
-//     return <i className="pl-4">No historical comments yet.</i>;
+const CommentTrail = ({ history, isLoading }) => {
+  if (isLoading) return <Spin className="block m-5" />;
+  if (!history || history.length === 0) return <i className="pl-4">No historical comments yet.</i>;
 
-//   const formatUsername = (username) => {
-//     if (!username) return "System";
-//     return username.replace(/\s*\([^)]*\)\s*$/, '').trim();
-//   };
+  // Helper to check if a message is system-generated
+  const isSystemMessage = (text, name, role) => {
+    const textLower = text.toLowerCase();
+    const nameLower = name.toLowerCase();
+    const roleLower = role?.toLowerCase() || '';
+    
+    return textLower.includes('submitted') || 
+           textLower.includes('approved') || 
+           textLower.includes('returned') ||
+           textLower.includes('rejected') ||
+           nameLower === 'system' ||
+           roleLower === 'system' ||
+           (textLower.includes('deferral') && textLower.includes('request'));
+  };
 
-//   const getRoleTag = (role) => {
-//     let color = "blue";
-//     const roleLower = (role || "").toLowerCase();
-//     switch (roleLower) {
-//       case "rm":
-//         color = "purple";
-//         break;
-//       case "deferral management":
-//         color = "green";
-//         break;
-//       case "creator":
-//         color = "green";
-//         break;
-//       case "co_checker":
-//         color = "volcano";
-//         break;
-//       case "system":
-//         color = "default";
-//         break;
-//       default:
-//         color = "blue";
-//     }
-//     return (
-//       <Tag color={color} style={{ marginLeft: 8, textTransform: "uppercase" }}>
-//         {roleLower.replace(/_/g, " ")}
-//       </Tag>
-//     );
-//   };
+  // Group comments by timestamp + user to merge them
+  const groups = [];
+  const groupMap = new Map(); // key: "timestamp|userName|role"
 
-//   return (
-//     <div className="max-h-52 overflow-y-auto">
-//       <List
-//         dataSource={history}
-//         itemLayout="horizontal"
-//         renderItem={(item, idx) => {
-//           const roleLabel = item.userRole;
-//           const name = formatUsername(item.user) || 'System';
-//           const text = item.comment || 'No comment provided';
-//           const timestamp = item.date;
-//           return (
-//             <List.Item key={idx}>
-//               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-//                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-//                   <Avatar icon={<UserOutlined />} style={{ backgroundColor: PRIMARY_BLUE }} />
-//                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-//                     <b style={{ fontSize: 14, color: PRIMARY_BLUE }}>{name}</b>
-//                     {roleLabel && getRoleTag(roleLabel)}
-//                     <span style={{ color: '#4a4a4a' }}>{text}</span>
-//                   </div>
-//                 </div>
-//                 <div style={{ fontSize: 12, color: '#777' }}>
-//                   {timestamp ? dayjs(timestamp).format('M/D/YY, h:mm A') : ''}
-//                 </div>
-//               </div>
-//             </List.Item>
-//           );
-//         }}
-//       />
-//     </div>
-//   );
-// };
+  for (let i = 0; i < history.length; i++) {
+    const item = history[i];
+    const roleLabel = item.userRole || item.role;
+    const name = item.user || 'System';
+    const text = item.comment || item.notes || item.message || item.text || 'No comment provided.';
+    const timestamp = item.date || item.createdAt || item.timestamp;
+    
+    // Round timestamp to nearest second to group very close events
+    const timestampKey = timestamp ? new Date(timestamp).toISOString().split('.')[0] : 'no-time';
+    const groupKey = `${timestampKey}|${name}|${roleLabel || 'unknown'}`;
 
-// // Add comment modal removed from approver queue (comments should be added from RM/other workflows)
+    const isSystem = isSystemMessage(text, name, roleLabel);
+
+    if (!groupMap.has(groupKey)) {
+      groupMap.set(groupKey, {
+        name,
+        roleLabel,
+        systemMessages: [],
+        userMessages: [],
+        timestamp
+      });
+    }
+
+    const group = groupMap.get(groupKey);
+    if (isSystem) {
+      group.systemMessages.push(text);
+    } else {
+      group.userMessages.push(text);
+    }
+  }
+
+  // Convert groups to display format
+  const processedComments = Array.from(groupMap.values()).map(group => ({
+    name: formatUsername(group.name),
+    roleLabel: group.roleLabel,
+    systemText: group.systemMessages.join('; '),
+    userText: group.userMessages.join('; '),
+    timestamp: group.timestamp,
+    merged: group.systemMessages.length > 0 && group.userMessages.length > 0
+  }));
+
+  const getRoleTag = (role) => {
+    let color = "blue";
+    const roleLower = (role || "").toLowerCase();
+    switch (roleLower) {
+      case "rm":
+        color = "purple";
+        break;
+      case "deferral management":
+        color = "green";
+        break;
+      case "creator":
+        color = "green";
+        break;
+      case "co_checker":
+        color = "volcano";
+        break;
+      case "system":
+        color = "default";
+        break;
+      default:
+        color = "blue";
+    }
+    return (
+      <Tag color={color} style={{ marginLeft: 8, textTransform: "uppercase" }}>
+        {roleLower.replace(/_/g, " ")}
+      </Tag>
+    );
+  };
+
+  return (
+    <div className="max-h-52 overflow-y-auto">
+      <List
+        dataSource={processedComments}
+        itemLayout="horizontal"
+        renderItem={(item, idx) => {
+          return (
+            <List.Item key={idx} style={{ padding: '8px 0', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: 12 }}>
+                <Avatar icon={<UserOutlined />} style={{ backgroundColor: PRIMARY_BLUE, flexShrink: 0 }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, flexWrap: 'wrap', paddingRight: 12 }}>
+                  <b style={{ fontSize: 13, color: PRIMARY_BLUE, whiteSpace: 'nowrap' }}>{item.name}</b>
+                  {item.roleLabel && getRoleTag(item.roleLabel)}
+                  <span style={{ color: '#4a4a4a' }}>
+                    {item.systemText}
+                    {item.merged && (
+                      <>
+                        <span style={{ margin: '0 4px', color: '#999' }}>;</span>
+                        <span>{item.userText}</span>
+                      </>
+                    )}
+                    {!item.merged && item.userText && item.userText}
+                  </span>
+                  <span style={{ fontSize: 12, color: '#999', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                    {item.timestamp ? dayjs(item.timestamp).format('M/D/YY, h:mm A') : ''}
+                  </span>
+                </div>
+              </div>
+            </List.Item>
+          );
+        }}
+      />
+    </div>
+  );
+};
+
+// Add comment modal removed from approver queue (comments should be added from RM/other workflows)
 
 
 // // Custom CSS for modal styling
@@ -2045,84 +2102,6 @@ const getRoleTag = (role) => {
   );
 };
 
-// Helper function to remove role from username in brackets
-const formatUsername = (username) => {
-  if (!username) return "System";
-  return username.replace(/\s*\([^)]*\)\s*$/, '').trim();
-};
-
-const CommentTrail = ({ history, isLoading }) => {
-  if (isLoading) return <Spin className="block m-5" />;
-  if (!history || history.length === 0)
-    return <i className="pl-4">No historical comments yet.</i>;
-
-  const formatUsername = (username) => {
-    if (!username) return "System";
-    return username.replace(/\s*\([^)]*\)\s*$/, '').trim();
-  };
-
-  const getRoleTag = (role) => {
-    let color = "blue";
-    const roleLower = (role || "").toLowerCase();
-    switch (roleLower) {
-      case "rm":
-        color = "purple";
-        break;
-      case "deferral management":
-        color = "green";
-        break;
-      case "creator":
-        color = "green";
-        break;
-      case "co_checker":
-        color = "volcano";
-        break;
-      case "system":
-        color = "default";
-        break;
-      default:
-        color = "blue";
-    }
-    return (
-      <Tag color={color} style={{ marginLeft: 8, textTransform: "uppercase" }}>
-        {roleLower.replace(/_/g, " ")}
-      </Tag>
-    );
-  };
-
-  return (
-    <div className="max-h-52 overflow-y-auto">
-      <List
-        dataSource={history}
-        itemLayout="horizontal"
-        renderItem={(item, idx) => {
-          const roleLabel = item.userRole;
-          const name = formatUsername(item.user) || 'System';
-          const text = item.comment || 'No comment provided';
-          const timestamp = item.date;
-          return (
-            <List.Item key={idx}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Avatar icon={<UserOutlined />} style={{ backgroundColor: PRIMARY_BLUE }} />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <b style={{ fontSize: 14, color: PRIMARY_BLUE }}>{name}</b>
-                    {roleLabel && getRoleTag(roleLabel)}
-                    <span style={{ color: '#4a4a4a' }}>{text}</span>
-                  </div>
-                </div>
-                <div style={{ fontSize: 12, color: '#777' }}>
-                  {timestamp ? dayjs(timestamp).format('M/D/YY, h:mm A') : ''}
-                </div>
-              </div>
-            </List.Item>
-          );
-        }}
-      />
-    </div>
-  );
-};
-
 // Add comment modal removed from approver queue (comments should be added from RM/other workflows)
 
 
@@ -2146,7 +2125,18 @@ const customStyles = `
 `;
 
 // Deferral Details Modal for MyQueue - Shows status as pending
-const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
+const DeferralDetailsModal = ({ 
+  deferral, 
+  open, 
+  onClose, 
+  onAction, 
+  token,
+  overrideApprovals = null,
+  headerTag = null,
+  overrideDaysSought = null,
+  overrideNextDueDate = null,
+  readOnly = false
+}) => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [postingComment, setPostingComment] = useState(false);
@@ -2847,37 +2837,29 @@ const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
   const isUnder75 = loanAmountValue > 0 && loanAmountValue < 75000000;
 
   // Build a consolidated history: initial request, stored history entries, and approval events
-  const history = (function buildHistory() {
+  const history = (function renderHistory() {
     const events = [];
+    // Extract requester name with multiple fallbacks, including from comments array
+    const requester = deferral.requestor?.name || 
+                      deferral.requestedBy?.name || 
+                      deferral.requestedBy?.fullName ||
+                      deferral.requestedBy ||
+                      deferral.rmName || 
+                      deferral.rmRequestedBy?.name || 
+                      deferral.createdBy?.name || 
+                      deferral.createdByName ||
+                      deferral.createdByUser?.name ||
+                      deferral.submittedBy?.name ||
+                      deferral.submittedByName ||
+                      deferral.user?.name ||
+                      deferral.userName ||
+                      deferral.name ||
+                      (deferral.comments?.[0]?.author?.name) ||
+                      (deferral.comments?.[0]?.authorName) ||
+                      'RM';
+    const requesterRole = deferral.requestor?.role || deferral.requestedBy?.role || 'RM';
+    const requestDate = deferral.requestedDate || deferral.createdAt || deferral.requestedAt;
 
-    // Initial request - show requestor's real name and role
-    const requesterName =
-      deferral.requestor?.name ||
-      deferral.requestedBy?.name ||
-      deferral.requestedBy ||
-      deferral.rmRequestedBy?.name ||
-      deferral.rmName ||
-      deferral.createdBy?.name ||
-      deferral.createdBy?.fullName ||
-      deferral.createdByName ||
-      deferral.createdByUser?.name ||
-      'Requestor';
-
-    const requesterRole =
-      deferral.requestor?.role ||
-      deferral.requestedBy?.role ||
-      deferral.rmRequestedBy?.role ||
-      deferral.createdBy?.role ||
-      deferral.requestedByRole ||
-      'RM';
-    events.push({
-      user: requesterName,
-      userRole: requesterRole,
-      date: deferral.requestedDate || deferral.createdAt,
-      comment: deferral.rmReason || 'Deferral request submitted'
-    });
-
-    // Add RM's posted comments (if any)
     if (deferral.comments && Array.isArray(deferral.comments) && deferral.comments.length > 0) {
       deferral.comments.forEach(c => {
         const commentAuthorName = c.author?.name || c.authorName || c.userName || c.author?.email || 'RM';
@@ -2891,22 +2873,25 @@ const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
       });
     }
 
-    // Stored history entries - filter out redundant 'moved' entries
     if (deferral.history && Array.isArray(deferral.history) && deferral.history.length > 0) {
-      deferral.history.forEach(h => {
-        // Skip redundant 'moved' action entries - they're implicit when the next approver approves
-        if (h.action === 'moved') {
-          return;
-        }
-
-        const userName = h.user?.name || h.userName || h.authorName || h.user || 'System';
-        const userRole = h.user?.role || h.userRole || h.authorRole || h.role || undefined;
-        events.push({ user: userName, userRole: userRole, date: h.date || h.createdAt || h.timestamp || h.entryDate, comment: h.comment || h.notes || h.message || '' });
+      deferral.history.forEach((h) => {
+        if (h.action === 'moved') return;
+        
+        // Extract user name - prioritize userName field which comes from backend req.user.name
+        let userName = h.userName || h.user?.name || h.user || 'System';
+        
+        const userRole = h.userRole || h.user?.role || h.role || 'System';
+        events.push({
+          user: userName,
+          userRole: userRole,
+          date: h.date || h.createdAt || h.timestamp || h.entryDate,
+          comment: h.comment || h.notes || h.message || ''
+        });
       });
     }
 
-    // Sort events by date ascending
-    return events.sort((a, b) => (new Date(a.date || 0)) - (new Date(b.date || 0)));
+    const sorted = events.sort((a, b) => (new Date(a.date || 0)) - (new Date(b.date || 0)));
+    return sorted;
   })();
 
   // Create attachments array from your data structure
@@ -2963,7 +2948,7 @@ const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
     <>
       <style>{customStyles}</style>
       <Modal
-        title={<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><BankOutlined /> <span>Deferral Request: {deferral.deferralNumber}</span></div>}
+        title={<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><BankOutlined /> <span>{headerTag ? `${headerTag}: ${deferral.deferralNumber}` : `Deferral Request: ${deferral.deferralNumber}`}</span></div>}
         open={open}
         onCancel={onClose}
         width={950}
@@ -2982,20 +2967,22 @@ const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
           <Button key="close" onClick={onClose}>
             Close
           </Button>,
-          <Button
-            key="rework"
-            onClick={handleReturnForRework}
-            loading={returnReworkLoading}
-            disabled={returnReworkLoading}
-            style={{
-              borderColor: WARNING_ORANGE,
-              color: WARNING_ORANGE,
-              fontWeight: 600
-            }}
-          >
-            Return for Rework
-          </Button>,
-          (deferral.status === "pending_approval" || deferral.status === "in_review" || deferral.status === "deferral_requested") ? (
+          !readOnly && (
+            <Button
+              key="rework"
+              onClick={handleReturnForRework}
+              loading={returnReworkLoading}
+              disabled={returnReworkLoading}
+              style={{
+                borderColor: WARNING_ORANGE,
+                color: WARNING_ORANGE,
+                fontWeight: 600
+              }}
+            >
+              Return for Rework
+            </Button>
+          ),
+          !readOnly && (deferral.status === "pending_approval" || deferral.status === "in_review" || deferral.status === "deferral_requested") ? (
             <Button
               key="reject"
               danger
@@ -3007,7 +2994,7 @@ const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
               Reject
             </Button>
           ) : null,
-          (deferral.status === "pending_approval" || deferral.status === "in_review" || deferral.status === "deferral_requested") ? (
+          !readOnly && (deferral.status === "pending_approval" || deferral.status === "in_review" || deferral.status === "deferral_requested") ? (
             <Button
               key="approve"
               type="primary"
@@ -3070,8 +3057,17 @@ const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
                     })()}
                   </div>
                 </Descriptions.Item>
-                <Descriptions.Item label="Days Sought"><div style={{ fontWeight: "bold", color: deferral.daysSought > 45 ? ERROR_RED : deferral.daysSought > 30 ? WARNING_ORANGE : PRIMARY_BLUE, fontSize: 14 }}>{deferral.daysSought || 0} days</div></Descriptions.Item>
-                <Descriptions.Item label="Next Due Date"><div style={{ color: (deferral.nextDueDate || deferral.nextDocumentDueDate || deferral.requestedExpiry) ? (dayjs(deferral.nextDueDate || deferral.nextDocumentDueDate || deferral.requestedExpiry).isBefore(dayjs()) ? ERROR_RED : SUCCESS_GREEN) : PRIMARY_BLUE }}>{(deferral.nextDueDate || deferral.nextDocumentDueDate || deferral.requestedExpiry) ? dayjs(deferral.nextDueDate || deferral.nextDocumentDueDate || deferral.requestedExpiry).format('DD MMM YYYY') : 'Not calculated'}</div></Descriptions.Item>
+                <Descriptions.Item label="Days Sought">
+                  <div style={{ fontWeight: "bold", color: (overrideDaysSought || deferral.daysSought) > 45 ? ERROR_RED : (overrideDaysSought || deferral.daysSought) > 30 ? WARNING_ORANGE : PRIMARY_BLUE, fontSize: 14 }}>
+                    {overrideDaysSought !== null ? overrideDaysSought : (deferral.daysSought || 0)} days
+                    {overrideDaysSought !== null && <span style={{ marginLeft: 8, fontSize: 12, color: WARNING_ORANGE }}>(Extension)</span>}
+                  </div>
+                </Descriptions.Item>
+                <Descriptions.Item label="Next Due Date">
+                  <div style={{ color: (overrideNextDueDate || deferral.nextDueDate || deferral.nextDocumentDueDate || deferral.requestedExpiry) ? (dayjs(overrideNextDueDate || deferral.nextDueDate || deferral.nextDocumentDueDate || deferral.requestedExpiry).isBefore(dayjs()) ? ERROR_RED : SUCCESS_GREEN) : PRIMARY_BLUE }}>
+                    {(overrideNextDueDate || deferral.nextDueDate || deferral.nextDocumentDueDate || deferral.requestedExpiry) ? dayjs(overrideNextDueDate || deferral.nextDueDate || deferral.nextDocumentDueDate || deferral.requestedExpiry).format('DD MMM YYYY') : 'Not calculated'}
+                  </div>
+                </Descriptions.Item>
 
                 <Descriptions.Item label="Current Approver">{deferral.approvers?.find(a => a.isCurrent)?.name || "You"}</Descriptions.Item>
                 <Descriptions.Item label="SLA Expiry"><div style={{ color: deferral.slaExpiry && dayjs(deferral.slaExpiry).isBefore(dayjs()) ? ERROR_RED : PRIMARY_BLUE }}>{deferral.slaExpiry ? dayjs(deferral.slaExpiry).format('DD MMM YYYY HH:mm') : 'Not set'}</div></Descriptions.Item>
@@ -3186,17 +3182,42 @@ const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
 
             {/* Approval Flow */}
             <Card size="small" title={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div><span style={{ color: PRIMARY_BLUE, fontSize: 14 }}>Approval Flow {(deferral.status === 'deferral_requested' || deferral.status === 'pending_approval') && (<Tag color="orange" style={{ marginLeft: 8, fontSize: 11 }}>Pending Approval</Tag>)}</span></div>
+              <div><span style={{ color: PRIMARY_BLUE, fontSize: 14 }}>Approval Flow {(overrideApprovals || deferral.status === 'deferral_requested' || deferral.status === 'pending_approval') && (<Tag color="orange" style={{ marginLeft: 8, fontSize: 11 }}>Pending Approval</Tag>)}</span></div>
               {null}
             </div>} style={{ marginBottom: 18 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {(deferral.approverFlow && deferral.approverFlow.length > 0) ? (
+                {(overrideApprovals && overrideApprovals.approvers && overrideApprovals.approvers.length > 0) ? (
+                  // Use extension approvers from overrideApprovals
+                  overrideApprovals.approvers.map((approver, index) => {
+                    const isApproved = approver?.approved === true;
+                    const isRejected = approver?.rejected === true;
+                    const isReturned = approver?.returned === true;
+                    const isPending = !isApproved && !isRejected && !isReturned;
+                    const hasEmail = approver?.email || (typeof approver === 'string' && approver.includes('@'));
+                    return (
+                      <div key={index} style={{ padding: '12px 16px', backgroundColor: isApproved ? '#f6ffed' : isPending ? '#fff7e6' : '#fafafa', borderRadius: 6, border: isApproved ? `2px solid ${SUCCESS_GREEN}` : isPending ? `2px solid ${WARNING_ORANGE}` : '1px solid #e8e8e8', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <Badge count={index + 1} style={{ backgroundColor: isApproved ? SUCCESS_GREEN : isPending ? WARNING_ORANGE : '#bfbfbf', fontSize: 12, height: 24, minWidth: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+                        <div style={{ flex: 1 }}>
+                          <Text strong style={{ fontSize: 14 }}>{typeof approver === 'object' ? (approver.name || approver.user?.name || approver.email || approver.role || String(approver)) : approver}</Text>
+                          <div style={{ fontSize: 12, color: isApproved ? SUCCESS_GREEN : WARNING_ORANGE, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            {isApproved ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                            {isApproved ? 'Approved' : 'Pending Approval'}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (deferral.approverFlow && deferral.approverFlow.length > 0) ? (
                   deferral.approverFlow.map((approver, index) => {
-                    const isCurrentApprover = index === (deferral.currentApproverIndex || 0);
+                    const currentIndex = deferral.currentApproverIndex || 0;
+                    const isCurrentApprover = index === currentIndex;
+                    const isApproved = approver?.approved === true || approver?.approvedAt || approver?.approvalDate;
+                    const isPastApprover = index < currentIndex;
+                    const shouldHighlightGreen = isApproved || isPastApprover;
                     const hasEmail = isCurrentApprover && (deferral.currentApprover?.email || approver.email || (typeof approver === 'string' && approver.includes('@')));
                     return (
-                      <div key={index} style={{ padding: '12px 16px', backgroundColor: isCurrentApprover ? '#e6f7ff' : '#fafafa', borderRadius: 6, border: isCurrentApprover ? `2px solid ${PRIMARY_BLUE}` : '1px solid #e8e8e8', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Badge count={index + 1} style={{ backgroundColor: isCurrentApprover ? PRIMARY_BLUE : '#bfbfbf', fontSize: 12, height: 24, minWidth: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+                      <div key={index} style={{ padding: '12px 16px', backgroundColor: shouldHighlightGreen ? '#f6ffed' : isCurrentApprover ? '#e6f7ff' : '#fafafa', borderRadius: 6, border: shouldHighlightGreen ? `2px solid ${SUCCESS_GREEN}` : isCurrentApprover ? `2px solid ${PRIMARY_BLUE}` : '1px solid #e8e8e8', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <Badge count={index + 1} style={{ backgroundColor: shouldHighlightGreen ? SUCCESS_GREEN : isCurrentApprover ? PRIMARY_BLUE : '#bfbfbf', fontSize: 12, height: 24, minWidth: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
                         <div style={{ flex: 1 }}>
                           <Text strong style={{ fontSize: 14 }}>{typeof approver === 'object' ? (approver.name || approver.user?.name || approver.email || approver.role || String(approver)) : approver}</Text>
                           {isCurrentApprover && (
@@ -3220,12 +3241,16 @@ const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
                   })
                 ) : (deferral.approvers && deferral.approvers.length > 0) ? (
                   deferral.approvers.filter(a => a && a !== "").map((approver, index) => {
-                    const isCurrentApprover = index === (deferral.currentApproverIndex || 0);
+                    const currentIndex = deferral.currentApproverIndex || 0;
+                    const isCurrentApprover = index === currentIndex;
+                    const isApproved = approver?.approved === true || approver?.approvedAt || approver?.approvalDate;
+                    const isPastApprover = index < currentIndex;
+                    const shouldHighlightGreen = isApproved || isPastApprover;
                     const hasEmail = isCurrentApprover && (deferral.currentApprover?.email || approver.email || (typeof approver === 'string' && approver.includes('@')));
                     const isEmail = typeof approver === 'string' && approver.includes('@');
                     return (
-                      <div key={index} style={{ padding: '12px 16px', backgroundColor: isCurrentApprover ? '#e6f7ff' : '#fafafa', borderRadius: 6, border: isCurrentApprover ? `2px solid ${PRIMARY_BLUE}` : '1px solid #e8e8e8', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Badge count={index + 1} style={{ backgroundColor: isCurrentApprover ? PRIMARY_BLUE : '#bfbfbf', fontSize: 12, height: 24, minWidth: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+                      <div key={index} style={{ padding: '12px 16px', backgroundColor: shouldHighlightGreen ? '#f6ffed' : isCurrentApprover ? '#e6f7ff' : '#fafafa', borderRadius: 6, border: shouldHighlightGreen ? `2px solid ${SUCCESS_GREEN}` : isCurrentApprover ? `2px solid ${PRIMARY_BLUE}` : '1px solid #e8e8e8', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <Badge count={index + 1} style={{ backgroundColor: shouldHighlightGreen ? SUCCESS_GREEN : isCurrentApprover ? PRIMARY_BLUE : '#bfbfbf', fontSize: 12, height: 24, minWidth: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
                         <div style={{ flex: 1 }}>
                           <Text strong style={{ fontSize: 14 }}>{typeof approver === 'string' ? (isEmail ? approver.split('@')[0] : approver) : (approver.name || approver.user?.name || approver.email || approver.role || String(approver))}</Text>
                           {isCurrentApprover && (
@@ -3253,8 +3278,6 @@ const DeferralDetailsModal = ({ deferral, open, onClose, onAction, token }) => {
                     <div>No approvers specified</div>
                   </div>
                 )}
-
-
               </div>
             </Card>
 
@@ -3391,8 +3414,53 @@ const MyQueue = () => {
   const [newComment, setNewComment] = useState("");
   const [postingComment, setPostingComment] = useState(false);
 
+  // State for extension modal
+  const [selectedExtension, setSelectedExtension] = useState(null);
+  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
+  const [detailOverrides, setDetailOverrides] = useState(null);
+
   // Live data - load pending deferrals from API
   const [deferrals, setDeferrals] = useState([]);
+
+  // Handle opening extension details modal
+  const handleOpenExtensionDetails = (extension) => {
+    if (!extension) return;
+
+    // Use the populated deferral data directly
+    const approvedDeferral = extension.deferral || {};
+    
+    if (!approvedDeferral._id) {
+      message.error('Unable to load deferral details for this extension');
+      return;
+    }
+
+    // Open the approved deferral but override approval workflow with extension's approval workflow
+    setSelectedDeferral(approvedDeferral);
+    setDetailOverrides({
+      headerTag: 'EXTENSION APPLICATION',
+      overrideDaysSought: extension.requestedDaysSought,
+      overrideNextDueDate: extension.requestedDaysSought 
+        ? dayjs(approvedDeferral.nextDueDate || approvedDeferral.nextDocumentDueDate)
+            .add(extension.requestedDaysSought, 'day')
+            .toISOString()
+        : null,
+      readOnly: false, // Enable action buttons for approvers
+      // Override approval status with extension's approval workflow
+      overrideApprovals: {
+        approvers: extension.approvers || [],
+        allApproversApproved: extension.allApproversApproved || false,
+        creatorApprovalStatus: extension.creatorApprovalStatus || 'pending',
+        checkerApprovalStatus: extension.checkerApprovalStatus || 'pending',
+        creatorApprovedBy: extension.creatorApprovedBy,
+        checkerApprovedBy: extension.checkerApprovedBy,
+        creatorApprovalDate: extension.creatorApprovalDate,
+        checkerApprovalDate: extension.checkerApprovalDate,
+        status: extension.status
+      }
+    });
+    setSelectedExtension(extension);
+    setExtensionModalOpen(true);
+  };
 
   // Fetch data on component mount
   useEffect(() => {
@@ -3835,12 +3903,13 @@ const MyQueue = () => {
             inputSize="large"
             useMyQueuePagination
             scrollX={1200}
+            onOpenExtensionDetails={handleOpenExtensionDetails}
           />
         </Tabs.TabPane>
       </Tabs>
 
       {/* Deferral Details Modal */}
-      {selectedDeferral && (
+      {selectedDeferral && !extensionModalOpen && (
         <DeferralDetailsModal
           deferral={selectedDeferral}
           open={modalOpen}
@@ -3850,6 +3919,27 @@ const MyQueue = () => {
             setSelectedDeferral(null);
           }}
           onAction={handleModalAction}
+        />
+      )}
+
+      {/* Extension Details Modal */}
+      {selectedDeferral && extensionModalOpen && selectedExtension && (
+        <DeferralDetailsModal
+          deferral={selectedDeferral}
+          open={extensionModalOpen}
+          token={token}
+          onClose={() => {
+            setExtensionModalOpen(false);
+            setSelectedDeferral(null);
+            setSelectedExtension(null);
+            setDetailOverrides(null);
+          }}
+          onAction={handleModalAction}
+          overrideApprovals={detailOverrides?.overrideApprovals}
+          headerTag={detailOverrides?.headerTag}
+          overrideDaysSought={detailOverrides?.overrideDaysSought}
+          overrideNextDueDate={detailOverrides?.overrideNextDueDate}
+          readOnly={detailOverrides?.readOnly}
         />
       )}
     </div>

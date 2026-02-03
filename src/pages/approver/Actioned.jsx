@@ -92,6 +92,35 @@ const Actioned = () => {
 
   const dclDocs = (selected && (selected.documents || []).filter(d => (d.isDCL) || (d.name && /dcl/i.test(d.name)) || (selected.dclNo && d.name && d.name.toLowerCase().includes((selected.dclNo || '').toLowerCase())))) || [];
 
+  // Helper: View document
+  const handleViewDocument = (file) => {
+    if (file && file.url) {
+      window.open(file.url, '_blank');
+      message.info(`Opening ${file.name || 'document'}`);
+    } else {
+      message.info('No preview available');
+    }
+  };
+
+  // Helper: Download document
+  const handleDownloadDocument = (file) => {
+    if (!file || !file.url) {
+      message.info('No file available for download');
+      return;
+    }
+    try {
+      const a = document.createElement('a');
+      a.href = file.url;
+      a.download = file.name || 'download';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error('Failed to download file:', err);
+      message.error('Failed to download file');
+    }
+  };
+
   const renderDclUpload = () => {
     return (
       <Card size="small" title={`Mandatory: DCL Upload ${dclDocs.length > 0 ? '✓' : ''}`} style={{ marginTop: 12 }}>
@@ -101,12 +130,16 @@ const Actioned = () => {
           <div>
             <div style={{ marginBottom: 10 }}>
               {dclDocs.map((doc, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: 10, borderBottom: '1px solid #f0f0f0' }}>
-                  <div>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 10, borderBottom: '1px solid #f0f0f0' }}>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700 }}>{doc.name}</div>
                     <div style={{ fontSize: 12, color: '#666' }}>{doc.size ? `${(doc.size / 1024).toFixed(2)} MB` : ''} {doc.uploadDate ? `• Uploaded: ${dayjs(doc.uploadDate).format('DD MMM YYYY HH:mm')}` : ''}</div>
                   </div>
-                  <div><Tag color="red">DCL Document</Tag></div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleViewDocument(doc)}>View</Button>
+                    <Button type="link" size="small" icon={<DownloadOutlined />} onClick={() => handleDownloadDocument(doc)}>Download</Button>
+                    <Tag color="red">DCL Document</Tag>
+                  </div>
                 </div>
               ))}
             </div>
@@ -139,67 +172,129 @@ const Actioned = () => {
   };
 
   // Simple comment trail renderer (shared style with deferral view)
+  const formatUsername = (username) => {
+    if (!username) return "System";
+    return username.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  };
+
+  const getRoleTag = (role) => {
+    let color = "blue";
+    const roleLower = (role || "").toLowerCase();
+    switch (roleLower) {
+      case "rm":
+        color = "purple";
+        break;
+      case "deferral management":
+        color = "green";
+        break;
+      case "creator":
+        color = "green";
+        break;
+      case "co_checker":
+        color = "volcano";
+        break;
+      case "system":
+        color = "default";
+        break;
+      default:
+        color = "blue";
+    }
+    return (
+      <Tag color={color} style={{ marginLeft: 8, textTransform: "uppercase" }}>
+        {roleLower.replace(/_/g, " ")}
+      </Tag>
+    );
+  };
+
   const CommentTrail = ({ history, isLoading }) => {
     if (isLoading) return <Spin className="block m-5" />;
     if (!history || history.length === 0) return <i className="pl-4">No historical comments yet.</i>;
 
-    const formatUsername = (username) => {
-      if (!username) return "System";
-      return username.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    // Helper to check if a message is system-generated
+    const isSystemMessage = (text, name, role) => {
+      const textLower = text.toLowerCase();
+      const nameLower = name.toLowerCase();
+      const roleLower = role?.toLowerCase() || '';
+      
+      return textLower.includes('submitted') || 
+             textLower.includes('approved') || 
+             textLower.includes('returned') ||
+             textLower.includes('rejected') ||
+             nameLower === 'system' ||
+             roleLower === 'system' ||
+             (textLower.includes('deferral') && textLower.includes('request'));
     };
 
-    const getRoleTag = (role) => {
-      let color = "blue";
-      const roleLower = (role || "").toLowerCase();
-      switch (roleLower) {
-        case "rm":
-          color = "purple";
-          break;
-        case "deferral management":
-          color = "green";
-          break;
-        case "creator":
-          color = "green";
-          break;
-        case "co_checker":
-          color = "volcano";
-          break;
-        case "system":
-          color = "default";
-          break;
-        default:
-          color = "blue";
+    // Group comments by timestamp + user to merge them
+    const groupMap = new Map(); // key: "timestamp|userName|role"
+
+    for (let i = 0; i < history.length; i++) {
+      const item = history[i];
+      const roleLabel = item.userRole || item.role;
+      const name = formatUsername(item.user) || item.userName || 'System';
+      const text = item.comment || item.notes || item.message || item.text || 'No comment provided.';
+      const timestamp = item.date || item.createdAt || item.timestamp;
+      
+      // Round timestamp to nearest second to group very close events
+      const timestampKey = timestamp ? new Date(timestamp).toISOString().split('.')[0] : 'no-time';
+      const groupKey = `${timestampKey}|${name}|${roleLabel || 'unknown'}`;
+
+      const isSystem = isSystemMessage(text, name, roleLabel);
+
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, {
+          name,
+          roleLabel,
+          systemMessages: [],
+          userMessages: [],
+          timestamp
+        });
       }
-      return (
-        <Tag color={color} style={{ marginLeft: 8, textTransform: "uppercase" }}>
-          {roleLower.replace(/_/g, " ")}
-        </Tag>
-      );
-    };
+
+      const group = groupMap.get(groupKey);
+      if (isSystem) {
+        group.systemMessages.push(text);
+      } else {
+        group.userMessages.push(text);
+      }
+    }
+
+    // Convert groups to display format
+    const processedComments = Array.from(groupMap.values()).map(group => ({
+      name: formatUsername(group.name),
+      roleLabel: group.roleLabel,
+      systemText: group.systemMessages.join('; '),
+      userText: group.userMessages.join('; '),
+      timestamp: group.timestamp,
+      merged: group.systemMessages.length > 0 && group.userMessages.length > 0
+    }));
 
     return (
       <div className="max-h-52 overflow-y-auto">
         <List
-          dataSource={history}
+          dataSource={processedComments}
           itemLayout="horizontal"
           renderItem={(item, idx) => {
-            const roleLabel = item.userRole;
-            const name = formatUsername(item.user) || 'System';
-            const text = item.comment || 'No comment provided';
-            const timestamp = item.date;
             return (
-              <List.Item key={idx}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Avatar icon={<UserOutlined />} style={{ backgroundColor: PRIMARY_BLUE }} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <b style={{ fontSize: 14, color: PRIMARY_BLUE }}>{name}</b>
-                      {roleLabel && getRoleTag(roleLabel)}
-                      <span style={{ color: '#4a4a4a' }}>{text}</span>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 12, color: '#777' }}>
-                    {timestamp ? dayjs(timestamp).format('M/D/YY, h:mm A') : ''}
+              <List.Item key={idx} style={{ padding: '8px 0', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: 12 }}>
+                  <Avatar icon={<UserOutlined />} style={{ backgroundColor: PRIMARY_BLUE, flexShrink: 0 }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, flexWrap: 'wrap', paddingRight: 12 }}>
+                    <b style={{ fontSize: 13, color: PRIMARY_BLUE, whiteSpace: 'nowrap' }}>{item.name}</b>
+                    {item.roleLabel && getRoleTag(item.roleLabel)}
+                    <span style={{ color: '#4a4a4a' }}>
+                      {item.systemText}
+                      {item.merged && (
+                        <>
+                          <span style={{ margin: '0 4px', color: '#999' }}>;</span>
+                          <span>{item.userText}</span>
+                        </>
+                      )}
+                      {!item.merged && item.userText && item.userText}
+                    </span>
+                    <span style={{ fontSize: 12, color: '#999', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                      {item.timestamp ? dayjs(item.timestamp).format('M/D/YY, h:mm A') : ''}
+                    </span>
                   </div>
                 </div>
               </List.Item>
@@ -1112,6 +1207,44 @@ const Actioned = () => {
               </div>
             )}
 
+            {/* Documents Requested for Deferrals */}
+            {selected.selectedDocuments && selected.selectedDocuments.length > 0 && (
+              <Card size="small" title={<span style={{ color: PRIMARY_BLUE }}>Documents Requested for Deferrals ({selected.selectedDocuments.length})</span>} style={{ marginBottom: 18 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {selected.selectedDocuments.map((doc, index) => {
+                    const docName = typeof doc === 'string' ? doc : doc.name || doc.label;
+                    const docType = typeof doc === 'object' ? doc.type || 'Secondary' : 'Secondary';
+
+                    return (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 12,
+                          padding: 12,
+                          backgroundColor: '#fffbf0',
+                          border: '1px solid #ffe58f',
+                          borderRadius: 6
+                        }}
+                      >
+                        <FileTextOutlined style={{ fontSize: 20, color: PRIMARY_BLUE, marginTop: 2 }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <Text strong>{docName}</Text>
+                            <Badge status="processing" text="Requested" />
+                          </div>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            Type: {docType}
+                          </Text>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
             {selected.facilities && selected.facilities.length > 0 && (
               <Card size="small" title={<span style={{ color: PRIMARY_BLUE }}>Facility Details ({selected.facilities.length})</span>} style={{ marginBottom: 18, marginTop: 12 }}>
                 <Table dataSource={selected.facilities} columns={getFacilityColumns()} pagination={false} size="small" rowKey={(r) => r.facilityNumber || r._id || `facility-${Math.random().toString(36).slice(2)}`} scroll={{ x: 600 }} />
@@ -1136,12 +1269,16 @@ const Actioned = () => {
                       size="small"
                       dataSource={additionalDocs}
                       renderItem={(doc, i) => (
-                        <List.Item key={i}>
+                        <List.Item key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <List.Item.Meta
                             avatar={getFileIcon(doc.type)}
                             title={<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ fontWeight: 500 }}>{doc.name}</span><Tag color="cyan" style={{ fontSize: 10 }}>Additional</Tag></div>}
                             description={<div style={{ fontSize: 12, color: '#666' }}>{doc.size && (<span>{doc.size > 1024 ? `${(doc.size / 1024).toFixed(2)} MB` : `${doc.size} KB`}</span>)} {doc.uploadDate && (<span style={{ marginLeft: 8 }}>Uploaded: {dayjs(doc.uploadDate).format('DD MMM YYYY HH:mm')}</span>)}</div>}
                           />
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleViewDocument(doc)}>View</Button>
+                            <Button type="link" size="small" icon={<DownloadOutlined />} onClick={() => handleDownloadDocument(doc)}>Download</Button>
+                          </div>
                         </List.Item>
                       )}
                     />
@@ -1231,11 +1368,6 @@ const Actioned = () => {
               <h4 style={{ color: PRIMARY_BLUE, marginBottom: 16 }}>Comment Trail & History</h4>
               {(function renderHistory() {
                 const events = [];
-                const requester = selected.requestor?.name || selected.requestedBy?.name || selected.requestedBy?.fullName || selected.rmName || selected.rmRequestedBy?.name || selected.createdBy?.name || selected.createdByName || 'RM';
-                const requesterRole = selected.requestor?.role || selected.requestedBy?.role || 'RM';
-                const requestDate = selected.requestedDate || selected.createdAt || selected.requestedAt;
-                const requestComment = selected.rmReason || 'Deferral request submitted';
-                events.push({ user: requester, userRole: requesterRole, date: requestDate, comment: requestComment });
 
                 if (selected.comments && Array.isArray(selected.comments) && selected.comments.length > 0) {
                   selected.comments.forEach(c => {
@@ -1253,8 +1385,11 @@ const Actioned = () => {
                 if (selected.history && Array.isArray(selected.history) && selected.history.length > 0) {
                   selected.history.forEach((h) => {
                     if (h.action === 'moved') return;
-                    const userName = h.user?.name || h.userName || h.user || 'System';
-                    const userRole = h.user?.role || h.userRole || h.role || 'System';
+                    
+                    // Extract user name - prioritize userName field which comes from backend req.user.name
+                    let userName = h.userName || h.user?.name || h.user || 'System';
+                    
+                    const userRole = h.userRole || h.user?.role || h.role || 'System';
                     events.push({
                       user: userName,
                       userRole: userRole,

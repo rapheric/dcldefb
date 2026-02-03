@@ -272,7 +272,6 @@
 import React, { useMemo, useState } from "react";
 import { Card, Col, Input, Row, Table, Tag, Empty, Spin } from "antd";
 import { FileTextOutlined, SearchOutlined } from "@ant-design/icons";
-import ExtensionApplicationModal from "./modals/ExtensionApplicationModal";
 import dayjs from "dayjs";
 
 const PRIMARY_BLUE = "#164679";
@@ -282,8 +281,8 @@ const WARNING_ORANGE = "#faad14";
 const SECONDARY_PURPLE = "#7e6496";
 
 const ExtensionApplicationsTab = ({
-    extensions,
-    loading,
+    extensions = [],
+    loading = false,
     tableClassName = "deferral-pending-table",
     useSearchCard = false,
     useSearchRow = false,
@@ -291,9 +290,8 @@ const ExtensionApplicationsTab = ({
     inputSize = "middle",
     useMyQueuePagination = false,
     scrollX = 1000,
+    onOpenExtensionDetails,
 }) => {
-    const [extensionModalOpen, setExtensionModalOpen] = useState(false);
-    const [selectedExtension, setSelectedExtension] = useState(null);
     const [searchText, setSearchText] = useState("");
 
     const filteredExtensions = useMemo(() => {
@@ -533,8 +531,7 @@ const ExtensionApplicationsTab = ({
                             scroll={{ x: scrollX }}
                             onRow={(record) => ({
                                 onClick: () => {
-                                    setSelectedExtension(record);
-                                    setExtensionModalOpen(true);
+                                    onOpenExtensionDetails && onOpenExtensionDetails(record);
                                 }
                             })}
                         />
@@ -560,38 +557,14 @@ const ExtensionApplicationsTab = ({
                         scroll={{ x: scrollX }}
                         onRow={(record) => ({
                             onClick: () => {
-                                setSelectedExtension(record);
-                                setExtensionModalOpen(true);
+                                onOpenExtensionDetails && onOpenExtensionDetails(record);
                             }
                         })}
                     />
                 </div>
             )}
 
-            <ExtensionApplicationModal
-                open={extensionModalOpen}
-                onClose={() => {
-                    setExtensionModalOpen(false);
-                    setSelectedExtension(null);
-                }}
-                deferral={{
-                    deferralNumber: selectedExtension?.deferralNumber,
-                    daysSought: selectedExtension?.currentDaysSought,
-                    nextDueDate: selectedExtension?.deferral?.nextDueDate,
-                    nextDocumentDueDate: selectedExtension?.deferral?.nextDocumentDueDate
-                }}
-                extension={selectedExtension}
-                onSubmit={() => { }}
-                loading={false}
-                readOnly
-                initialDaysToExtendBy={
-                    typeof selectedExtension?.requestedDaysSought === 'number'
-                        ? selectedExtension.requestedDaysSought
-                        : 30
-                }
-                initialExtensionReason={selectedExtension?.extensionReason}
-                initialAdditionalFiles={selectedExtension?.additionalFiles || selectedExtension?.supportingDocuments || []}
-            />
+            {/* Removed the modal as we are using the callback instead */}
         </>
     );
 };

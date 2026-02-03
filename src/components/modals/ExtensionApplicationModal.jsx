@@ -9,8 +9,19 @@ import {
     Space,
     Descriptions,
     Tag,
+    Upload,
+    List,
+    Tooltip,
+    DatePicker,
 } from "antd";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
+import {
+    UploadOutlined,
+    EyeOutlined,
+    DownloadOutlined,
+    DeleteOutlined,
+    FileOutlined,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
 
 const PRIMARY_BLUE = "#164679";
 const ERROR_RED = "#ff4d4f";
@@ -18,12 +29,53 @@ const ERROR_RED = "#ff4d4f";
 const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading }) => {
     const [form] = Form.useForm();
     const [submitting, setSubmitting] = useState(false);
+    const [supportingFiles, setSupportingFiles] = useState([]);
+
+    const currentDueDate = deferral?.nextDueDate || deferral?.nextDocumentDueDate || null;
+    const requestedDays = Form.useWatch("requestedDaysSought", form);
+    const computedNextDueDate = currentDueDate && requestedDays
+        ? dayjs(currentDueDate).add(Number(requestedDays), "day")
+        : null;
+
+    const handleSupportingUpload = (file) => {
+        setSupportingFiles((prev) => [...prev, file]);
+        message.success(`${file.name} added`);
+        return false;
+    };
+
+    const handleRemoveSupporting = (file) => {
+        setSupportingFiles((prev) => prev.filter((f) => f.uid !== file.uid));
+        message.info(`${file.name} removed`);
+    };
+
+    const handleViewSupporting = (file) => {
+        const f = file.originFileObj || file;
+        const url = URL.createObjectURL(f);
+        window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+    };
+
+    const handleDownloadSupporting = (file) => {
+        const f = file.originFileObj || file;
+        const url = URL.createObjectURL(f);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = f.name || "document";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+    };
 
     const handleSubmit = async (values) => {
         setSubmitting(true);
         try {
-            await onSubmit(values);
+            await onSubmit({
+                ...values,
+                supportingDocuments: supportingFiles,
+            });
             form.resetFields();
+            setSupportingFiles([]);
         } catch (error) {
             console.error("Error submitting extension:", error);
         } finally {
@@ -37,6 +89,7 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
             open={open}
             onCancel={() => {
                 form.resetFields();
+                setSupportingFiles([]);
                 onClose();
             }}
             footer={null}
@@ -58,6 +111,11 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
                     <Descriptions.Item label="Current Days Sought" span={3}>
                         <Tag color="blue">{deferral?.daysSought || 0} days</Tag>
                     </Descriptions.Item>
+                    <Descriptions.Item label="Current Due Date" span={3}>
+                        {deferral?.nextDueDate || deferral?.nextDocumentDueDate
+                            ? dayjs(deferral?.nextDueDate || deferral?.nextDocumentDueDate).format("DD MMM YYYY")
+                            : "Not set"}
+                    </Descriptions.Item>
                 </Descriptions>
 
                 <Form
@@ -65,7 +123,7 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
                     layout="vertical"
                     onFinish={handleSubmit}
                     initialValues={{
-                        requestedDaysSought: deferral?.daysSought || 0,
+                        requestedDaysSought: undefined,
                         extensionReason: "",
                     }}
                 >
@@ -75,23 +133,6 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
                         name="requestedDaysSought"
                         rules={[
                             { required: true, message: "Please enter requested days" },
-                            {
-                                validator: (_, value) => {
-                                    if (!value) return Promise.resolve();
-                                    const currentDays = deferral?.daysSought || 0;
-                                    if (value <= currentDays) {
-                                        return Promise.reject(
-                                            new Error(`Must be greater than ${currentDays} current days`)
-                                        );
-                                    }
-                                    if (value > currentDays + 90) {
-                                        return Promise.reject(
-                                            new Error("Cannot exceed 90 additional days")
-                                        );
-                                    }
-                                    return Promise.resolve();
-                                },
-                            },
                         ]}
                     >
                         <InputNumber
@@ -99,6 +140,16 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
                             max={365}
                             style={{ width: "100%" }}
                             placeholder="Enter additional days needed"
+                        />
+                    </Form.Item>
+
+                    <Form.Item label="Next Due Date">
+                        <DatePicker
+                            value={computedNextDueDate}
+                            disabled
+                            style={{ width: "100%" }}
+                            format="DD MMM YYYY"
+                            placeholder="Auto-calculated"
                         />
                     </Form.Item>
 
@@ -118,27 +169,60 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
                         />
                     </Form.Item>
 
-                    {/* Info Box */}
-                    <div
-                        style={{
-                            backgroundColor: "#f0f5ff",
-                            border: `1px solid ${PRIMARY_BLUE}`,
-                            borderRadius: 6,
-                            padding: 12,
-                            marginBottom: 20,
-                        }}
-                    >
-                        <div style={{ fontSize: 12, color: PRIMARY_BLUE }}>
-                            <ExclamationCircleOutlined style={{ marginRight: 8 }} />
-                            <strong>Extension Workflow:</strong> This request will follow the
-                            same approval process as the original deferral:
-                            <ul style={{ marginTop: 8, marginBottom: 0 }}>
-                                <li>→ All selected approvers must approve</li>
-                                <li>→ Then Creator review</li>
-                                <li>→ Finally Checker review</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {/* Supporting Documents */}
+                    <Form.Item label="Additional Supporting Documents">
+                        <Upload
+                            beforeUpload={handleSupportingUpload}
+                            fileList={[]}
+                            multiple
+                            showUploadList={false}
+                        >
+                            <Button icon={<UploadOutlined />}>Upload Documents</Button>
+                        </Upload>
+
+                        {supportingFiles.length > 0 && (
+                            <div style={{ marginTop: 12 }}>
+                                <List
+                                    size="small"
+                                    dataSource={supportingFiles}
+                                    renderItem={(file) => (
+                                        <List.Item
+                                            actions={[
+                                                <Tooltip title="View" key="view">
+                                                    <Button
+                                                        type="text"
+                                                        icon={<EyeOutlined />}
+                                                        onClick={() => handleViewSupporting(file)}
+                                                    />
+                                                </Tooltip>,
+                                                <Tooltip title="Download" key="download">
+                                                    <Button
+                                                        type="text"
+                                                        icon={<DownloadOutlined />}
+                                                        onClick={() => handleDownloadSupporting(file)}
+                                                    />
+                                                </Tooltip>,
+                                                <Tooltip title="Remove" key="remove">
+                                                    <Button
+                                                        type="text"
+                                                        danger
+                                                        icon={<DeleteOutlined />}
+                                                        onClick={() => handleRemoveSupporting(file)}
+                                                    />
+                                                </Tooltip>,
+                                            ]}
+                                        >
+                                            <List.Item.Meta
+                                                avatar={<FileOutlined />}
+                                                title={file.name}
+                                                description={file.size ? `${(file.size / 1024).toFixed(2)} KB` : ""}
+                                            />
+                                        </List.Item>
+                                    )}
+                                />
+                            </div>
+                        )}
+                    </Form.Item>
 
                     {/* Buttons */}
                     <Space style={{ width: "100%", justifyContent: "flex-end" }}>
