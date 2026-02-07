@@ -20,7 +20,6 @@ const DocumentTable = ({
   handleDocReject,
   handleDocReset,
 }) => {
-
   const getStatusTag = (status, type = "action") => {
     const lowerStatus = status?.toLowerCase() || "pending";
     let color = "default";
@@ -407,7 +406,7 @@ const DocumentTable = ({
         columns={columns}
         dataSource={docs.map((doc, idx) => ({
           ...doc,
-          key: doc.key || doc._id || idx,
+          key: doc.key || doc.id || doc._id || idx,
         }))}
         pagination={false}
         size="small"

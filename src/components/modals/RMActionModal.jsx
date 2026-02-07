@@ -726,7 +726,7 @@ const RMActionModal = ({ checklist, open, onClose, actionType }) => {
         const token = localStorage.getItem('authToken') ||
                      (JSON.parse(localStorage.getItem('user') || '{}')?.token);
        
-        const response = await fetch(`http://localhost:5000/api/checklist/${checklist._id}/upload`, {
+        const response = await fetch(`http://localhost:5000/api/checklist/${checklist.id || checklist._id}/upload`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -901,12 +901,12 @@ const RMActionModal = ({ checklist, open, onClose, actionType }) => {
                 </div>
                
                 {category.docList.map((doc, docIndex) => {
-                  const isUploaded = uploadedFiles[doc._id] || doc.status === 'uploaded';
+                  const isUploaded = uploadedFiles[doc.id || doc._id] || doc.status === 'uploaded';
                   const isDeferred = doc.status === 'deferred';
                  
                   return (
                     <Card
-                      key={doc._id}
+                      key={doc.id || doc._id}
                       size="small"
                       style={{
                         marginBottom: 10,
@@ -944,7 +944,7 @@ const RMActionModal = ({ checklist, open, onClose, actionType }) => {
                           {actionType !== 'deferral' ? (
                             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                               <Upload
-                                beforeUpload={(file) => handleDocumentUpload(file, doc._id)}
+                                beforeUpload={(file) => handleDocumentUpload(file, doc.id || doc._id)}
                                 showUploadList={false}
                                 disabled={uploading}
                               >
@@ -967,14 +967,14 @@ const RMActionModal = ({ checklist, open, onClose, actionType }) => {
                                     ✓ Uploaded
                                   </Tag>
                                   <span style={{ color: '#666' }}>
-                                    {uploadedFiles[doc._id]?.name || 'File uploaded'}
+                                    {uploadedFiles[doc.id || doc._id]?.name || 'File uploaded'}
                                   </span>
                                 </div>
                               )}
                             </div>
                           ) : (
                             <Form.Item
-                              name={`deferralReason_${doc._id}`}
+                              name={`deferralReason_${doc.id || doc._id}`}
                               label="Deferral Reason"
                               style={{ marginBottom: 0 }}
                               rules={[{ required: true, message: 'Please enter deferral reason' }]}

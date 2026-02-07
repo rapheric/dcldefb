@@ -1,7 +1,6 @@
 // import { DatePicker } from "antd";
 // import moment from "moment"; // For date formatting
 
-
 // import React, { useState, useEffect } from "react";
 // import {
 //   Button,
@@ -16,13 +15,13 @@
 //   Descriptions,
 //   Spin,
 // } from "antd";
-// import { 
-//   UploadOutlined, 
-//   EyeOutlined, 
-//   DownloadOutlined, 
+// import {
+//   UploadOutlined,
+//   EyeOutlined,
+//   DownloadOutlined,
 //   PaperClipOutlined,
 //   FileOutlined,
-//   DeleteOutlined 
+//   DeleteOutlined
 // } from "@ant-design/icons";
 // // import { useUpdateChecklistStatusMutation } from "../../api/checklistApi";
 
@@ -112,8 +111,8 @@
 //       await new Promise(resolve => setTimeout(resolve, 1500));
 
 //       // For mock data - simulate success
-//       const successMessage = action === "returned" 
-//         ? "Checklist returned to RM successfully!" 
+//       const successMessage = action === "returned"
+//         ? "Checklist returned to RM successfully!"
 //         : "Checklist submitted to Checker successfully!";
 
 //       message.success(successMessage);
@@ -292,17 +291,17 @@
 //         }}
 //         width={1000}
 //         footer={[
-//           <Button 
-//             key="download" 
-//             icon={<DownloadOutlined />} 
+//           <Button
+//             key="download"
+//             icon={<DownloadOutlined />}
 //             onClick={downloadChecklist}
 //             disabled={submitting}
 //           >
 //             Download Checklist
 //           </Button>,
-//           <Button 
-//             key="return" 
-//             type="default" 
+//           <Button
+//             key="return"
+//             type="default"
 //             onClick={() => submitCheckerAction("returned")}
 //             loading={submitting}
 //             disabled={submitting}
@@ -412,10 +411,10 @@
 //         </div>
 
 //         <h3 style={{ marginTop: 16, color: PRIMARY_BLUE }}>Documents</h3>
-//         <Table 
-//           rowKey="docIdx" 
-//           columns={columns} 
-//           dataSource={docs} 
+//         <Table
+//           rowKey="docIdx"
+//           columns={columns}
+//           dataSource={docs}
 //           pagination={false}
 //           style={{ marginBottom: 16 }}
 //         />
@@ -435,9 +434,9 @@
 //             <PaperClipOutlined style={{ marginRight: 8 }} />
 //             Additional Supporting Documents
 //           </h4>
-//           <div style={{ 
-//             fontSize: 12, 
-//             color: "#666", 
+//           <div style={{
+//             fontSize: 12,
+//             color: "#666",
 //             marginBottom: 12,
 //             padding: "8px 12px",
 //             background: "#f5f5f5",
@@ -448,7 +447,7 @@
 //         </div>
 
 //         <Upload {...uploadProps}>
-//           <Button 
+//           <Button
 //             icon={<UploadOutlined />}
 //             disabled={submitting}
 //             style={{ marginBottom: 8 }}
@@ -459,15 +458,15 @@
 
 //         {/* Show uploaded files list with exact names */}
 //         {additionalFiles.length > 0 && (
-//           <div style={{ 
+//           <div style={{
 //             marginTop: 12,
 //             padding: "16px",
 //             background: "#f8f9fa",
 //             borderRadius: 6,
 //             border: "1px solid #e9ecef"
 //           }}>
-//             <div style={{ 
-//               color: PRIMARY_BLUE, 
+//             <div style={{
+//               color: PRIMARY_BLUE,
 //               fontWeight: 600,
 //               marginBottom: 12,
 //               display: "flex",
@@ -483,7 +482,7 @@
 //               </Tag>
 //             </div>
 
-//             <div style={{ 
+//             <div style={{
 //               maxHeight: "200px",
 //               overflowY: "auto",
 //               paddingRight: 4
@@ -491,7 +490,7 @@
 //               {additionalFiles.map((file, index) => {
 //                 const fileType = getFileType(file.name, file.type);
 //                 const fileSize = formatFileSize(file.size);
-//                 const uploadTime = file.uploadedAt 
+//                 const uploadTime = file.uploadedAt
 //                   ? new Date(file.uploadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 //                   : 'Just now';
 
@@ -523,16 +522,16 @@
 //                         <FileOutlined style={{ color: PRIMARY_BLUE, fontSize: 18 }} />
 //                       </div>
 //                       <div style={{ flex: 1 }}>
-//                         <div style={{ 
-//                           fontWeight: 600, 
+//                         <div style={{
+//                           fontWeight: 600,
 //                           color: "#333",
 //                           fontSize: 14,
 //                           marginBottom: 2
 //                         }}>
 //                           {file.name || `Document ${index + 1}`}
 //                         </div>
-//                         <div style={{ 
-//                           fontSize: 12, 
+//                         <div style={{
+//                           fontSize: 12,
 //                           color: "#6c757d",
 //                           display: "flex",
 //                           alignItems: "center",
@@ -599,7 +598,7 @@
 //             </div>
 
 //             {/* Summary at bottom */}
-//             <div style={{ 
+//             <div style={{
 //               marginTop: 12,
 //               padding: "8px 12px",
 //               background: "#e6f7ff",
@@ -625,7 +624,6 @@
 // };
 
 // export default CreatorQueueChecklistModal;
-
 
 import React, { useState, useEffect } from "react";
 import {
@@ -712,7 +710,8 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
   const handleAdditionalUpload = (file) => {
     const fileName = file.name || `Document_${Date.now()}`;
     const fileSize = file.size;
-    const fileType = file.type || file.name?.split(".").pop()?.toUpperCase() || "FILE";
+    const fileType =
+      file.type || file.name?.split(".").pop()?.toUpperCase() || "FILE";
 
     const fileWithPreview = {
       uid: file.uid || `additional-${Date.now()}-${Math.random()}`,
@@ -778,7 +777,7 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Checklist_${checklist._id}.txt`;
+    link.download = `Checklist_${checklist.id || checklist._id}.txt`;
     link.click();
     message.success("Checklist downloaded");
   };
@@ -787,7 +786,8 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
   const pending = docs.filter((d) => d.status === "pendingChecker").length;
   const approved = docs.filter((d) => d.status === "approved").length;
   const rejected = docs.filter((d) => d.status === "rejected").length;
-  const progressPercent = total === 0 ? 0 : Math.round((approved / total) * 100);
+  const progressPercent =
+    total === 0 ? 0 : Math.round((approved / total) * 100);
 
   const columns = [
     {
@@ -797,7 +797,9 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
     {
       title: "Category",
       dataIndex: "category",
-      render: (text) => <span style={{ color: SECONDARY_PURPLE, fontWeight: 500 }}>{text}</span>,
+      render: (text) => (
+        <span style={{ color: SECONDARY_PURPLE, fontWeight: 500 }}>{text}</span>
+      ),
     },
     {
       title: "RM Comment",
@@ -815,7 +817,9 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
             value={record.expiryDate ? dayjs(record.expiryDate) : null}
             onChange={(date) => {
               const updated = [...docs];
-              updated[record.docIdx].expiryDate = date ? date.toISOString() : null;
+              updated[record.docIdx].expiryDate = date
+                ? date.toISOString()
+                : null;
               setDocs(updated);
             }}
             disabled={submitting}
@@ -854,7 +858,12 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
           <Button
             icon={<EyeOutlined />}
             size="small"
-            onClick={() => window.open(getFullUrl(record.fileUrl || record.uploadData?.fileUrl), "_blank")}
+            onClick={() =>
+              window.open(
+                getFullUrl(record.fileUrl || record.uploadData?.fileUrl),
+                "_blank",
+              )
+            }
             disabled={!record.fileUrl}
           >
             View
@@ -880,7 +889,8 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
     },
   ];
 
-  const allDocsApproved = docs.length > 0 && docs.every((doc) => doc.status === "approved");
+  const allDocsApproved =
+    docs.length > 0 && docs.every((doc) => doc.status === "approved");
 
   const formatFileSize = (bytes) => {
     if (!bytes || bytes === 0) return "0 Bytes";
@@ -924,10 +934,20 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
         }}
         width={1000}
         footer={[
-          <Button key="download" icon={<DownloadOutlined />} onClick={downloadChecklist} disabled={submitting}>
+          <Button
+            key="download"
+            icon={<DownloadOutlined />}
+            onClick={downloadChecklist}
+            disabled={submitting}
+          >
             Download Checklist
           </Button>,
-          <Button key="return" type="default" onClick={() => submitCheckerAction("returned")} loading={submitting}>
+          <Button
+            key="return"
+            type="default"
+            onClick={() => submitCheckerAction("returned")}
+            loading={submitting}
+          >
             Return to RM
           </Button>,
           <Button
@@ -961,7 +981,13 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
           >
             <div style={{ textAlign: "center" }}>
               <Spin size="large" />
-              <div style={{ marginTop: 16, fontWeight: "bold", color: PRIMARY_BLUE }}>
+              <div
+                style={{
+                  marginTop: 16,
+                  fontWeight: "bold",
+                  color: PRIMARY_BLUE,
+                }}
+              >
                 Submitting checklist...
               </div>
             </div>
@@ -975,9 +1001,15 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
                 {checklist?.dclNo || checklist?._id}
               </span>
             </Descriptions.Item>
-            <Descriptions.Item label="Title">{checklist?.title}</Descriptions.Item>
-            <Descriptions.Item label="Loan Type">{checklist?.loanType}</Descriptions.Item>
-            <Descriptions.Item label="Created By">{checklist?.createdBy?.name}</Descriptions.Item>
+            <Descriptions.Item label="Title">
+              {checklist?.title}
+            </Descriptions.Item>
+            <Descriptions.Item label="Loan Type">
+              {checklist?.loanType}
+            </Descriptions.Item>
+            <Descriptions.Item label="Created By">
+              {checklist?.createdBy?.name}
+            </Descriptions.Item>
           </Descriptions>
         </Card>
 
@@ -990,14 +1022,35 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
             margin: "16px 0",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ fontWeight: "700", color: PRIMARY_BLUE }}>Total Documents: {total}</div>
-            <div style={{ fontWeight: "700", color: SECONDARY_PURPLE }}>Pending: {pending}</div>
-            <div style={{ fontWeight: "700", color: ACCENT_LIME }}>Approved: {approved}</div>
-            <div style={{ fontWeight: "700", color: "#ff4d4f" }}>Rejected: {rejected}</div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
+            <div style={{ fontWeight: "700", color: PRIMARY_BLUE }}>
+              Total Documents: {total}
+            </div>
+            <div style={{ fontWeight: "700", color: SECONDARY_PURPLE }}>
+              Pending: {pending}
+            </div>
+            <div style={{ fontWeight: "700", color: ACCENT_LIME }}>
+              Approved: {approved}
+            </div>
+            <div style={{ fontWeight: "700", color: "#ff4d4f" }}>
+              Rejected: {rejected}
+            </div>
           </div>
 
-          <div style={{ width: "100%", height: 12, background: "#e0e0e0", borderRadius: 50 }}>
+          <div
+            style={{
+              width: "100%",
+              height: 12,
+              background: "#e0e0e0",
+              borderRadius: 50,
+            }}
+          >
             <div
               style={{
                 height: "100%",
@@ -1009,15 +1062,30 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
             ></div>
           </div>
 
-          <div style={{ textAlign: "right", marginTop: 4, fontWeight: "700", color: PRIMARY_BLUE }}>
+          <div
+            style={{
+              textAlign: "right",
+              marginTop: 4,
+              fontWeight: "700",
+              color: PRIMARY_BLUE,
+            }}
+          >
             {progressPercent}%
           </div>
         </div>
 
         <h3 style={{ marginTop: 16, color: PRIMARY_BLUE }}>Documents</h3>
-        <Table rowKey="docIdx" columns={columns} dataSource={docs} pagination={false} style={{ marginBottom: 16 }} />
+        <Table
+          rowKey="docIdx"
+          columns={columns}
+          dataSource={docs}
+          pagination={false}
+          style={{ marginBottom: 16 }}
+        />
 
-        <h3 style={{ marginTop: 16, color: PRIMARY_BLUE }}>Creator General Comment</h3>
+        <h3 style={{ marginTop: 16, color: PRIMARY_BLUE }}>
+          Creator General Comment
+        </h3>
         <Input.TextArea
           rows={4}
           value={checkerComment}
@@ -1042,12 +1110,17 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
               borderRadius: 4,
             }}
           >
-            Upload any supporting documents not included in the original checklist
+            Upload any supporting documents not included in the original
+            checklist
           </div>
         </div>
 
         <Upload {...uploadProps}>
-          <Button icon={<UploadOutlined />} disabled={submitting} style={{ marginBottom: 8 }}>
+          <Button
+            icon={<UploadOutlined />}
+            disabled={submitting}
+            style={{ marginBottom: 8 }}
+          >
             Click to Upload Supporting Documents
           </Button>
         </Upload>
@@ -1077,16 +1150,22 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
                 <span>Supporting Documents ({additionalFiles.length})</span>
               </div>
               <Tag color="blue" style={{ fontWeight: 500 }}>
-                {additionalFiles.length} file{additionalFiles.length !== 1 ? "s" : ""}
+                {additionalFiles.length} file
+                {additionalFiles.length !== 1 ? "s" : ""}
               </Tag>
             </div>
 
-            <div style={{ maxHeight: "200px", overflowY: "auto", paddingRight: 4 }}>
+            <div
+              style={{ maxHeight: "200px", overflowY: "auto", paddingRight: 4 }}
+            >
               {additionalFiles.map((file, index) => {
                 const fileType = getFileType(file.name, file.type);
                 const fileSize = formatFileSize(file.size);
                 const uploadTime = file.uploadedAt
-                  ? new Date(file.uploadedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                  ? new Date(file.uploadedAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                   : "Just now";
 
                 return (
@@ -1104,7 +1183,14 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
                       boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        flex: 1,
+                      }}
+                    >
                       <div
                         style={{
                           width: 36,
@@ -1116,10 +1202,19 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
                           justifyContent: "center",
                         }}
                       >
-                        <FileOutlined style={{ color: PRIMARY_BLUE, fontSize: 18 }} />
+                        <FileOutlined
+                          style={{ color: PRIMARY_BLUE, fontSize: 18 }}
+                        />
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, color: "#333", fontSize: 14, marginBottom: 2 }}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: "#333",
+                            fontSize: 14,
+                            marginBottom: 2,
+                          }}
+                        >
                           {file.name || `Document ${index + 1}`}
                         </div>
                         <div
@@ -1154,7 +1249,9 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
                           if (file.url) {
                             window.open(file.url, "_blank");
                           } else {
-                            message.warning(`Preview not available for ${file.name}`);
+                            message.warning(
+                              `Preview not available for ${file.name}`,
+                            );
                           }
                         }}
                         disabled={submitting || !file.url}
@@ -1168,9 +1265,12 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
                           if (file.url) {
                             const link = document.createElement("a");
                             link.href = file.url;
-                            link.download = file.name || `document_${index + 1}`;
+                            link.download =
+                              file.name || `document_${index + 1}`;
                             link.click();
-                            message.success(`Downloading ${file.name || "document"}`);
+                            message.success(
+                              `Downloading ${file.name || "document"}`,
+                            );
                           }
                         }}
                         disabled={submitting || !file.url}

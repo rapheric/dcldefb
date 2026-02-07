@@ -479,7 +479,9 @@ const RmReviewChecklistModal = ({
 
   // Add this query for comments
   const { data: comments, isLoading: commentsLoading } =
-    useGetChecklistCommentsQuery(checklist?._id, { skip: !checklist?._id });
+    useGetChecklistCommentsQuery(checklist?.id || checklist?._id, {
+      skip: !checklist?.id && !checklist?._id,
+    });
 
   useEffect(() => {
     if (!checklist || !checklist.documents) return;
@@ -529,7 +531,9 @@ const RmReviewChecklistModal = ({
     return doc.status || "pendingrm";
   };
 
-  const isActionAllowed = !readOnly && checklist?.status === "rm_review";
+  // Allow actions based on document status, not checklist status
+  // DocumentTable.canActOnDoc() will check the individual document status
+  const isActionAllowed = !readOnly;
 
   const documentStats = useMemo(() => {
     return calculateDocumentStats(docs);
@@ -547,7 +551,7 @@ const RmReviewChecklistModal = ({
         JSON.parse(localStorage.getItem("user") || "{}")?.token;
 
       const response = await fetch(
-        `${API_BASE_URL}/api/checklist/${checklist._id}/upload`,
+        `${API_BASE_URL}/api/checklist/${checklist.id || checklist._id}/upload`,
         {
           method: "POST",
           headers: {

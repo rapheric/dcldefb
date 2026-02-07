@@ -72,7 +72,7 @@ const Completed = ({ userId }) => {
     if (!checklists) return [];
 
     return checklists
-      .filter((c) => c.assignedToRM?._id === userId)
+      .filter((c) => (c.assignedToRM?.id || c.assignedToRM?._id) === userId)
       .filter((c) => {
         const status = (c.status || "").toLowerCase();
 
@@ -219,6 +219,21 @@ const Completed = ({ userId }) => {
       ),
     },
     {
+      title: "RM",
+      dataIndex: "assignedToRM",
+      width: 120,
+      render: (rm) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <UserOutlined style={{ color: SECONDARY_BLUE, fontSize: 12 }} />
+          <span
+            style={{ color: PRIMARY_PURPLE, fontWeight: 500, fontSize: 13 }}
+          >
+            {rm?.name || "N/A"}
+          </span>
+        </div>
+      ),
+    },
+    {
       title: "Docs",
       dataIndex: "documents",
       width: 70,
@@ -227,7 +242,7 @@ const Completed = ({ userId }) => {
         const totalDocs =
           docs?.reduce(
             (total, category) => total + (category.docList?.length || 0),
-            0
+            0,
           ) || 0;
         return (
           <Tag

@@ -150,7 +150,9 @@ const ChecklistsPage = ({ open, onClose }) => {
   const [customerNumber, setCustomerNumber] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [ibpsNo, setIbpsNo] = useState("");
-  const [selectedMultipleLoanTypes, setSelectedMultipleLoanTypes] = useState([]);
+  const [selectedMultipleLoanTypes, setSelectedMultipleLoanTypes] = useState(
+    [],
+  );
   const [newDocName, setNewDocName] = useState("");
   const [selectedCategoryName, setSelectedCategoryName] = useState(null);
 
@@ -183,29 +185,32 @@ const ChecklistsPage = ({ open, onClose }) => {
 
   // Logic to handle multiple loan types document population
   React.useEffect(() => {
-    if (loanType === "Multiple Loan Type" && selectedMultipleLoanTypes.length > 0) {
+    if (
+      loanType === "Multiple Loan Type" &&
+      selectedMultipleLoanTypes.length > 0
+    ) {
       const mergedCategories = {};
 
-      selectedMultipleLoanTypes.forEach(type => {
+      selectedMultipleLoanTypes.forEach((type) => {
         const categories = loanTypeDocuments[type] || [];
-        categories.forEach(cat => {
+        categories.forEach((cat) => {
           if (!mergedCategories[cat.title]) {
             mergedCategories[cat.title] = new Set();
           }
-          cat.documents.forEach(doc => {
+          cat.documents.forEach((doc) => {
             mergedCategories[cat.title].add(doc);
           });
         });
       });
 
-      const newDocs = Object.keys(mergedCategories).map(title => ({
+      const newDocs = Object.keys(mergedCategories).map((title) => ({
         category: title,
-        docList: Array.from(mergedCategories[title]).map(docName => ({
+        docList: Array.from(mergedCategories[title]).map((docName) => ({
           name: docName,
           status: "pendingrm",
           action: "",
           comment: "",
-        }))
+        })),
       }));
 
       setDocuments(newDocs);
@@ -217,7 +222,9 @@ const ChecklistsPage = ({ open, onClose }) => {
 
     setDocuments((prevDocs) => {
       const updatedDocs = [...prevDocs];
-      const categoryIdx = updatedDocs.findIndex(cat => cat.category === selectedCategoryName);
+      const categoryIdx = updatedDocs.findIndex(
+        (cat) => cat.category === selectedCategoryName,
+      );
 
       const newDoc = {
         name: newDocName.trim(),
@@ -231,7 +238,7 @@ const ChecklistsPage = ({ open, onClose }) => {
       } else {
         updatedDocs.push({
           category: selectedCategoryName,
-          docList: [newDoc]
+          docList: [newDoc],
         });
       }
       return updatedDocs;
@@ -243,17 +250,24 @@ const ChecklistsPage = ({ open, onClose }) => {
 
   const handleSubmit = async () => {
     // If Multiple Loan Type is selected, ensure at least one actual type is picked
-    const actualLoanType = loanType === "Multiple Loan Type"
-      ? selectedMultipleLoanTypes.join(", ")
-      : loanType;
+    const actualLoanType =
+      loanType === "Multiple Loan Type"
+        ? selectedMultipleLoanTypes.join(", ")
+        : loanType;
 
-    if (!assignedToRM || (loanType === "Multiple Loan Type" ? selectedMultipleLoanTypes.length === 0 : !loanType) || !ibpsNo) {
+    if (
+      !assignedToRM ||
+      (loanType === "Multiple Loan Type"
+        ? selectedMultipleLoanTypes.length === 0
+        : !loanType) ||
+      !ibpsNo
+    ) {
       return alert("Please fill all required fields.");
     }
 
     const payload = {
       loanType: actualLoanType,
-      assignedToRM,
+      assignedToRMId: assignedToRM,
       customerId,
       customerName,
       customerNumber,
@@ -332,7 +346,11 @@ const ChecklistsPage = ({ open, onClose }) => {
         {loanType && (
           <div style={{ marginBottom: "16px" }}>
             <DocumentInputSectionCoCreator
-              loanType={loanType === "Multiple Loan Type" ? selectedMultipleLoanTypes.join(", ") : loanType}
+              loanType={
+                loanType === "Multiple Loan Type"
+                  ? selectedMultipleLoanTypes.join(", ")
+                  : loanType
+              }
               newDocName={newDocName}
               setNewDocName={setNewDocName}
               selectedCategoryName={selectedCategoryName}
@@ -371,8 +389,9 @@ const ChecklistsPage = ({ open, onClose }) => {
               marginTop: "-8px",
             }}
           >
-            Please fill all required fields (Assigned RM, Loan Type, {loanType === "Multiple Loan Type" ? "Actual Loan Types, " : ""} and IBPS
-            NO)
+            Please fill all required fields (Assigned RM, Loan Type,{" "}
+            {loanType === "Multiple Loan Type" ? "Actual Loan Types, " : ""} and
+            IBPS NO)
           </div>
         )}
       </Space>

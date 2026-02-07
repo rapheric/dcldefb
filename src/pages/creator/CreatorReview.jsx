@@ -55,8 +55,8 @@ const CreatorReview = () => {
   const updateDocumentStatus = (docName, status, reason = "") => {
     setDocuments((prev) =>
       prev.map((doc) =>
-        doc.name === docName ? { ...doc, status, reason } : doc
-      )
+        doc.name === docName ? { ...doc, status, reason } : doc,
+      ),
     );
   };
 
@@ -83,8 +83,8 @@ const CreatorReview = () => {
   const handleReturnToRM = () => {
     setDocuments((prev) =>
       prev.map((d) =>
-        d.status !== "Approved" ? { ...d, status: "Returned" } : d
-      )
+        d.status !== "Approved" ? { ...d, status: "Returned" } : d,
+      ),
     );
     message.warning("Checklist returned to RM for correction.");
     navigate("/MyQueue");
@@ -178,7 +178,7 @@ const CreatorReview = () => {
         </Text>
         <Text type="secondary" style={{ fontSize: 14 }}>
           Customer No: {checklist.loanNo} | DCL No:{" "}
-          {checklist._id.toUpperCase()}
+          {(checklist.id || checklist._id).toUpperCase()}
         </Text>
       </Space>
 

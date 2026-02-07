@@ -185,7 +185,7 @@ const SupportingDocsSection = ({
         {supportingDocs.map((doc) => (
           <Card
             size="small"
-            key={doc._id || doc.id}
+            key={doc.id || doc._id}
             style={{
               borderRadius: 6,
               borderLeft: `3px solid ${PRIMARY_BLUE}`,
@@ -251,7 +251,7 @@ const SupportingDocsSection = ({
                     onClick={() =>
                       onDeleteSupportingDoc &&
                       onDeleteSupportingDoc(
-                        doc._id || doc.id,
+                        doc.id || doc._id,
                         doc.fileName || doc.name,
                       )
                     }

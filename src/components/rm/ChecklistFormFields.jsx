@@ -1,12 +1,11 @@
 import React from "react";
 
-import { Select, Input, Space } from "antd"; 
+import { Select, Input, Space } from "antd";
 
 const { Option } = Select;
 
-
 const PRIMARY_BLUE = "#164679"; // Dark Blue/Navy
-const ACCENT_LIME = "#b5d334";  // Lime/Light Green
+const ACCENT_LIME = "#b5d334"; // Lime/Light Green
 const HIGHLIGHT_GOLD = "#fcb116"; // Gold / Yellow-orange
 const SECONDARY_PURPLE = "#7e6496"; // Purple / Accent shade
 
@@ -16,8 +15,8 @@ const SECONDARY_PURPLE = "#7e6496"; // Purple / Accent shade
  * order) is strictly preserved from the user's original request.
  */
 const ChecklistFormFields = ({
-  rms, 
-  customers, 
+  rms,
+  customers,
   assignedToRM,
   setAssignedToRM,
   customerId,
@@ -27,19 +26,18 @@ const ChecklistFormFields = ({
   title,
   setTitle,
   loanType,
-  loanTypes, 
+  loanTypes,
   handleLoanTypeChange,
 }) => {
-  
   // A helper for Antd components to align with Tailwind's rounded-lg and ensure width
-  // Note: We cannot use className directly on Antd components without wrappers, 
+  // Note: We cannot use className directly on Antd components without wrappers,
   // so we rely on 'style' and the custom Antd styling injection.
-  const antStyle = { 
-    width: "100%", 
+  const antStyle = {
+    width: "100%",
     borderRadius: "0.5rem",
-    marginBottom: "20px" // Added margin to match the spacing previously provided by Tailwind wrappers
-  }; 
-  
+    marginBottom: "20px", // Added margin to match the spacing previously provided by Tailwind wrappers
+  };
+
   // Custom Antd styling to override default colors for a better UX experience
   const customAntdStyle = `
     /* Custom styling for Ant Design elements to fit the color theme */
@@ -85,15 +83,16 @@ const ChecklistFormFields = ({
     // Outer container for superior structure: rounded corners, shadow, and mobile-friendly padding
     // We remove the internal Tailwind div wrappers and labels, and just apply styling to the Antd components themselves
     // and the outer wrapper, respecting the original minimal JSX structure.
-    <div className={`p-6 md:p-8 bg-white shadow-2xl rounded-xl border-t-4 border-t-[${ACCENT_LIME}]`}>
-      
+    <div
+      className={`p-6 md:p-8 bg-white shadow-2xl rounded-xl border-t-4 border-t-[${ACCENT_LIME}]`}
+    >
       {/* Inject custom Antd styles */}
       <style>{customAntdStyle}</style>
 
       <h2 className={`text-2xl font-extrabold mb-8 text-[${PRIMARY_BLUE}]`}>
         New Checklist Setup
       </h2>
-      
+
       {/* Select RM - LOGIC PRESERVED EXACTLY */}
       <Select
         placeholder="Assign RM"
@@ -102,11 +101,15 @@ const ChecklistFormFields = ({
         style={antStyle}
         showSearch
       >
-        {rms?.map((rm) => ( // Using optional chaining to handle potentially undefined 'rms' without default props
-          <Option key={rm._id} value={rm._id}>
-            {rm.name}
-          </Option>
-        ))}
+        {rms?.map(
+          (
+            rm, // Using optional chaining to handle potentially undefined 'rms' without default props
+          ) => (
+            <Option key={rm.id || rm._id} value={rm.id || rm._id}>
+              {rm.name}
+            </Option>
+          ),
+        )}
       </Select>
 
       {/* Select Customer - LOGIC PRESERVED EXACTLY */}
@@ -120,19 +123,32 @@ const ChecklistFormFields = ({
           option?.children?.toLowerCase().includes(input.toLowerCase())
         }
       >
-        {customers?.map((c) => ( // Using optional chaining to handle potentially undefined 'customers' without default props
-          <Option key={c._id} value={c._id}>
-            {c.customerNumber} - {c.name}
-          </Option>
-        ))}
+        {customers?.map(
+          (
+            c, // Using optional chaining to handle potentially undefined 'customers' without default props
+          ) => (
+            <Option key={c.id || c._id} value={c.id || c._id}>
+              {c.customerNumber} - {c.name}
+            </Option>
+          ),
+        )}
       </Select>
 
       {/* Auto-filled customer info - LOGIC PRESERVED EXACTLY */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-        <Input placeholder="Customer Name" value={customerName} disabled style={{borderRadius: "0.5rem"}}/>
-        <Input placeholder="Customer Number" value={customerNumber} disabled style={{borderRadius: "0.5rem"}}/>
+        <Input
+          placeholder="Customer Name"
+          value={customerName}
+          disabled
+          style={{ borderRadius: "0.5rem" }}
+        />
+        <Input
+          placeholder="Customer Number"
+          value={customerNumber}
+          disabled
+          style={{ borderRadius: "0.5rem" }}
+        />
       </div>
-
 
       {/* Title - LOGIC PRESERVED EXACTLY */}
       <Input
@@ -149,15 +165,19 @@ const ChecklistFormFields = ({
         onChange={handleLoanTypeChange}
         style={antStyle}
       >
-        {loanTypes?.map((t) => ( // Using optional chaining to handle potentially undefined 'loanTypes' without default props
-          <Option key={t} value={t}>
-            {t}
-          </Option>
-        ))}
+        {loanTypes?.map(
+          (
+            t, // Using optional chaining to handle potentially undefined 'loanTypes' without default props
+          ) => (
+            <Option key={t} value={t}>
+              {t}
+            </Option>
+          ),
+        )}
       </Select>
-      
+
       <p className={`text-xs mt-6 text-center text-[${SECONDARY_PURPLE}]`}>
-          All fields are mandatory to proceed.
+        All fields are mandatory to proceed.
       </p>
     </div>
   );

@@ -38,7 +38,9 @@ const CheckerReviewChecklistModal = ({
   const [saveDraft, { isLoading: isSavingDraft }] =
     useSaveChecklistDraftMutation();
   const { data: comments, isLoading: commentsLoading } =
-    useGetChecklistCommentsQuery(checklist?._id, { skip: !checklist?._id });
+    useGetChecklistCommentsQuery(checklist?.id || checklist?._id, {
+      skip: !checklist?.id && !checklist?._id,
+    });
 
   const uploadedDocsCount = useMemo(() => {
     return docs.filter((doc) => doc.fileUrl).length;
@@ -72,7 +74,7 @@ const CheckerReviewChecklistModal = ({
     setDocs(
       flatDocs.map((doc, idx) => ({
         ...doc,
-        key: doc._id || `doc-${idx}`,
+        key: doc.id || doc._id || `doc-${idx}`,
         status: doc.status || doc.action || "pending",
         approved: shouldForceApproved ? true : doc.approved || false,
         checkerStatus: shouldForceApproved
@@ -140,7 +142,8 @@ const CheckerReviewChecklistModal = ({
   };
 
   const submitCheckerAction = async (action) => {
-    if (!checklist?._id) return alert("Checklist ID missing");
+    const checklistId = checklist?.id || checklist?._id;
+    if (!checklistId) return alert("Checklist ID missing");
 
     if (action === "approved") {
       // Direct check on docs array
@@ -184,10 +187,10 @@ const CheckerReviewChecklistModal = ({
     setLoading(true);
     try {
       const payload = {
-        id: checklist._id,
+        id: checklistId,
         action: action,
         checkerDecisions: docs.map((doc) => ({
-          documentId: doc._id || doc.key,
+          documentId: doc.id || doc._id || doc.key,
           checkerStatus: doc.checkerStatus,
           checkerComment: doc.checkerComment || "",
         })),
@@ -210,10 +213,10 @@ const CheckerReviewChecklistModal = ({
     try {
       message.loading({ content: "Saving draft...", key: "saveDraft" });
       const payload = {
-        checklistId: checklist._id,
+        checklistId: checklist?.id || checklist?._id,
         draftData: {
           documents: docs.map((doc) => ({
-            _id: doc._id,
+            _id: doc.id || doc._id,
             name: doc.name,
             category: doc.category,
             status: doc.status,

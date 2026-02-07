@@ -43,7 +43,9 @@ const CreatorCompletedChecklistModal = ({
 
   // Get comments
   const { data: comments, isLoading: commentsLoading } =
-    useGetChecklistCommentsQuery(checklist?._id, { skip: !checklist?._id });
+    useGetChecklistCommentsQuery(checklist?.id || checklist?._id, {
+      skip: !checklist?.id && !checklist?._id,
+    });
 
   const handleDownloadPDF = async () => {
     // Ensure docs is an array before passing to generatePDF

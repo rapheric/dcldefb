@@ -1,8 +1,8 @@
 // src/components/SocketProvider.jsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
-import { message } from 'antd';
-import { useSelector } from 'react-redux';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { io } from "socket.io-client";
+import { message } from "antd";
+import { useSelector } from "react-redux";
 
 // Create context
 const SocketContext = createContext();
@@ -11,7 +11,7 @@ const SocketContext = createContext();
 export const useSocket = () => {
   const context = useContext(SocketContext);
   if (!context) {
-    throw new Error('useSocket must be used within a SocketProvider');
+    throw new Error("useSocket must be used within a SocketProvider");
   }
   return context;
 };
@@ -20,7 +20,7 @@ export const useSocket = () => {
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
- 
+
   // Get user from Redux store
   const { user } = useSelector((state) => state.auth);
 
@@ -28,7 +28,7 @@ export const SocketProvider = ({ children }) => {
     // Function to initialize socket for logged-in users
     const initializeSocket = () => {
       // Check if user exists in Redux store
-      if (!user || !user._id) {
+      if (!user || (!user.id && !user._id)) {
         console.log("No user logged in, skipping socket connection");
         return null;
       }
@@ -36,56 +36,61 @@ export const SocketProvider = ({ children }) => {
       try {
         // Get token from localStorage
         const token = localStorage.getItem("token");
-       
+
         // Create socket connection
-        const socketInstance = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
-          transports: ["websocket", "polling"],
-          withCredentials: true,
-          autoConnect: true,
-          reconnection: true,
-          reconnectionAttempts: 5,
-          reconnectionDelay: 1000,
-          auth: {
-            token: token
-          }
-        });
+        const socketInstance = io(
+          import.meta.env.VITE_API_URL || "http://localhost:5000",
+          {
+            transports: ["websocket", "polling"],
+            withCredentials: true,
+            autoConnect: true,
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            auth: {
+              token: token,
+            },
+          },
+        );
 
         // ✅ ADDED: Socket connection debugging
         console.log("🔄 Initializing socket connection...");
-       
-        socketInstance.on('connect', () => {
-          console.log('✅ Socket connected for user:', user.name);
-          console.log('Socket ID:', socketInstance.id);
-          console.log('Ready State:', socketInstance.readyState);
+
+        socketInstance.on("connect", () => {
+          console.log("✅ Socket connected for user:", user.name);
+          console.log("Socket ID:", socketInstance.id);
+          console.log("Ready State:", socketInstance.readyState);
           setIsConnected(true);
-         
+
           // Emit userOnline event with user data
-          socketInstance.emit('userOnline', {
-            _id: user._id,
+          socketInstance.emit("userOnline", {
+            _id: user.id || user._id,
             name: user.name,
             email: user.email,
-            role: user.role
+            role: user.role,
           });
-         
+
           // Join admin room if admin
           if (user.role === "admin") {
-            socketInstance.emit("joinAdminRoom", user._id);
+            socketInstance.emit("joinAdminRoom", user.id || user._id);
             console.log(`👑 Admin ${user.name} joined admin room`);
           }
         });
 
-        socketInstance.on('disconnect', (reason) => {
-          console.log('🔴 Socket disconnected:', reason);
+        socketInstance.on("disconnect", (reason) => {
+          console.log("🔴 Socket disconnected:", reason);
           setIsConnected(false);
         });
 
-        socketInstance.on('connect_error', (error) => {
-          console.error('❌ Socket connection error:', error);
+        socketInstance.on("connect_error", (error) => {
+          console.error("❌ Socket connection error:", error);
           setIsConnected(false);
         });
 
-        socketInstance.on('forcedLogout', (data) => {
-          message.warning(`You have been logged out: ${data.reason || 'Admin action'}`);
+        socketInstance.on("forcedLogout", (data) => {
+          message.warning(
+            `You have been logged out: ${data.reason || "Admin action"}`,
+          );
           localStorage.removeItem("token");
           window.location.href = "/login";
         });
@@ -93,26 +98,26 @@ export const SocketProvider = ({ children }) => {
         // Track user activity
         const trackActivity = () => {
           if (user && socketInstance.connected) {
-            socketInstance.emit('trackActivity', {
-              userId: user._id,
+            socketInstance.emit("trackActivity", {
+              userId: user.id || user._id,
               page: window.location.pathname,
-              action: 'page_view'
+              action: "page_view",
             });
           }
         };
 
         // Track initial activity
         trackActivity();
-       
+
         // Track every 30 seconds
         const activityInterval = setInterval(trackActivity, 30000);
-       
+
         // Track on route changes
         const handleRouteChange = () => {
           setTimeout(trackActivity, 100);
         };
 
-        window.addEventListener('popstate', handleRouteChange);
+        window.addEventListener("popstate", handleRouteChange);
 
         setSocket(socketInstance);
 
@@ -138,7 +143,10 @@ export const SocketProvider = ({ children }) => {
           clearInterval(socketInstance.activityInterval);
         }
         if (socketInstance.handleRouteChange) {
-          window.removeEventListener('popstate', socketInstance.handleRouteChange);
+          window.removeEventListener(
+            "popstate",
+            socketInstance.handleRouteChange,
+          );
         }
         socketInstance.disconnect();
       }
@@ -152,7 +160,7 @@ export const SocketProvider = ({ children }) => {
         connected: socket.connected,
         id: socket.id,
         readyState: socket.readyState,
-        isConnected: isConnected
+        isConnected: isConnected,
       });
     }
   }, [socket, isConnected]);

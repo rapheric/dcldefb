@@ -28,6 +28,12 @@ const DocumentTable = ({
   onViewFile, // ✅ Make sure this is passed
   isActionDisabled,
 }) => {
+  // CoCreator can only act on documents with pendingco status
+  const canActOnDoc = (doc) => {
+    const docStatus = (doc.status || "").toLowerCase();
+    const isPendingCo = docStatus === "pendingco";
+    return !isActionDisabled && isPendingCo;
+  };
   const columns = [
     {
       title: "Category",
@@ -69,7 +75,7 @@ const DocumentTable = ({
             value={record.action}
             style={{ width: record.action === "deferred" ? 110 : "100%" }}
             onChange={(val) => onActionChange(record.docIdx, val)}
-            disabled={isActionDisabled}
+            disabled={!canActOnDoc(record)}
           >
             <Option value="submitted">Submitted</Option>
             <Option value="pendingrm">Pending from RM</Option>
@@ -89,7 +95,7 @@ const DocumentTable = ({
                 onDeferralNoChange(record.docIdx, e.target.value)
               }
               style={{ width: 100 }}
-              disabled={isActionDisabled}
+              disabled={!canActOnDoc(record)}
             />
           )}
         </div>
@@ -102,9 +108,7 @@ const DocumentTable = ({
       render: (status, record) => {
         const statusColor = getStatusColor(status);
         const statusLabel =
-          status === "deferred" && record.deferralNo
-            ? "Deferred"
-            : status;
+          status === "deferred" && record.deferralNo ? "Deferred" : status;
 
         return (
           <Tag className="status-tag" color={statusColor.tag}>
@@ -165,7 +169,7 @@ const DocumentTable = ({
           size="small"
           value={text}
           onChange={(e) => onCommentChange(record.docIdx, e.target.value)}
-          disabled={isActionDisabled}
+          disabled={!canActOnDoc(record)}
         />
       ),
     },
@@ -186,7 +190,7 @@ const DocumentTable = ({
             value={dateValue}
             onChange={(date) => onExpiryDateChange(record.docIdx, date)}
             allowClear
-            disabled={isActionDisabled}
+            disabled={!canActOnDoc(record)}
             style={{ width: 160 }}
             placeholder="Select expiry date"
           />
@@ -309,7 +313,7 @@ const DocumentTable = ({
       key: "delete",
       width: 80,
       render: (_, record) =>
-        !isActionDisabled ? (
+        canActOnDoc(record) ? (
           <Popconfirm
             title="Delete document?"
             description="This action cannot be undone."

@@ -1,21 +1,31 @@
-import { useState } from 'react';
-import { message } from 'antd';
+import { useState } from "react";
+import { message } from "antd";
 import {
   useSubmitChecklistToRMMutation,
   useUpdateChecklistStatusMutation,
   useSaveChecklistDraftMutation,
 } from "../../src/api/checklistApi";
-import { API_BASE_URL } from '../utils/constants';
+import { API_BASE_URL } from "../utils/constants";
 
-export const useChecklistOperations = (checklist, docs, supportingDocs, creatorComment, currentUser) => {
-  const [submitRmChecklist, { isLoading: isSubmittingToRM }] = useSubmitChecklistToRMMutation();
-  const [updateChecklistStatus, { isLoading: isCheckerSubmitting }] = useUpdateChecklistStatusMutation();
-  const [saveDraft, { isLoading: isSavingDraft }] = useSaveChecklistDraftMutation();
+export const useChecklistOperations = (
+  checklist,
+  docs,
+  supportingDocs,
+  creatorComment,
+  currentUser,
+) => {
+  const [submitRmChecklist, { isLoading: isSubmittingToRM }] =
+    useSubmitChecklistToRMMutation();
+  const [updateChecklistStatus, { isLoading: isCheckerSubmitting }] =
+    useUpdateChecklistStatusMutation();
+  const [saveDraft, { isLoading: isSavingDraft }] =
+    useSaveChecklistDraftMutation();
   const [uploadingSupportingDoc, setUploadingSupportingDoc] = useState(false);
 
   const submitToRM = async () => {
     try {
-      if (!checklist?._id) {
+      const checklistId = checklist?.id || checklist?._id;
+      if (!checklistId) {
         throw new Error("Checklist ID missing");
       }
 
@@ -26,13 +36,14 @@ export const useChecklistOperations = (checklist, docs, supportingDocs, creatorC
           acc.push(categoryGroup);
         }
         categoryGroup.docList.push({
-          _id: doc._id,
+          _id: doc._id || doc.id,
           name: doc.name,
           category: doc.category,
           status: doc.status,
-          displayStatus: doc.status === "deferred" && doc.deferralNo
-            ? `Deferred (${doc.deferralNo})`
-            : doc.status,
+          displayStatus:
+            doc.status === "deferred" && doc.deferralNo
+              ? `Deferred (${doc.deferralNo})`
+              : doc.status,
           deferralNo: doc.deferralNo,
           action: doc.action,
           comment: doc.comment,
@@ -50,11 +61,13 @@ export const useChecklistOperations = (checklist, docs, supportingDocs, creatorC
         supportingDocs: supportingDocs,
       };
 
-      await submitRmChecklist({ id: checklist._id, body: payload }).unwrap();
+      await submitRmChecklist({ id: checklistId, body: payload }).unwrap();
       message.success("Checklist submitted to RM!");
     } catch (err) {
       console.error("Submit to RM error:", err);
-      message.error(err?.data?.error || err?.message || "Failed to submit checklist to RM");
+      message.error(
+        err?.data?.error || err?.message || "Failed to submit checklist to RM",
+      );
       throw err;
     }
   };
@@ -96,7 +109,8 @@ export const useChecklistOperations = (checklist, docs, supportingDocs, creatorC
     } catch (err) {
       console.error("Submit Error Details:", err);
       message.error({
-        content: err?.data?.message ||
+        content:
+          err?.data?.message ||
           err?.data?.error ||
           err?.message ||
           "Failed to submit checklist.",
@@ -108,7 +122,8 @@ export const useChecklistOperations = (checklist, docs, supportingDocs, creatorC
 
   const saveDraftHandler = async () => {
     try {
-      if (!checklist?._id) {
+      const checklistId = checklist?.id || checklist?._id;
+      if (!checklistId) {
         throw new Error("Checklist ID missing");
       }
 
@@ -118,10 +133,10 @@ export const useChecklistOperations = (checklist, docs, supportingDocs, creatorC
       });
 
       const payload = {
-        checklistId: checklist._id,
+        checklistId: checklistId,
         draftData: {
           documents: docs.map((doc) => ({
-            _id: doc._id,
+            _id: doc._id || doc.id,
             name: doc.name,
             category: doc.category,
             status: doc.status || doc.action,
@@ -157,16 +172,18 @@ export const useChecklistOperations = (checklist, docs, supportingDocs, creatorC
     try {
       setUploadingSupportingDoc(true);
 
-      if (!checklist?._id) {
+      const checklistId = checklist?.id || checklist?._id;
+      if (!checklistId) {
         throw new Error("Checklist ID missing");
       }
 
-      const userName = currentUser?.name || currentUser?.username || 'Current User';
+      const userName =
+        currentUser?.name || currentUser?.username || "Current User";
       const userId = currentUser?._id || currentUser?.id;
 
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("checklistId", checklist._id);
+      formData.append("checklistId", checklistId);
       formData.append("documentId", `support_${Date.now()}`);
       formData.append("documentName", file.name);
       formData.append("category", "Supporting Documents");
@@ -192,7 +209,7 @@ export const useChecklistOperations = (checklist, docs, supportingDocs, creatorC
       const newSupportingDoc = {
         id: result.data._id || Date.now().toString(),
         name: file.name,
-        fileUrl: result.data.fileUrl.startsWith('http')
+        fileUrl: result.data.fileUrl.startsWith("http")
           ? result.data.fileUrl
           : `${API_BASE_URL}${result.data.fileUrl}`,
         uploadData: {
@@ -203,7 +220,7 @@ export const useChecklistOperations = (checklist, docs, supportingDocs, creatorC
           fileName: file.name,
           fileType: file.type,
           fileSize: file.size,
-          status: 'supporting'
+          status: "supporting",
         },
         uploadedAt: new Date().toISOString(),
         category: "Supporting Documents",

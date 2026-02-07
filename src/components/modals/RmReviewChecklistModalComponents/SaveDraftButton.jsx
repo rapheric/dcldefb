@@ -20,7 +20,7 @@ const SaveDraftButton = ({
     try {
       message.loading({ content: "Saving draft...", key: "saveDraft" });
       await saveDraft({
-        checklistId: checklist._id,
+        checklistId: checklist.id || checklist._id,
         draftData: {
           documents: docs.map((doc) => ({
             _id: doc._id,

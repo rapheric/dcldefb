@@ -61,30 +61,62 @@ const MyQueue = ({ userId }) => {
 
   // ... (Theme colors and other constants) ...
 
-// MAPPING: Backend Status Code -> Display Name/Color Config
-const STATUS_CONFIG = {
-  // Existing Statuses (Assuming these are the *display* names)
-  "Submitted": { color: SUCCESS_GREEN, textColor: "white", display: "Submitted" },
-  "Pending from RM": { color: WARNING_ORANGE, textColor: "white", display: "Pending from RM" },
-  "Pending from CO": { color: INFO_BLUE, textColor: "white", display: "Pending from CO" },
-  "Deferred": { color: SECONDARY_BLUE, textColor: "white", display: "Deferred" },
-  "Waived": { color: PRIMARY_PURPLE, textColor: "white", display: "Waived" },
-  "TBO": { color: "#666666", textColor: "white", display: "TBO" },
+  // MAPPING: Backend Status Code -> Display Name/Color Config
+  const STATUS_CONFIG = {
+    // Existing Statuses (Assuming these are the *display* names)
+    Submitted: {
+      color: SUCCESS_GREEN,
+      textColor: "white",
+      display: "Submitted",
+    },
+    "Pending from RM": {
+      color: WARNING_ORANGE,
+      textColor: "white",
+      display: "Pending from RM",
+    },
+    "Pending from CO": {
+      color: INFO_BLUE,
+      textColor: "white",
+      display: "Pending from CO",
+    },
+    Deferred: {
+      color: SECONDARY_BLUE,
+      textColor: "white",
+      display: "Deferred",
+    },
+    Waived: { color: PRIMARY_PURPLE, textColor: "white", display: "Waived" },
+    TBO: { color: "#666666", textColor: "white", display: "TBO" },
 
-  // Add the new status codes with their user-friendly display names
-  "co_creator_review": { color: INFO_BLUE, textColor: "white", display: "Pending from CO-Creator" },
-  "rm_review": { color: WARNING_ORANGE, textColor: "white", display: "Pending from RM" }, // Matches existing 'Pending from RM' color
-  "co_checker_review": { color: INFO_BLUE, textColor: "white", display: "Pending from CO-Checker" },
+    // Add the new status codes with their user-friendly display names (camelCase from backend)
+    cocreatorreview: {
+      color: INFO_BLUE,
+      textColor: "white",
+      display: "Pending from CO-Creator",
+    },
+    rmreview: {
+      color: WARNING_ORANGE,
+      textColor: "white",
+      display: "Pending from RM",
+    }, // Matches existing 'Pending from RM' color
+    cocheckerreview: {
+      color: INFO_BLUE,
+      textColor: "white",
+      display: "Pending from CO-Checker",
+    },
 
-  // Ensure 'pending' is handled
-  "pending": { color: WARNING_ORANGE, textColor: "white", display: "Pending Submission" },
-  "approved": { color: SUCCESS_GREEN, textColor: "white", display: "Approved" },
-  "rejected": { color: ERROR_RED, textColor: "white", display: "Rejected" },
+    // Ensure 'pending' is handled
+    pending: {
+      color: WARNING_ORANGE,
+      textColor: "white",
+      display: "Pending Submission",
+    },
+    approved: { color: SUCCESS_GREEN, textColor: "white", display: "Approved" },
+    rejected: { color: ERROR_RED, textColor: "white", display: "Rejected" },
 
-  // Catch-all for unknown or default
-  "default": { color: "#d9d9d9", textColor: "#000", display: "Processing" },
-};
-// NOTE: Use the backend status code as the key, and the display name in the 'display' property
+    // Catch-all for unknown or default
+    default: { color: "#d9d9d9", textColor: "#000", display: "Processing" },
+  };
+  // NOTE: Use the backend status code as the key, and the display name in the 'display' property
 
   // Filter checklists assigned to this RM and queue status
   const filteredData = useMemo(() => {
@@ -92,37 +124,32 @@ const STATUS_CONFIG = {
 
     return (
       checklists
-        .filter((c) => c.assignedToRM?._id === userId)
+        .filter((c) => (c.assignedToRM?.id || c.assignedToRM?._id) === userId)
         .filter((c) => {
           const status = (c.status || "").toLowerCase();
 
-          // 1. Filter out "approved" and "rejected"
+          // 1. Filter out only "approved" and "rejected"
+          // Keep "pending" status because newly created checklists start as pending
           return status !== "approved" && status !== "rejected";
         })
 
-        // NEW FILTER ADDED HERE
-        .filter((c) => {
-          const status = (c.status || "").toLowerCase();
-          // 2. Filter out "pending" status
-          return status !== "pending";
-        })
-
         // Map and Inject the displayStatus field
-      .map((c) => {
-        const backendStatus = (c.status || "default").toLowerCase();
-        
-        // Find the config using the backend status code.
-        // If not found, fall back to a default config or the status itself
-        const config = STATUS_CONFIG[backendStatus] || 
-                       STATUS_CONFIG[(c.displayStatus || "default")] || // Fallback to existing displayStatus if status is not a code
-                       STATUS_CONFIG.default;
+        .map((c) => {
+          const backendStatus = (c.status || "default").toLowerCase();
 
-        return {
-          ...c,
-          // Set the displayStatus property for the Table column
-          displayStatus: config.display || c.status, 
-        };
-      })
+          // Find the config using the backend status code.
+          // If not found, fall back to a default config or the status itself
+          const config =
+            STATUS_CONFIG[backendStatus] ||
+            STATUS_CONFIG[c.displayStatus || "default"] || // Fallback to existing displayStatus if status is not a code
+            STATUS_CONFIG.default;
+
+          return {
+            ...c,
+            // Set the displayStatus property for the Table column
+            displayStatus: config.display || c.status,
+          };
+        })
 
         .filter((c) => {
           if (!searchText) return true;
@@ -213,26 +240,28 @@ const STATUS_CONFIG = {
         </div>
       ),
     },
-{
-    title: "IBPS No", // ✅ New IBPS NO column
-    dataIndex: "ibpsNo",
-    width: 120,
-    render: (text) => (
-      <div style={{ 
-        color: SECONDARY_BLUE, 
-        fontWeight: 500,
-        fontFamily: "monospace",
-        backgroundColor: text ? "rgba(181, 211, 52, 0.1)" : "transparent",
-        padding: "2px 6px",
-        borderRadius: 4,
-        fontSize: 12,
-        textAlign: "center"
-      }}>
-        {text || "Not set"}
-      </div>
-    ),
-  },
-    
+    {
+      title: "IBPS No", // ✅ New IBPS NO column
+      dataIndex: "ibpsNo",
+      width: 120,
+      render: (text) => (
+        <div
+          style={{
+            color: SECONDARY_BLUE,
+            fontWeight: 500,
+            fontFamily: "monospace",
+            backgroundColor: text ? "rgba(181, 211, 52, 0.1)" : "transparent",
+            padding: "2px 6px",
+            borderRadius: 4,
+            fontSize: 12,
+            textAlign: "center",
+          }}
+        >
+          {text || "Not set"}
+        </div>
+      ),
+    },
+
     {
       title: "Loan Type",
       dataIndex: "loanType",
@@ -259,6 +288,21 @@ const STATUS_CONFIG = {
       ),
     },
     {
+      title: "RM",
+      dataIndex: "assignedToRM",
+      width: 120,
+      render: (rm) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <UserOutlined style={{ color: SECONDARY_BLUE, fontSize: 12 }} />
+          <span
+            style={{ color: PRIMARY_PURPLE, fontWeight: 500, fontSize: 13 }}
+          >
+            {rm?.name || "N/A"}
+          </span>
+        </div>
+      ),
+    },
+    {
       title: "Docs",
       dataIndex: "documents",
       width: 70,
@@ -267,7 +311,7 @@ const STATUS_CONFIG = {
         const totalDocs =
           docs?.reduce(
             (total, category) => total + (category.docList?.length || 0),
-            0
+            0,
           ) || 0;
         return (
           <Tag
@@ -306,8 +350,8 @@ const STATUS_CONFIG = {
               daysLeft <= 2
                 ? ERROR_RED
                 : daysLeft <= 5
-                ? WARNING_ORANGE
-                : SUCCESS_GREEN
+                  ? WARNING_ORANGE
+                  : SUCCESS_GREEN
             }
             style={{ fontWeight: "bold", fontSize: 11 }}
           >

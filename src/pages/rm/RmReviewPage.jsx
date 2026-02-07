@@ -35,7 +35,7 @@ const RMReviewPage = () => {
 
   // Only RM assigned checklists
   const myChecklists = checklists.filter(
-    (c) => String(c.assignedToRM?._id) === String(rmId)
+    (c) => String(c.assignedToRM?._id) === String(rmId),
   );
 
   // Upload doc
@@ -56,8 +56,7 @@ const RMReviewPage = () => {
   };
 
   const submitDeferral = () => {
-    if (!deferralComment.trim())
-      return message.error("Enter deferral reason");
+    if (!deferralComment.trim()) return message.error("Enter deferral reason");
 
     const updated = [...selectedChecklist.documents];
     updated[deferralModal.docIdx].status = "deferred";
@@ -71,35 +70,36 @@ const RMReviewPage = () => {
   // ================================
   // FIXED: SUBMIT CHECKLIST TO CO
   // ================================
-const submitToCoCreator = async () => {
-  try {
-    const payload = {
-      checklistId: selectedChecklist._id,
+  const submitToCoCreator = async () => {
+    try {
+      const payload = {
+        checklistId: selectedChecklist.id || selectedChecklist._id,
 
-      // Send back only status + deferrals + uploaded file
+        // Send back only status + deferrals + uploaded file
 
-      documents: selectedChecklist.documents.map((doc) => ({
-        _id: doc._id,
-        status: doc.status,                   // uploaded / deferred
-        fileUrl: doc.fileUrl || null,
-        deferralReason: doc.deferralReason || null
-      })),
+        documents: selectedChecklist.documents.map((doc) => ({
+          _id: doc.id || doc._id,
+          status: doc.status, // uploaded / deferred
+          fileUrl: doc.fileUrl || null,
+          deferralReason: doc.deferralReason || null,
+        })),
 
-      // This tells backend to send it back to whoever assigned to RM
-      returnTo: selectedChecklist.assignedToCoChecker?._id,
-    };
+        // This tells backend to send it back to whoever assigned to RM
+        returnTo:
+          selectedChecklist.assignedToCoChecker?.id ||
+          selectedChecklist.assignedToCoChecker?._id,
+      };
 
-    await submitRmChecklist(payload).unwrap();
+      await submitRmChecklist(payload).unwrap();
 
-    message.success("Checklist submitted back to Co-Creator!");
-    setSelectedChecklist(null);
-    refetch();
-  } catch (err) {
-    console.error(err);
-    message.error(err?.data?.error || "Submission failed");
-  }
-};
-
+      message.success("Checklist submitted back to Co-Creator!");
+      setSelectedChecklist(null);
+      refetch();
+    } catch (err) {
+      console.error(err);
+      message.error(err?.data?.error || "Submission failed");
+    }
+  };
 
   // Document table columns
   const docColumns = [
@@ -156,14 +156,9 @@ const submitToCoCreator = async () => {
         <Space>
           <Upload
             showUploadList={false}
-            beforeUpload={(file) =>
-              handleFileUpload(record.docIdx, file)
-            }
+            beforeUpload={(file) => handleFileUpload(record.docIdx, file)}
           >
-            <Button
-              size="small"
-              icon={<UploadOutlined />}
-            >
+            <Button size="small" icon={<UploadOutlined />}>
               Upload
             </Button>
           </Upload>
@@ -210,13 +205,11 @@ const submitToCoCreator = async () => {
             render: (_, r) => {
               const total = r.documents.length;
               const approved = r.documents.filter(
-                (d) => d.status === "approved"
+                (d) => d.status === "approved",
               ).length;
               return (
                 <Tag color={approved === total ? "green" : "orange"}>
-                  {approved === total
-                    ? "Fully Approved"
-                    : "In Progress"}
+                  {approved === total ? "Fully Approved" : "In Progress"}
                 </Tag>
               );
             },
@@ -228,16 +221,14 @@ const submitToCoCreator = async () => {
                 size="small"
                 type="link"
                 onClick={() => {
-                  const preparedDocs = (r.documents || []).map(
-                    (doc, idx) => ({
-                      ...doc,
-                      docIdx: idx,
-                      status: doc.status || "pending",
-                      comment: doc.comment || "",
-                      action: doc.action || "pending",
-                      fileUrl: doc.fileUrl || null,
-                    })
-                  );
+                  const preparedDocs = (r.documents || []).map((doc, idx) => ({
+                    ...doc,
+                    docIdx: idx,
+                    status: doc.status || "pending",
+                    comment: doc.comment || "",
+                    action: doc.action || "pending",
+                    fileUrl: doc.fileUrl || null,
+                  }));
                   setSelectedChecklist({
                     ...r,
                     documents: preparedDocs,
@@ -280,7 +271,7 @@ const submitToCoCreator = async () => {
           <Card size="small" style={{ marginBottom: 12 }}>
             <Descriptions size="small" column={2}>
               <Descriptions.Item label="DCL No">
-                {selectedChecklist._id}
+                {selectedChecklist.id || selectedChecklist._id}
               </Descriptions.Item>
               <Descriptions.Item label="Title">
                 {selectedChecklist.title}
@@ -295,8 +286,7 @@ const submitToCoCreator = async () => {
                 {selectedChecklist.assignedToRM?.name}
               </Descriptions.Item>
               <Descriptions.Item label="Co-Checker">
-                {selectedChecklist.assignedToCoChecker?.name ||
-                  "Pending"}
+                {selectedChecklist.assignedToCoChecker?.name || "Pending"}
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -316,16 +306,12 @@ const submitToCoCreator = async () => {
       <Modal
         title="Request Deferral"
         open={deferralModal.open}
-        onCancel={() =>
-          setDeferralModal({ open: false, docIdx: null })
-        }
+        onCancel={() => setDeferralModal({ open: false, docIdx: null })}
         footer={[
           <Button
             key="cancel"
             size="small"
-            onClick={() =>
-              setDeferralModal({ open: false, docIdx: null })
-            }
+            onClick={() => setDeferralModal({ open: false, docIdx: null })}
           >
             Cancel
           </Button>,
@@ -342,9 +328,7 @@ const submitToCoCreator = async () => {
         <Input.TextArea
           rows={3}
           value={deferralComment}
-          onChange={(e) =>
-            setDeferralComment(e.target.value)
-          }
+          onChange={(e) => setDeferralComment(e.target.value)}
           placeholder="Enter deferral reason"
         />
       </Modal>
@@ -353,4 +337,3 @@ const submitToCoCreator = async () => {
 };
 
 export default RMReviewPage;
-

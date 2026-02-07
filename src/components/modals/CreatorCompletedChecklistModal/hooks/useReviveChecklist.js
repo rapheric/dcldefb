@@ -35,7 +35,7 @@ export const useReviveChecklist = (
         key: "revive",
       });
 
-      const result = await onRevive(checklist._id);
+      const result = await onRevive(checklist.id || checklist._id);
 
       message.success({
         content:

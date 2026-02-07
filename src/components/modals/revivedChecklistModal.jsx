@@ -1,5 +1,5 @@
 // components/RevivedChecklistsModal.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   Box,
@@ -22,7 +22,7 @@ import {
   Button,
   Stack,
   Divider,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Search as SearchIcon,
   Refresh as RefreshIcon,
@@ -30,16 +30,16 @@ import {
   History as HistoryIcon,
   Close as CloseIcon,
   ArrowForward as ArrowForwardIcon,
-} from '@mui/icons-material';
-import { useGetRevivedChecklistsQuery } from '../features/api/apiSlice';
-import RevivedChecklistDetails from './RevivedChecklistDetails';
+} from "@mui/icons-material";
+import { useGetRevivedChecklistsQuery } from "../features/api/apiSlice";
+import RevivedChecklistDetails from "./RevivedChecklistDetails";
 
 const RevivedChecklistsModal = ({ open, onClose }) => {
   // State
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedChecklist, setSelectedChecklist] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
 
@@ -94,22 +94,22 @@ const RevivedChecklistsModal = ({ open, onClose }) => {
 
   const getStatusColor = (status) => {
     const colors = {
-      revived: 'warning',
-      approved: 'success',
-      completed: 'info',
+      revived: "warning",
+      approved: "success",
+      completed: "info",
     };
-    return colors[status] || 'default';
+    return colors[status] || "default";
   };
 
   // Format date
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -169,7 +169,8 @@ const RevivedChecklistsModal = ({ open, onClose }) => {
         {/* Error Alert */}
         {isError && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            Error loading revived checklists: {error?.data?.message || error?.message}
+            Error loading revived checklists:{" "}
+            {error?.data?.message || error?.message}
           </Alert>
         )}
 
@@ -188,14 +189,30 @@ const RevivedChecklistsModal = ({ open, onClose }) => {
               <Table stickyHeader size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell><strong>DCL No</strong></TableCell>
-                    <TableCell><strong>Customer Name</strong></TableCell>
-                    <TableCell><strong>Loan Type</strong></TableCell>
-                    <TableCell><strong>Status</strong></TableCell>
-                    <TableCell><strong>Revived By</strong></TableCell>
-                    <TableCell><strong>Revived At</strong></TableCell>
-                    <TableCell><strong>New DCL</strong></TableCell>
-                    <TableCell><strong>Actions</strong></TableCell>
+                    <TableCell>
+                      <strong>DCL No</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Customer Name</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Loan Type</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Status</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Revived By</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Revived At</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>New DCL</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Actions</strong>
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -209,7 +226,7 @@ const RevivedChecklistsModal = ({ open, onClose }) => {
                     </TableRow>
                   ) : (
                     checklists.map((checklist) => (
-                      <TableRow key={checklist._id} hover>
+                      <TableRow key={checklist.id || checklist._id} hover>
                         <TableCell>
                           <Typography variant="body2" fontWeight="medium">
                             {checklist.dclNo}
@@ -231,11 +248,9 @@ const RevivedChecklistsModal = ({ open, onClose }) => {
                           />
                         </TableCell>
                         <TableCell>
-                          {checklist.revivedBy?.name || 'Unknown'}
+                          {checklist.revivedBy?.name || "Unknown"}
                         </TableCell>
-                        <TableCell>
-                          {formatDate(checklist.revivedAt)}
-                        </TableCell>
+                        <TableCell>{formatDate(checklist.revivedAt)}</TableCell>
                         <TableCell>
                           {checklist.revivedTo ? (
                             <Chip
@@ -243,11 +258,13 @@ const RevivedChecklistsModal = ({ open, onClose }) => {
                               size="small"
                               color="info"
                               icon={<ArrowForwardIcon />}
-                              onClick={() => {/* Navigate to new checklist */}}
+                              onClick={() => {
+                                /* Navigate to new checklist */
+                              }}
                               clickable
                             />
                           ) : (
-                            'N/A'
+                            "N/A"
                           )}
                         </TableCell>
                         <TableCell>
@@ -264,7 +281,9 @@ const RevivedChecklistsModal = ({ open, onClose }) => {
                             <Tooltip title="Revival History">
                               <IconButton
                                 size="small"
-                                onClick={() => {/* Open history modal */}}
+                                onClick={() => {
+                                  /* Open history modal */
+                                }}
                                 color="secondary"
                               >
                                 <HistoryIcon fontSize="small" />
@@ -295,7 +314,8 @@ const RevivedChecklistsModal = ({ open, onClose }) => {
             {/* Summary Stats */}
             <Box sx={statsStyle}>
               <Typography variant="caption" color="text.secondary">
-                Showing {checklists.length} of {pagination?.total || 0} revived checklists
+                Showing {checklists.length} of {pagination?.total || 0} revived
+                checklists
               </Typography>
               <Button
                 variant="outlined"
@@ -315,49 +335,49 @@ const RevivedChecklistsModal = ({ open, onClose }) => {
 
 // Styles
 const modalStyle = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '90%',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "90%",
   maxWidth: 1200,
-  maxHeight: '90vh',
-  bgcolor: 'background.paper',
+  maxHeight: "90vh",
+  bgcolor: "background.paper",
   boxShadow: 24,
   borderRadius: 2,
   p: 3,
-  overflow: 'auto',
+  overflow: "auto",
 };
 
 const headerStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
   mb: 2,
 };
 
 const controlsStyle = {
-  display: 'flex',
+  display: "flex",
   gap: 2,
   mb: 3,
-  alignItems: 'center',
+  alignItems: "center",
 };
 
 const loadingStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
   py: 8,
 };
 
 const statsStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
   mt: 2,
   pt: 2,
-  borderTop: '1px solid #e0e0e0',
+  borderTop: "1px solid #e0e0e0",
 };
 
 export default RevivedChecklistsModal;

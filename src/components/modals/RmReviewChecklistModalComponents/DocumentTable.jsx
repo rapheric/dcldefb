@@ -40,20 +40,11 @@ const DocumentTable = ({
   const [deferralDocIdx, setDeferralDocIdx] = useState(null);
 
   const canActOnDoc = (doc) => {
-    const restrictedStatuses = [
-      "submitted",
-      "tbo",
-      "waived",
-      "sighted",
-      "deferred",
-      "pendingco",
-    ];
+    // RM can only act on documents with pendingrm status
+    const docStatus = (doc.status || "").toLowerCase();
+    const isPendingRM = docStatus === "pendingrm";
 
-    const isRestrictedStatus = restrictedStatuses.includes(
-      (doc.status || "").toLowerCase(),
-    );
-
-    return isActionAllowed && !isRestrictedStatus;
+    return isActionAllowed && isPendingRM;
   };
 
   const renderStatusTag = (key) => {
@@ -438,7 +429,10 @@ const DocumentTable = ({
           color = "#faad14"; // Yellow/Orange for pending
         } else if (rmStatus === "submitted_for_review") {
           color = "#52c41a"; // Green for submitted
-        } else if (rmStatus.includes("defferal_requested") || rmStatus === "deferred") {
+        } else if (
+          rmStatus.includes("defferal_requested") ||
+          rmStatus === "deferred"
+        ) {
           color = "#ff4d4f"; // Red for deferred
         }
 

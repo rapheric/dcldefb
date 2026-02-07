@@ -29,7 +29,6 @@
 // import CommentHistorySection from "./CommentHistorySection";
 // import DocumentSidebarComponent from "./DocumentSidebarComponent";
 
-
 // const CompletedChecklistModal = ({
 //   checklist,
 //   open,
@@ -51,8 +50,8 @@
 //   try {
 //     // Pass ALL required parameters including documentCounts
 //     await downloadChecklistAsPDF(
-//       checklist, 
-//       docs, 
+//       checklist,
+//       docs,
 //       documentCounts, // Make sure this is passed
 //       comments
 //     );
@@ -147,7 +146,6 @@
 
 // export default CompletedChecklistModal;
 
-
 // src/components/completedChecklistModal/CompletedChecklistModal.jsx
 import React, { useState } from "react";
 import { Button, Modal, Tag, message } from "antd";
@@ -179,10 +177,12 @@ const CompletedChecklistModal = ({
   const [supportingDocs] = useState([]);
 
   const { data: comments, isLoading: commentsLoading } =
-    useGetChecklistCommentsQuery(checklist?._id, { skip: !checklist?._id });
+    useGetChecklistCommentsQuery(checklist?.id || checklist?._id, {
+      skip: !checklist?.id && !checklist?._id,
+    });
 
   const { docs, documentCounts } = useChecklistDocuments(checklist);
-  
+
   // Use the PDF generator hook
   const { isGenerating, progress, generatePDF } = usePDFGenerator();
 
@@ -198,8 +198,10 @@ const CompletedChecklistModal = ({
         comment: doc.comment || "",
         expiryDate: doc.expiryDate || null,
         fileUrl: doc.fileUrl || null,
-        checkerStatus: doc.checkerStatus || doc.finalCheckerStatus || "approved",
-        finalCheckerStatus: doc.finalCheckerStatus || doc.checkerStatus || "approved",
+        checkerStatus:
+          doc.checkerStatus || doc.finalCheckerStatus || "approved",
+        finalCheckerStatus:
+          doc.finalCheckerStatus || doc.checkerStatus || "approved",
         // Add other fields that your hook might expect
         rmStatus: doc.rmStatus || "completed",
         deferralNumber: doc.deferralNumber || doc.deferralNo || null,
@@ -216,25 +218,30 @@ const CompletedChecklistModal = ({
           ibpsNo: checklist?.ibpsNo || "Not provided",
           loanType: checklist?.loanType || "N/A",
           customerNumber: checklist?.customerNumber || "N/A",
-          customerName: checklist?.customerName || checklist?.customerNumber || "N/A",
+          customerName:
+            checklist?.customerName || checklist?.customerNumber || "N/A",
           createdBy: checklist?.createdBy || { name: "N/A" },
           assignedToRM: checklist?.assignedToRM || { name: "N/A" },
-          assignedToCoChecker: checklist?.assignedToCoChecker || { name: "Pending" },
+          assignedToCoChecker: checklist?.assignedToCoChecker || {
+            name: "Pending",
+          },
           status: checklist?.status || "completed",
           createdAt: checklist?.createdAt || new Date().toISOString(),
-          completedAt: checklist?.completedAt || checklist?.updatedAt || new Date().toISOString(),
+          completedAt:
+            checklist?.completedAt ||
+            checklist?.updatedAt ||
+            new Date().toISOString(),
           segment: checklist?.segment || "Corporate",
           branch: checklist?.branch || "Head Office",
         },
         documents: preparedDocs,
         supportingDocs: supportingDocs || [],
-        creatorComment: checklist?.creatorComment || '',
+        creatorComment: checklist?.creatorComment || "",
         comments: comments || [],
         onProgress: (percent) => {
           console.log(`PDF Generation Progress: ${percent}%`);
-        }
+        },
       });
-
     } catch (error) {
       console.error("Error generating PDF:", error);
       message.error("Failed to generate PDF. Please try again.");
@@ -251,9 +258,11 @@ const CompletedChecklistModal = ({
   // Determine button text based on progress
   const getPDFButtonText = () => {
     if (isGenerating) {
-      return progress > 0 ? `Generating PDF (${progress}%)` : 'Generating PDF...';
+      return progress > 0
+        ? `Generating PDF (${progress}%)`
+        : "Generating PDF...";
     }
-    return 'Download as PDF';
+    return "Download as PDF";
   };
 
   return (

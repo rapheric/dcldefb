@@ -5,7 +5,7 @@ import {
   UserOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { Dropdown, Menu, message } from "antd";
+import { Dropdown, message } from "antd";
 import { useDispatch } from "react-redux";
 import { logout } from "../api/authSlice";
 import { useNavigate } from "react-router-dom";
@@ -22,24 +22,20 @@ const Navbar = ({ toggleSidebar }) => {
     navigate("/login");
   };
 
-  const menu = (
-    <Menu
-      items={[
-        {
-          key: "profile",
-          label: "Profile",
-          icon: <UserOutlined />,
-        },
-        {
-          key: "logout",
-          label: "Logout",
-          icon: <LogoutOutlined />,
-          danger: true,
-          onClick: handleLogout,
-        },
-      ]}
-    />
-  );
+  const menuItems = [
+    {
+      key: "profile",
+      label: "Profile",
+      icon: <UserOutlined />,
+    },
+    {
+      key: "logout",
+      label: "Logout",
+      icon: <LogoutOutlined />,
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
 
   return (
     <div
@@ -63,7 +59,11 @@ const Navbar = ({ toggleSidebar }) => {
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
         <BellOutlined style={{ fontSize: 20, cursor: "pointer" }} />
 
-        <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
+        <Dropdown
+          menu={{ items: menuItems }}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
           <div
             style={{
               display: "flex",

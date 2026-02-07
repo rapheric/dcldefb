@@ -593,11 +593,6 @@
 
 // export default CoChecklistPage;
 
-
-
-
-
-
 import React, { useState, useMemo } from "react";
 import { Button, Divider, Table, Tag } from "antd";
 import ChecklistsPage from "./ChecklistsPageCreator";
@@ -624,7 +619,7 @@ const CoChecklistPage = ({ userId }) => {
     useGetAllCoCreatorChecklistsQuery();
 
   // Filter checklists: Only show Pending checklists and Revived checklists
-  // EXCLUDE co_creator_review status checklists (non-revived)
+  // EXCLUDE coCreatorReview status checklists (non-revived)
   const myChecklists = useMemo(() => {
     return checklists.filter((c) => {
       const statusLower = (c.status || "").toLowerCase();
@@ -632,13 +627,13 @@ const CoChecklistPage = ({ userId }) => {
 
       // Only include:
       // 1. Checklists with "pending" status (newly created)
-      // 2. Revived checklists (with "Copy" in DCL number) that are still in co_creator_review
-      // EXCLUDE: checklists that have been submitted (status changes from co_creator_review)
+      // 2. Revived checklists (with "Copy" in DCL number) that are still in coCreatorReview
+      // EXCLUDE: checklists that have been submitted (status changes from coCreatorReview)
 
       if (isRevived) {
         // Show revived checklists only if they're still in editable state
         // Once submitted (status changes), they should disappear
-        return statusLower === "co_creator_review";
+        return statusLower === "cocreatorreview";
       }
 
       // Only show pending status checklists
@@ -859,7 +854,7 @@ const CoChecklistPage = ({ userId }) => {
       <Table
         columns={columns}
         dataSource={myChecklists}
-        rowKey="_id"
+        rowKey="id"
         size="large"
         pagination={{
           pageSize: 5,

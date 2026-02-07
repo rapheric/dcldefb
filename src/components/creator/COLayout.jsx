@@ -33,10 +33,6 @@ const MainLayout = () => {
         return <CoChecklistPage userId={userId} />;
       case "myqueue":
         return <MyQueue />;
-      //  case "queue":
-      // return <Queue />;
-      //  case "completedQueue":
-      // return <CompletedQueue />;
       case "completed":
         return <Completed />;
       case "deferrals":

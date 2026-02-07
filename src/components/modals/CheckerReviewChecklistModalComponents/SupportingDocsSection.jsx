@@ -44,7 +44,7 @@ const SupportingDocsSection = ({ supportingDocs }) => {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {supportingDocs.map((doc) => (
             <Card
-              key={doc._id || doc.id}
+              key={doc.id || doc._id}
               size="small"
               style={{ borderRadius: 6 }}
             >

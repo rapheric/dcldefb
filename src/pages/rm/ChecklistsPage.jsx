@@ -64,7 +64,7 @@ const ChecklistsPage = ({ open, onClose }) => {
           action: "",
           comment: "",
         })),
-      }))
+      })),
     );
   };
 
@@ -100,7 +100,7 @@ const ChecklistsPage = ({ open, onClose }) => {
     const payload = {
       title,
       loanType,
-      assignedToRM,
+      assignedToRMId: assignedToRM,
       customerId,
       // Use the DERIVED values directly in the payload
       customerName: customerName,
@@ -112,7 +112,7 @@ const ChecklistsPage = ({ open, onClose }) => {
           action: doc.action,
           status: doc.status,
           comment: doc.comment,
-        }))
+        })),
       ),
     };
 
