@@ -49,7 +49,6 @@ export const useChecklistOperations = (
           fileUrl: doc.fileUrl,
           deferralNumber: doc.deferralNo,
           deferralReason: doc.deferralReason,
-          expiryDate: doc.expiryDate || null,
         });
 
         return acc;
@@ -67,13 +66,15 @@ export const useChecklistOperations = (
 
       message.success("Checklist submitted to RM successfully!");
 
-      // Trigger parent callback to refetch checklist data
+      // Trigger parent callback with updated checklist data from server
       if (onChecklistUpdate) {
-        onChecklistUpdate({
-          id: checklistId,
-          status: "RMReview",
-          message: "Checklist submitted to RM",
-        });
+        onChecklistUpdate(
+          result?.checklist || {
+            id: checklistId,
+            status: "RMReview",
+            message: "Checklist submitted to RM",
+          },
+        );
       }
 
       return result;
@@ -113,13 +114,26 @@ export const useChecklistOperations = (
         supportingDocs,
       };
 
-      await updateChecklistStatus(payload).unwrap();
+      const result = await updateChecklistStatus(payload).unwrap();
 
       message.success({
         content: "Checklist submitted to Co-Checker!",
         key: "checkerSubmit",
         duration: 3,
       });
+
+      // Trigger parent callback with updated checklist data from server
+      if (onChecklistUpdate) {
+        onChecklistUpdate(
+          result?.checklist || {
+            id: checklist.id || checklist._id,
+            status: "CoCheckerReview",
+            message: "Checklist submitted to Co-Checker",
+          },
+        );
+      }
+
+      return result;
     } catch (err) {
       console.error("Submit Error Details:", err);
       message.error({
