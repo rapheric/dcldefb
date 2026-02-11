@@ -9,7 +9,11 @@ import dayjs from "dayjs";
 //   SECONDARY_PURPLE,
 // } from "../utils/checklistConstants";
 import { getFullUrl as getFullUrlUtil } from "../../../utils/checklistUtils.js";
-import { getCheckerStatusDisplay, getExpiryStatus, SECONDARY_PURPLE } from "../../../utils/checklistConstants.js";
+import {
+  getCheckerStatusDisplay,
+  getExpiryStatus,
+  SECONDARY_PURPLE,
+} from "../../../utils/checklistConstants.js";
 
 const DocumentsTable = ({ docs, checklist }) => {
   const columns = [
@@ -76,6 +80,13 @@ const DocumentsTable = ({ docs, checklist }) => {
           </Tag>
         );
       },
+    },
+    {
+      title: "Deferral No",
+      dataIndex: "deferralNo",
+      width: 100,
+      render: (deferralNo) =>
+        deferralNo ? <Tag color="cyan">{deferralNo}</Tag> : "-",
     },
     {
       title: "Checker Status",
@@ -190,6 +201,7 @@ const DocumentsTable = ({ docs, checklist }) => {
       rowKey="docIdx"
       size="small"
       scroll={{ x: "max-content" }}
+      locale={{ emptyText: "No documents" }}
     />
   );
 };

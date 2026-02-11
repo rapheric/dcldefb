@@ -1,6 +1,7 @@
 // export default CheckerReviewChecklistModal;
 import React, { useState, useEffect, useMemo } from "react";
 import { message } from "antd";
+import { useSelector } from "react-redux";
 import {
   useUpdateCheckerStatusMutation,
   useGetChecklistCommentsQuery,
@@ -27,6 +28,11 @@ const CheckerReviewChecklistModal = ({
   onChecklistUpdate = null, // Callback to update parent with fresh checklist data
 }) => {
   const effectiveReadOnly = isReadOnly || readOnly;
+  const auth = useSelector((state) => state.auth);
+  const token = auth?.token || localStorage.getItem("token");
+  const API_BASE_URL =
+    import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
+
   const [docs, setDocs] = useState([]);
   const [supportingDocs, setSupportingDocs] = useState([]);
   const [checkerComment, setCheckerComment] = useState("");
@@ -34,6 +40,7 @@ const CheckerReviewChecklistModal = ({
   const [confirmAction, setConfirmAction] = useState(null);
   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [uploadingSupportingDoc, setUploadingSupportingDoc] = useState(false);
   const [localChecklist, setLocalChecklist] = useState(checklist);
 
   const [submitCheckerStatus] = useUpdateCheckerStatusMutation();
@@ -119,6 +126,65 @@ const CheckerReviewChecklistModal = ({
       message.error("Failed to generate PDF. Please try again.");
     } finally {
       setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleUploadSupportingDoc = async (file) => {
+    try {
+      setUploadingSupportingDoc(true);
+
+      const checklistId = checklist?.id || checklist?._id;
+      if (!checklistId) {
+        throw new Error("Checklist ID missing");
+      }
+
+      const formData = new FormData();
+      formData.append("files", file);
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/cocreatorChecklist/${checklistId}/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        },
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.supportingDocs || result.supportingDocs.length === 0) {
+        throw new Error(result.message || "Upload failed");
+      }
+
+      const uploadedDoc = result.supportingDocs[0];
+      const newSupportingDoc = {
+        id: uploadedDoc.id,
+        fileName: uploadedDoc.fileName,
+        fileUrl: uploadedDoc.fileUrl,
+        fileSize: uploadedDoc.fileSize,
+        fileType: uploadedDoc.fileType,
+        uploadedBy: uploadedDoc.uploadedBy,
+        uploadedById: uploadedDoc.uploadedById,
+        uploadedByRole: uploadedDoc.uploadedByRole,
+        uploadedAt: uploadedDoc.uploadedAt,
+      };
+
+      // Add new supporting doc to the state
+      setSupportingDocs((prev) => [...prev, newSupportingDoc]);
+
+      message.success(`"${file.name}" uploaded successfully!`);
+    } catch (error) {
+      console.error("Supporting doc upload failed", error);
+      message.error(error.message || "Upload failed");
+    } finally {
+      setUploadingSupportingDoc(false);
     }
   };
 
@@ -419,11 +485,13 @@ const CheckerReviewChecklistModal = ({
             effectiveReadOnly={effectiveReadOnly}
             isGeneratingPDF={isGeneratingPDF}
             isSavingDraft={isSavingDraft}
+            uploadingSupportingDoc={uploadingSupportingDoc}
             isDisabled={isDisabled}
             canApproveChecklist={canApproveChecklist}
             canReturnToCreator={canReturnToCreator} // NEW: Pass this prop
             handlePdfDownload={handlePdfDownload}
             handleSaveDraft={handleSaveDraft}
+            handleUploadSupportingDoc={handleUploadSupportingDoc}
             setConfirmAction={setConfirmAction}
             onClose={onClose}
             documentStats={documentStats}

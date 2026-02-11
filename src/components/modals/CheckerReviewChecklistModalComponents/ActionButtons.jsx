@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Space, Tooltip, message } from "antd";
+import { Button, Space, Tooltip, message, Upload } from "antd";
 import { CheckCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import PDFGenerator from "./PDFGenerator";
 import { ACCENT_LIME, PRIMARY_BLUE } from "../../../utils/constants";
@@ -11,11 +11,13 @@ const ActionButtons = ({
   effectiveReadOnly,
   isGeneratingPDF,
   isSavingDraft,
+  uploadingSupportingDoc,
   isDisabled,
   canApproveChecklist,
   canReturnToCreator, // NEW prop
   handlePdfDownload,
   handleSaveDraft,
+  handleUploadSupportingDoc,
   setConfirmAction,
   onClose,
   documentStats,
@@ -96,18 +98,31 @@ const ActionButtons = ({
             Save Draft
           </Button>
 
-          <Button
-            icon={<UploadOutlined />}
-            disabled={isDisabled || effectiveReadOnly}
-            style={{
-              borderColor: PRIMARY_BLUE,
-              color: PRIMARY_BLUE,
-              borderRadius: "6px",
-              opacity: effectiveReadOnly ? 0.5 : 1,
+          <Upload
+            showUploadList={false}
+            beforeUpload={(file) => {
+              if (handleUploadSupportingDoc) {
+                handleUploadSupportingDoc(file);
+              }
+              return false;
             }}
+            disabled={isDisabled || effectiveReadOnly}
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
           >
-            Upload Docs
-          </Button>
+            <Button
+              icon={<UploadOutlined />}
+              loading={uploadingSupportingDoc}
+              disabled={isDisabled || effectiveReadOnly}
+              style={{
+                borderColor: PRIMARY_BLUE,
+                color: PRIMARY_BLUE,
+                borderRadius: "6px",
+                opacity: effectiveReadOnly ? 0.5 : 1,
+              }}
+            >
+              Upload Supporting Doc
+            </Button>
+          </Upload>
         </Space>
 
         <Space size="middle">

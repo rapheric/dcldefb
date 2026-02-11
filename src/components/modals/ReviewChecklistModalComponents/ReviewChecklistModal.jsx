@@ -92,6 +92,18 @@ const ReviewChecklistModal = ({
     handleChecklistUpdate,
   );
 
+  // Wrapper for uploading supporting docs that updates local state
+  const handleUploadSupportingDoc = async (file) => {
+    try {
+      const newDoc = await uploadSupportingDoc(file);
+      if (newDoc) {
+        setSupportingDocs((prev) => [...prev, newDoc]);
+      }
+    } catch (error) {
+      console.error("Error uploading supporting doc:", error);
+    }
+  };
+
   //   const isActionDisabled = readOnly || !["pending", "co_creator_review"].includes(
   //   const isActionDisabled = readOnly || !["pending", "co_creator_review"].includes(
   //     checklist?.status?.toLowerCase(),
@@ -168,7 +180,7 @@ const ReviewChecklistModal = ({
             onSaveDraft={saveDraft}
             onSubmitToRM={submitToRM}
             onSubmitToCheckers={submitToCheckers}
-            onUploadSupportingDoc={uploadSupportingDoc}
+            onUploadSupportingDoc={handleUploadSupportingDoc}
             onClose={onClose}
             comments={comments}
           />

@@ -25,7 +25,7 @@ import dayjs from "dayjs";
 
 import CompletedChecklistModal from "../../components/modals/CompletedChecklistModalComponents/CompletedChecklistModal";
 
-import { useGetAllCoCreatorChecklistsQuery } from "../../api/checklistApi";
+import { useGetCompletedDCLsForCheckerQuery } from "../../api/checklistApi";
 
 // Theme Colors
 const PRIMARY_BLUE = "#164679";
@@ -47,75 +47,46 @@ const Completed = ({ userId }) => {
     data: checklists = [],
     isLoading,
     refetch,
-  } = useGetAllCoCreatorChecklistsQuery();
+  } = useGetCompletedDCLsForCheckerQuery(userId);
 
-  console.log("All Checklists in Completed:", checklists);
+  console.log("🔍 All Completed Checklists for Checker:", checklists);
+  React.useEffect(() => {
+    if (selectedChecklist) {
+      console.log("✅ Selected Checklist:", selectedChecklist);
+      console.log(
+        "📄 Documents in selected checklist:",
+        selectedChecklist.documents,
+      );
+      if (selectedChecklist.documents) {
+        const docCount = selectedChecklist.documents.reduce(
+          (sum, cat) => sum + (cat.docList?.length || 0),
+          0,
+        );
+        console.log("📊 Total documents in selected checklist:", docCount);
+      }
+    }
+  }, [selectedChecklist]);
 
-  // const filteredData = useMemo(() => {
-  //   if (!checklists) return [];
-
-  //   return (
-  //     checklists
-
-  //       .filter((c) => {
-  //         const status = (c.status || "").toLowerCase();
-  //         return status === "approved" || status === "completed";
-  //       })
-
-  //       // SEARCH FILTER (unchanged)
-  //       .filter((c) => {
-  //         if (!searchText) return true;
-  //         const q = searchText.toLowerCase();
-
-  //         return (
-  //           c.dclNo?.toLowerCase().includes(q) ||
-  //           c.customerNumber?.toLowerCase().includes(q) ||
-  //           c.customerName?.toLowerCase().includes(q) ||
-  //           c.loanType?.toLowerCase().includes(q) ||
-  //           c.createdBy?.name?.toLowerCase().includes(q)
-  //         );
-  //       })
-  //   );
-  // }, [checklists, userId, searchText]);
-
+  // ✅ No filtering needed - backend already filters by checker and approved status
   const filteredData = useMemo(() => {
     if (!checklists || !userId) return [];
 
-    return checklists
-      .filter((c) => {
-        const checkerId =
-          typeof c.assignedToCoChecker === "object"
-            ? c.assignedToCoChecker?._id
-            : c.assignedToCoChecker;
+    return checklists.filter((c) => {
+      if (!searchText) return true;
+      const q = searchText.toLowerCase();
 
-        return checkerId === userId;
-      })
-      .filter((c) => {
-        const status = (c.status || "").toLowerCase();
-        return status === "approved" || status === "completed";
-      })
-      .filter((c) => {
-        if (!searchText) return true;
-        const q = searchText.toLowerCase();
-
-        return (
-          c.dclNo?.toLowerCase().includes(q) ||
-          c.customerNumber?.toLowerCase().includes(q) ||
-          c.customerName?.toLowerCase().includes(q) ||
-          c.loanType?.toLowerCase().includes(q) ||
-          c.createdBy?.name?.toLowerCase().includes(q)
-        );
-      });
+      return (
+        c.dclNo?.toLowerCase().includes(q) ||
+        c.customerNumber?.toLowerCase().includes(q) ||
+        c.customerName?.toLowerCase().includes(q) ||
+        c.loanType?.toLowerCase().includes(q) ||
+        c.createdBy?.name?.toLowerCase().includes(q)
+      );
+    });
   }, [checklists, userId, searchText]);
 
   console.log("user:", userId);
-
-  console.log(
-    "Checker-owned checklist sample:",
-    checklists.find((c) => c.assignedToCoChecker?._id === userId)
-  );
-
-  console.log("filteredCheckerCompleted:", filteredData);
+  console.log("Completed Checklists for Checker:", filteredData);
 
   const clearFilters = () => setSearchText("");
 
@@ -280,6 +251,7 @@ const Completed = ({ userId }) => {
           scroll={{ x: 1000 }}
           onRow={(record) => ({
             onClick: () => {
+              console.log("🖱️ Clicked on checklist:", record.dclNo, record);
               setSelectedChecklist(record);
               setModalOpen(true);
             },

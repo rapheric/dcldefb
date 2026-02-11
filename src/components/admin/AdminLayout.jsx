@@ -1,12 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
-import {
-  CheckCircle,
-  Clock,
-  User,
-  Shield,
-  FileText
-} from "lucide-react";
+import { CheckCircle, Clock, User, Shield, FileText } from "lucide-react";
 import { UserOutlined } from "@ant-design/icons";
 
 import AdminDashboard from "../../pages/admin/AdminDashboard.jsx";

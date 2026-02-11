@@ -27,6 +27,7 @@ export const useChecklistDocuments = (checklist) => {
           ...doc,
           category: item.category,
           status: doc.status || doc.action || "pending",
+          coStatus: doc.coStatus || doc.status || doc.action || "pending",
           checkerStatus:
             doc.checkerStatus ||
             doc.coCheckerStatus ||
@@ -39,6 +40,7 @@ export const useChecklistDocuments = (checklist) => {
         return acc.concat({
           ...item,
           status: item.status || item.action || "pending",
+          coStatus: item.coStatus || item.status || item.action || "pending",
           checkerStatus:
             item.checkerStatus ||
             item.coCheckerStatus ||
@@ -49,7 +51,17 @@ export const useChecklistDocuments = (checklist) => {
       return acc;
     }, []);
 
-    const preparedDocs = flatDocs.map((doc, idx) => {
+    // Filter out documents that are still pending with RM or Co-Creator
+    // These shouldn't appear in completed/approved checklists
+    const filteredDocs = flatDocs.filter((doc) => {
+      const coStatusLower = (doc.coStatus || "").toLowerCase();
+      if (checklist.status === "approved" || checklist.status === "completed") {
+        return coStatusLower !== "pendingrm" && coStatusLower !== "pendingco";
+      }
+      return true;
+    });
+
+    const preparedDocs = filteredDocs.map((doc, idx) => {
       let finalCheckerStatus = doc.checkerStatus || null;
 
       if (checklist.status === "approved" || checklist.status === "completed") {
@@ -64,10 +76,12 @@ export const useChecklistDocuments = (checklist) => {
         ...doc,
         docIdx: idx,
         status: doc.status || doc.action || "pending",
+        coStatus: doc.coStatus || doc.status || doc.action || "pending",
         action: doc.action || doc.status || "pending",
         comment: doc.comment || "",
         fileUrl: doc.fileUrl || null,
         expiryDate: doc.expiryDate || null,
+        deferralNo: doc.deferralNo || doc.deferralNumber || null,
         checkerStatus: doc.checkerStatus || null,
         finalCheckerStatus: finalCheckerStatus,
         name: doc.name || doc.documentName || `Document ${idx + 1}`,

@@ -17,7 +17,7 @@ import {
 const { Text } = Typography;
 const { Panel } = Collapse;
 
-const DocumentSidebar = ({ documents, open, onClose }) => {
+const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
   const getFileIcon = (fileName) => {
     if (!fileName) return <FileTextOutlined className="doc-icon" />;
     const ext = fileName.split(".").pop().toLowerCase();
@@ -85,31 +85,66 @@ const DocumentSidebar = ({ documents, open, onClose }) => {
   const processedDocs =
     documents && documents.length > 0
       ? documents
-        .filter((doc) => (doc.uploadData && doc.uploadData.status !== "deleted") || doc.fileUrl)
-        .map((doc, idx) => ({
-          id: idx,
-          title: doc.name || `Document ${idx + 1}`,
-          category: doc.category,
-          fileName: doc.fileUrl
-            ? doc.fileUrl.split("/").pop()
-            : "document.pdf",
+          .filter(
+            (doc) =>
+              (doc.uploadData && doc.uploadData.status !== "deleted") ||
+              doc.fileUrl,
+          )
+          .map((doc, idx) => ({
+            id: idx,
+            title: doc.name || `Document ${idx + 1}`,
+            category: doc.category,
+            fileName: doc.fileUrl
+              ? doc.fileUrl.split("/").pop()
+              : "document.pdf",
+            version: "1.0",
+            size: 102400,
+            pages: "1",
+            owner: "Current User",
+            uploadedBy: "Current User",
+            uploadDate: doc.uploadDate || new Date().toISOString(),
+            modifiedDate: doc.modifiedDate || new Date().toISOString(),
+            fileUrl: doc.fileUrl,
+            uploadHistory: [
+              {
+                timestamp: new Date().toISOString(),
+                user: "Current User",
+                action: "Uploaded",
+              },
+            ],
+          }))
+      : [];
+
+  // Process supporting documents
+  const processedSupportingDocs =
+    supportingDocs && supportingDocs.length > 0
+      ? supportingDocs.map((doc, idx) => ({
+          id: `support-${idx}`,
+          title: doc.fileName || doc.name || `Supporting Doc ${idx + 1}`,
+          category: "Supporting Documents",
+          fileName: doc.fileName || doc.name,
           version: "1.0",
-          size: 102400,
+          size: doc.fileSize || 0,
           pages: "1",
-          owner: "Current User",
-          uploadedBy: "Current User",
-          uploadDate: doc.uploadDate || new Date().toISOString(),
-          modifiedDate: doc.modifiedDate || new Date().toISOString(),
+          owner: doc.uploadedBy || "Current User",
+          uploadedBy: doc.uploadedBy || "Current User",
+          uploadDate: doc.uploadedAt || new Date().toISOString(),
+          modifiedDate: doc.uploadedAt || new Date().toISOString(),
           fileUrl: doc.fileUrl,
+          uploadedByRole: doc.uploadedByRole,
+          fileType: doc.fileType,
           uploadHistory: [
             {
-              timestamp: new Date().toISOString(),
-              user: "Current User",
+              timestamp: doc.uploadedAt || new Date().toISOString(),
+              user: doc.uploadedBy || "Current User",
               action: "Uploaded",
             },
           ],
         }))
       : [];
+
+  // Combine all documents
+  const allDocs = [...processedDocs, ...processedSupportingDocs];
 
   return (
     <Drawer
@@ -127,7 +162,7 @@ const DocumentSidebar = ({ documents, open, onClose }) => {
               borderRadius: "12px",
             }}
           >
-            {processedDocs.length} {processedDocs.length === 1 ? "doc" : "docs"}
+            {allDocs.length} {allDocs.length === 1 ? "doc" : "docs"}
           </span>
         </div>
       }
@@ -142,7 +177,7 @@ const DocumentSidebar = ({ documents, open, onClose }) => {
           borderBottom: `2px solid #b5d334`,
           background: "white",
         },
-        body: { padding: "16px" }
+        body: { padding: "16px" },
       }}
     >
       <div style={{ marginBottom: "16px" }}>
@@ -299,7 +334,7 @@ const DocumentSidebar = ({ documents, open, onClose }) => {
                           "http://localhost:5000";
                         const url =
                           doc.fileUrl.startsWith("http") ||
-                            doc.fileUrl.startsWith("blob:")
+                          doc.fileUrl.startsWith("blob:")
                             ? doc.fileUrl
                             : `${API_BASE}${doc.fileUrl}`;
                         window.open(url, "_blank");
@@ -314,6 +349,99 @@ const DocumentSidebar = ({ documents, open, onClose }) => {
             ))}
           </div>
         </Panel>
+
+        {/* Supporting Documents Section */}
+        {processedSupportingDocs.length > 0 && (
+          <Panel
+            header={
+              <Text strong style={{ color: "#164679" }}>
+                Supporting Documents ({processedSupportingDocs.length})
+              </Text>
+            }
+            key="2"
+          >
+            <div
+              style={{ maxHeight: "calc(100vh - 250px)", overflowY: "auto" }}
+            >
+              {processedSupportingDocs.map((doc) => (
+                <div key={doc.id} className="doc-item">
+                  <div className="doc-header">
+                    {getFileIcon(doc.fileName || doc.title)}
+                    <div className="doc-title">{doc.fileName || doc.title}</div>
+                    <div
+                      className="version-badge"
+                      style={{ backgroundColor: "#b5d334" }}
+                    >
+                      Supporting
+                    </div>
+                  </div>
+
+                  <div className="doc-meta">
+                    <span>
+                      <ClockCircleOutlined className="doc-meta-icon" />
+                      {formatDateTime(doc.uploadDate)}
+                    </span>
+                    <span>•</span>
+                    <span>{formatFileSize(doc.size)}</span>
+                  </div>
+
+                  <div style={{ marginTop: "10px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      <UserAddOutlined
+                        style={{ fontSize: "10px", color: "#718096" }}
+                      />
+                      <span style={{ color: "#718096" }}>Uploaded by:</span>
+                      <span style={{ fontWeight: "500", color: "#164679" }}>
+                        {doc.uploadedBy}
+                      </span>
+                      {doc.uploadedByRole && (
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            backgroundColor: "#f0f5ff",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            color: "#164679",
+                          }}
+                        >
+                          {doc.uploadedByRole}
+                        </span>
+                      )}
+                    </div>
+                    {doc.fileUrl && (
+                      <Button
+                        type="link"
+                        size="small"
+                        icon={<DownloadOutlined />}
+                        onClick={() => {
+                          const API_BASE =
+                            import.meta.env?.VITE_APP_API_URL ||
+                            "http://localhost:5000";
+                          const url =
+                            doc.fileUrl.startsWith("http") ||
+                            doc.fileUrl.startsWith("blob:")
+                              ? doc.fileUrl
+                              : `${API_BASE}${doc.fileUrl}`;
+                          window.open(url, "_blank");
+                        }}
+                        style={{ padding: "0", fontSize: "11px" }}
+                      >
+                        Download
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Panel>
+        )}
       </Collapse>
 
       <Divider style={{ margin: "16px 0" }} />
@@ -335,7 +463,7 @@ const DocumentSidebar = ({ documents, open, onClose }) => {
           }}
         >
           <Text type="secondary">Total Documents:</Text>
-          <Text strong>{processedDocs.length}</Text>
+          <Text strong>{allDocs.length}</Text>
         </div>
         <div
           style={{
@@ -346,10 +474,8 @@ const DocumentSidebar = ({ documents, open, onClose }) => {
         >
           <Text type="secondary">Last Upload:</Text>
           <Text>
-            {processedDocs.length > 0
-              ? formatDateTime(
-                processedDocs[processedDocs.length - 1].uploadDate,
-              )
+            {allDocs.length > 0
+              ? formatDateTime(allDocs[allDocs.length - 1].uploadDate)
               : "N/A"}
           </Text>
         </div>

@@ -93,7 +93,10 @@ const CheckerLayout = () => {
         >
           <Routes>
             <Route path="/" element={<AllChecklists userId={userId} />} />
-            <Route path="/myQueue" element={<AllChecklists userId={userId} />} />
+            <Route
+              path="/myQueue"
+              element={<AllChecklists userId={userId} />}
+            />
             <Route
               path="/completed"
               element={<CompletedChecklists userId={userId} />}

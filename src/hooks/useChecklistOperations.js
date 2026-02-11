@@ -205,26 +205,19 @@ export const useChecklistOperations = (
         throw new Error("Checklist ID missing");
       }
 
-      const userName =
-        currentUser?.name || currentUser?.username || "Current User";
-      const userId = currentUser?._id || currentUser?.id;
-
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("checklistId", checklistId);
-      formData.append("documentId", `support_${Date.now()}`);
-      formData.append("documentName", file.name);
-      formData.append("category", "Supporting Documents");
-      formData.append("uploadedBy", userName);
-      formData.append("uploadedById", userId);
+      formData.append("files", file);
 
-      const response = await fetch(`${API_BASE_URL}/api/uploads`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_BASE_URL}/api/cocreatorChecklist/${checklistId}/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
         },
-        body: formData,
-      });
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -233,29 +226,21 @@ export const useChecklistOperations = (
 
       const result = await response.json();
 
-      if (!result.success) {
+      if (!result.supportingDocs || result.supportingDocs.length === 0) {
         throw new Error(result.message || "Upload failed");
       }
 
+      const uploadedDoc = result.supportingDocs[0];
       const newSupportingDoc = {
-        id: result.data._id || Date.now().toString(),
-        name: file.name,
-        fileUrl: result.data.fileUrl.startsWith("http")
-          ? result.data.fileUrl
-          : `${API_BASE_URL}${result.data.fileUrl}`,
-        uploadData: {
-          ...result.data,
-          uploadedBy: result.data.uploadedBy || userName,
-          uploadedById: result.data.uploadedById || userId,
-          uploadedAt: result.data.createdAt || new Date().toISOString(),
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-          status: "supporting",
-        },
-        uploadedAt: new Date().toISOString(),
-        category: "Supporting Documents",
-        isSupporting: true,
+        id: uploadedDoc.id,
+        fileName: uploadedDoc.fileName,
+        fileUrl: uploadedDoc.fileUrl,
+        fileSize: uploadedDoc.fileSize,
+        fileType: uploadedDoc.fileType,
+        uploadedBy: uploadedDoc.uploadedBy,
+        uploadedById: uploadedDoc.uploadedById,
+        uploadedByRole: uploadedDoc.uploadedByRole,
+        uploadedAt: uploadedDoc.uploadedAt,
       };
 
       return newSupportingDoc;

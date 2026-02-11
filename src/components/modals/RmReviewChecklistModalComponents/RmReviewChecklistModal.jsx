@@ -606,30 +606,51 @@ const RmReviewChecklistModal = ({
     try {
       setUploadingSupportingDoc(true);
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("checklistId", checklist._id);
-      formData.append("documentId", `support_${Date.now()}`);
-      formData.append("documentName", file.name);
-      formData.append("category", "Supporting Documents");
+      const checklistId = checklist?.id || checklist?._id;
+      if (!checklistId) {
+        throw new Error("Checklist ID missing");
+      }
 
-      const response = await fetch(`${API_BASE_URL}/api/uploads`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const formData = new FormData();
+      formData.append("files", file);
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/cocreatorChecklist/${checklistId}/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
         },
-        body: formData,
-      });
+      );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Upload failed");
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} ${errorText}`);
       }
 
       const result = await response.json();
 
+      if (!result.supportingDocs || result.supportingDocs.length === 0) {
+        throw new Error(result.message || "Upload failed");
+      }
+
+      const uploadedDoc = result.supportingDocs[0];
+      const newSupportingDoc = {
+        id: uploadedDoc.id,
+        fileName: uploadedDoc.fileName,
+        fileUrl: uploadedDoc.fileUrl,
+        fileSize: uploadedDoc.fileSize,
+        fileType: uploadedDoc.fileType,
+        uploadedBy: uploadedDoc.uploadedBy,
+        uploadedById: uploadedDoc.uploadedById,
+        uploadedByRole: uploadedDoc.uploadedByRole,
+        uploadedAt: uploadedDoc.uploadedAt,
+      };
+
       // Add new supporting doc to the state
-      setSupportingDocs((prev) => [...prev, result.data]);
+      setSupportingDocs((prev) => [...prev, newSupportingDoc]);
 
       message.success(`"${file.name}" uploaded successfully!`);
     } catch (error) {

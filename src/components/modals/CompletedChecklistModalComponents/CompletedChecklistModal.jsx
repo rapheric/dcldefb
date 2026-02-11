@@ -183,6 +183,13 @@ const CompletedChecklistModal = ({
 
   const { docs, documentCounts } = useChecklistDocuments(checklist);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log("🔍 CompletedChecklistModal - Checklist data:", checklist);
+    console.log("📋 Documents from hook:", docs);
+    console.log("📊 Document counts:", documentCounts);
+  }, [checklist, docs, documentCounts]);
+
   // Use the PDF generator hook
   const { isGenerating, progress, generatePDF } = usePDFGenerator();
 
