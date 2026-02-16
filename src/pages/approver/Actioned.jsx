@@ -1167,15 +1167,15 @@ const Actioned = () => {
                 <Descriptions.Item label="DCL No"><Text strong style={{ color: PRIMARY_BLUE }}>{selected.dclNo || selected.dclNumber}</Text></Descriptions.Item>
                 <Descriptions.Item label="Status">
                   {selected.status === 'deferral_requested' || selected.status === 'pending_approval' ? (
-                    <Tag color="processing" style={{ fontWeight: 700 }}>
+                    <Tag color="processing" style={{ fontWeight: 700, color: WARNING_ORANGE }}>
                       Pending
                     </Tag>
                   ) : selected.status === 'deferral_approved' || selected.status === 'approved' ? (
-                    <Tag color="success" style={{ fontWeight: 700 }}>
+                    <Tag color="success" style={{ fontWeight: 700, color: SUCCESS_GREEN }}>
                       Approved
                     </Tag>
                   ) : selected.status === 'deferral_rejected' || selected.status === 'rejected' ? (
-                    <Tag color="error" style={{ fontWeight: 700 }}>
+                    <Tag color="error" style={{ fontWeight: 700, color: ERROR_RED }}>
                       Rejected
                     </Tag>
                   ) : (

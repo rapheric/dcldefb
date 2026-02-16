@@ -24,6 +24,7 @@ import {
 import { useGetChecklistsByCreatorQuery, useReviveChecklistMutation, useUpdateChecklistStatusMutation, useUpdateCoCreatorChecklistMutation, useReviveChecklistWithCreatorMutation } from "../../api/checklistApi";
 import CheckerReviewChecklistModal from "../../components/modals/CheckerReviewChecklistModal";
 import dayjs from "dayjs";
+import { formatDate } from "../../utils/checklistUtils";
 // import ReviewChecklistModal from "../../components/modals/ReviewChecklistModal";
 import CreatorCompletedChecklistModal from "../../components/modals/CreatorCompletedChecklistModal";
 import { useSelector } from "react-redux";
@@ -478,7 +479,7 @@ const Completed = () => {
       width: 120,
       render: (date) => (
         <div style={{ fontSize: 12, fontWeight: 500 }}>
-          {date ? dayjs(date).format("DD/MM/YYYY") : "—"}
+          {date ? formatDate(date) : "—"}
         </div>
       ),
     },

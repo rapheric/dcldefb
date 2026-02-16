@@ -30,6 +30,7 @@ import {
 } from "../../api/checklistApi";
 import CheckerReviewChecklistModal from "../../components/modals/CheckerReviewChecklistModalComponents/CheckerReviewChecklistModal";
 import dayjs from "dayjs";
+import { formatDate } from "../../utils/checklistUtils";
 // import ReviewChecklistModal from "../../components/modals/ReviewChecklistModal";
 // import CreatorCompletedChecklistModal from "../../components/modals/CreatorCompletedChecklistModal";
 import { useSelector } from "react-redux";
@@ -562,7 +563,7 @@ const getCheckerInfo = (record) => {
       width: 120,
       render: (date) => (
         <div style={{ fontSize: 12, fontWeight: 500 }}>
-          {date ? dayjs(date).format("DD/MM/YYYY") : "—"}
+          {date ? formatDate(date) : "—"}
         </div>
       ),
     },

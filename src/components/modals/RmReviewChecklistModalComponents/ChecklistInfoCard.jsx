@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, Descriptions } from "antd";
+import { formatDateTime } from "../../../utils/checklistUtils";
 // import { SECONDARY_PURPLE } from "../constants/colors";
 
 const ChecklistInfoCard = ({ checklist }) => {
@@ -27,7 +28,7 @@ const ChecklistInfoCard = ({ checklist }) => {
           {checklist.createdBy?.name}
         </Descriptions.Item>
         <Descriptions.Item label="Created At">
-          {checklist.createdAt}
+          {checklist.createdAt ? formatDateTime(checklist.createdAt) : "N/A"}
         </Descriptions.Item>
         <Descriptions.Item label="RM">
           {checklist.assignedToRM?.name}

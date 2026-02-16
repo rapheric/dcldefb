@@ -580,15 +580,15 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
             <Descriptions.Item label="Status">
               {status === "deferral_requested" ||
                 status === "pending_approval" ? (
-                <Tag color="processing" style={{ fontWeight: 700 }}>
+                <Tag color="processing" style={{ fontWeight: 700, color: WARNING_ORANGE }}>
                   Pending
                 </Tag>
               ) : status === "deferral_approved" || status === "approved" ? (
-                <Tag color="success" style={{ fontWeight: 700 }}>
+                <Tag color="success" style={{ fontWeight: 700, color: SUCCESS_GREEN }}>
                   Approved
                 </Tag>
               ) : status === "deferral_rejected" || status === "rejected" ? (
-                <Tag color="error" style={{ fontWeight: 700 }}>
+                <Tag color="error" style={{ fontWeight: 700, color: ERROR_RED }}>
                   Rejected
                 </Tag>
               ) : (

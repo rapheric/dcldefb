@@ -7,6 +7,7 @@ import {
   FileTextOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { formatDateTime } from "../../utils/checklistUtils";
 
 import Deferrals from "./Deferrals";
 import AllDCLsTable from "./AllDCLsTable";
@@ -94,7 +95,7 @@ export default function Reports() {
 
       {/* FOOTER */}
       <div style={{ marginTop: 12, fontSize: 12, color: "#666" }}>
-        Generated on {dayjs().format("DD/MM/YYYY HH:mm:ss")}
+        Generated on {formatDateTime(new Date())}
       </div>
     </div>
   );

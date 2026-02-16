@@ -7,6 +7,46 @@ import dayjs from "dayjs";
 // API Base URL constant
 export const API_BASE_URL = import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
+/**
+ * Format date cleanly without unnecessary numbers
+ * @param {string|Date} date - Date to format
+ * @returns {string} Formatted date (e.g., "16 Feb 2026")
+ */
+export const formatDate = (date) => {
+    if (!date) return "";
+    return dayjs(date).format("D MMM YYYY");
+};
+
+/**
+ * Format date with time in clean format
+ * @param {string|Date} date - Date to format
+ * @returns {string} Formatted date with time (e.g., "16 Feb 2026 14:30")
+ */
+export const formatDateTime = (date) => {
+    if (!date) return "";
+    return dayjs(date).format("D MMM YYYY HH:mm");
+};
+
+/**
+ * Format time only
+ * @param {string|Date} date - Date to format
+ * @returns {string} Formatted time (e.g., "2:30 PM")
+ */
+export const formatTime = (date) => {
+    if (!date) return "";
+    return dayjs(date).format("h:mm A");
+};
+
+/**
+ * Format date for table display (relative or absolute)
+ * @param {string|Date} date - Date to format
+ * @returns {string} Formatted date (e.g., "16 Feb")
+ */
+export const formatDateShort = (date) => {
+    if (!date) return "";
+    return dayjs(date).format("D MMM");
+};
+
 // Theme colors
 export const THEME = {
     PRIMARY_BLUE: "#164679",
@@ -50,30 +90,52 @@ export const getExpiryStatus = (expiryDate) => {
 export const getStatusConfig = (status) => {
     const statusLower = (status || "").toLowerCase().replace(/\s+/g, "_");
 
+    // Consistent color codes
+    const GREEN = "green";      // #52c41a - Approved, Submitted (NEW)
+    const RED = "red";          // #ff4d4f - Rejected
+    const ORANGE = "orange";    // #faad14 - Pending, TBO (changed from cyan)
+    const BLUE = "blue";        // #1890ff - Sighted (changed from lime/cyan), Review status
+    const PURPLE = "purple";    // #722ed1 - Co-related
+    const VOLCANO = "volcano";  // #fa541c - Deferred, Deferral Requested
+    const DEFAULT = "default";  // #d9d9d9 - Draft
+
     const configs = {
-        approved: { color: "green", bgColor: "#f6ffed", label: "Approved" },
-        submitted: { color: "blue", bgColor: "#e6f7ff", label: "Submitted" },
-        submitted_for_review: { color: "blue", bgColor: "#e6f7ff", label: "Submitted for Review" },
-        pending: { color: "orange", bgColor: "#fff7e6", label: "Pending" },
-        pending_from_customer: { color: "gold", bgColor: "#fffbe6", label: "Pending from Customer" },
-        pendingrm: { color: "orange", bgColor: "#fff7e6", label: "Pending RM" },
-        pendingco: { color: "purple", bgColor: "#f9f0ff", label: "Pending Co" },
-        rejected: { color: "red", bgColor: "#fff2f0", label: "Rejected" },
-        tbo: { color: "cyan", bgColor: "#e6fffb", label: "TBO" },
-        sighted: { color: "lime", bgColor: "#fcffe6", label: "Sighted" },
-        waived: { color: "magenta", bgColor: "#fff0f6", label: "Waived" },
-        deferred: { color: "volcano", bgColor: "#fff2e8", label: "Deferred" },
-        defferal_requested: { color: "volcano", bgColor: "#fff2e8", label: "Deferral Requested" },
-        expired: { color: "red", bgColor: "#fff2f0", label: "Expired" },
-        current: { color: "green", bgColor: "#f6ffed", label: "Current" },
-        co_review: { color: "geekblue", bgColor: "#f0f5ff", label: "Co Review" },
-        rm_review: { color: "blue", bgColor: "#e6f7ff", label: "RM Review" },
-        co_checker_review: { color: "purple", bgColor: "#f9f0ff", label: "Co-Checker Review" },
-        completed: { color: "green", bgColor: "#f6ffed", label: "Completed" },
-        draft: { color: "default", bgColor: "#fafafa", label: "Draft" },
+        // Commission/Approval statuses - Using consistent color scheme
+        approved: { color: GREEN, bgColor: "#f6ffed", label: "Approved" },
+        submitted: { color: GREEN, bgColor: "#f6ffed", label: "Submitted" },              // Changed from BLUE to GREEN
+        submitted_for_review: { color: GREEN, bgColor: "#f6ffed", label: "Submitted for Review" }, // Changed from BLUE to GREEN
+        
+        // Pending statuses - All warnings/amber
+        pending: { color: ORANGE, bgColor: "#fff7e6", label: "Pending" },
+        pending_from_customer: { color: ORANGE, bgColor: "#fff7e6", label: "Pending from Customer" }, // Changed from GOLD to ORANGE
+        pendingrm: { color: ORANGE, bgColor: "#fff7e6", label: "Pending RM" },
+        pendingco: { color: PURPLE, bgColor: "#f9f0ff", label: "Pending Co" },
+        
+        // Document review/sighting statuses
+        sighted: { color: BLUE, bgColor: "#e6f7ff", label: "Sighted" },                  // Changed from LIME to BLUE
+        tbo: { color: ORANGE, bgColor: "#fff7e6", label: "TBO" },                        // Changed from CYAN to ORANGE
+        
+        // Rejection/Deferral
+        rejected: { color: RED, bgColor: "#fff2f0", label: "Rejected" },
+        deferred: { color: VOLCANO, bgColor: "#fff2e8", label: "Deferred" },
+        defferal_requested: { color: VOLCANO, bgColor: "#fff2e8", label: "Deferral Requested" },
+        
+        // Miscellaneous
+        waived: { color: PURPLE, bgColor: "#f9f0ff", label: "Waived" },
+        expired: { color: RED, bgColor: "#fff2f0", label: "Expired" },
+        current: { color: GREEN, bgColor: "#f6ffed", label: "Current" },
+        
+        // Review stages
+        co_review: { color: PURPLE, bgColor: "#f9f0ff", label: "Co Review" },
+        rm_review: { color: BLUE, bgColor: "#e6f7ff", label: "RM Review" },
+        co_checker_review: { color: PURPLE, bgColor: "#f9f0ff", label: "Co-Checker Review" },
+        
+        // Completion statuses
+        completed: { color: GREEN, bgColor: "#f6ffed", label: "Completed" },
+        draft: { color: DEFAULT, bgColor: "#fafafa", label: "Draft" },
     };
 
-    return configs[statusLower] || { color: "default", bgColor: "#fafafa", label: status || "Unknown" };
+    return configs[statusLower] || { color: DEFAULT, bgColor: "#fafafa", label: status || "Unknown" };
 };
 
 /**
@@ -143,7 +205,7 @@ export const calculateDocumentStats = (docs = []) => {
 /**
  * Format file size in bytes to human-readable string
  * @param {number} bytes - File size in bytes
- * @returns {string} Formatted file size
+ * @returns {string} 
  */
 export const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";

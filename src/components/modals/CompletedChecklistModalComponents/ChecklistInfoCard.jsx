@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, Descriptions, Tag } from "antd";
 import { PRIMARY_BLUE } from "../../../utils/checklistConstants";
+import { formatDateTime } from "../../../utils/checklistUtils";
 // import { PRIMARY_BLUE } from "../utils/checklistConstants";
 
 const ChecklistInfoCard = ({ checklist }) => (
@@ -27,7 +28,7 @@ const ChecklistInfoCard = ({ checklist }) => (
         {checklist.ibpsNo || "Not provided"}
       </Descriptions.Item>
       <Descriptions.Item label="Created At">
-        {checklist.createdAt}
+        {checklist.createdAt ? formatDateTime(checklist.createdAt) : "N/A"}
       </Descriptions.Item>
       <Descriptions.Item label="Loan Type">
         {checklist.loanType}
@@ -45,7 +46,7 @@ const ChecklistInfoCard = ({ checklist }) => (
         <Tag color="green">{checklist.status}</Tag>
       </Descriptions.Item>
       <Descriptions.Item label="Completed At">
-        {checklist.completedAt || checklist.updatedAt || "N/A"}
+        {checklist.completedAt ? formatDateTime(checklist.completedAt) : checklist.updatedAt ? formatDateTime(checklist.updatedAt) : "N/A"}
       </Descriptions.Item>
     </Descriptions>
   </Card>

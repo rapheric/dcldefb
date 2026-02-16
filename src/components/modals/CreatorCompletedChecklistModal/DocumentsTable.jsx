@@ -11,7 +11,7 @@ import {
   getCheckerStatusDisplay,
   getExpiryStatus,
 } from "../../../utils/checklistConstants";
-import { formatDate } from "../../../utils/dateUtils";
+import { formatDate } from "../../../utils/checklistUtils";
 import { tableStyles } from "../../styles/componentStyle";
 
 const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
@@ -58,13 +58,15 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
 
   const STATUS_CONFIG = {
     CO_STATUS_COLORS: {
-      submitted: "green",
-      pendingrm: "#6E0C05",
-      pendingco: "#6E0549",
-      deferred: "#55C41D",
-      sighted: "#02ECF5",
-      waived: "#C4AA1D",
-      tbo: "#0F13E5",
+      submitted: "#52c41a",      // GREEN - Submitted (changed from "green" ant color)
+      approved: "#52c41a",       // GREEN - Approved
+      pendingrm: "#6E0C05",      // Dark red - Pending RM
+      pendingco: "#6E0549",      // Dark purple - Pending CO
+      deferred: "#fa541c",       // VOLCANO - Deferred (changed to match standard)
+      deferral_requested: "#fa541c", // VOLCANO - Deferral Requested
+      sighted: "#1890ff",        // LIGHT BLUE - Sighted (changed from cyan)
+      waived: "#C4AA1D",         // Gold - Waived
+      tbo: "#faad14",            // AMBER/ORANGE - TBO (changed from blue)
     },
   };
 
@@ -168,6 +170,7 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
                 display: "flex",
                 alignItems: "center",
                 gap: "4px",
+                color: statusDisplay.color === "green" ? "#52c41a" : statusDisplay.color === "red" ? "#f5222d" : "inherit",
               }}
             >
               {statusDisplay.text}

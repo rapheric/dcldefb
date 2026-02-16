@@ -2,6 +2,7 @@
 import React from "react";
 import { Avatar, Tag, Spin } from "antd";
 import { UserOutlined } from "@ant-design/icons";
+import { formatDateTime } from "../../utils/checklistUtils";
 
 /* ---------------------------
    Role badge helper
@@ -178,10 +179,7 @@ const CommentHistory = ({ comments = [], isLoading }) => {
               marginLeft: "auto",
             }}
           >
-            {new Date(item.createdAt || item.timestamp).toLocaleString([], {
-              dateStyle: "short",
-              timeStyle: "short",
-            })}
+            {formatDateTime(item.createdAt || item.timestamp)}
           </span>
         </div>
       ))}

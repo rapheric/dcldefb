@@ -32,6 +32,7 @@ import {
   ArrowForward as ArrowForwardIcon,
 } from "@mui/icons-material";
 import { useGetRevivedChecklistsQuery } from "../features/api/apiSlice";
+import { formatDate } from "../../utils/checklistUtils";
 import RevivedChecklistDetails from "./RevivedChecklistDetails";
 
 const RevivedChecklistsModal = ({ open, onClose }) => {

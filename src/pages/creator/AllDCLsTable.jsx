@@ -9,6 +9,7 @@ import {
 
 import dayjs from "dayjs";
 
+import { formatDate } from "../../utils/checklistUtils";
 import { useGetAllCoCreatorChecklistsQuery } from "../../api/checklistApi";
 
 import {
@@ -365,7 +366,7 @@ export default function AllDCLsTable({ filters }) {
       width: 120,
       render: (date) => (
         <div style={{ fontSize: 12, fontWeight: 500 }}>
-          {date ? dayjs(date).format("DD/MM/YYYY") : "—"}
+          {date ? formatDate(date) : "—"}
         </div>
       ),
     },

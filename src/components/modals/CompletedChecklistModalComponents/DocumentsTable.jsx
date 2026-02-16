@@ -39,34 +39,36 @@ const DocumentsTable = ({ docs, checklist }) => {
       dataIndex: "status",
       width: 120,
       render: (status, record) => {
-        let color = "default";
+        let color = "#d9d9d9"; // default gray
         const statusLower = (status || "").toLowerCase();
 
+        // Consistent color scheme for all statuses
         switch (statusLower) {
           case "submitted":
           case "approved":
-            color = "green";
+            color = "#52c41a"; // GREEN - Approved/Submitted
             break;
           case "pendingrm":
-            color = "#6E0C05";
+            color = "#6E0C05"; // Keep existing dark red for pending RM
             break;
           case "pendingco":
-            color = "#6E0549";
+            color = "#6E0549"; // Keep existing dark purple for pending CO
             break;
           case "waived":
-            color = "#C4AA1D";
+            color = "#C4AA1D"; // Keep existing gold for waived
             break;
           case "sighted":
-            color = "#02ECF5";
+            color = "#1890ff"; // LIGHT BLUE - Sighted
             break;
           case "deferred":
-            color = "#55C41D";
+          case "deferral_requested":
+            color = "#fa541c"; // VOLCANO - Deferred/Deferral Requested
             break;
           case "tbo":
-            color = "#0F13E5";
+            color = "#faad14"; // AMBER/ORANGE - TBO
             break;
           default:
-            color = "default";
+            color = "#d9d9d9";
         }
 
         const statusLabel =
@@ -115,6 +117,7 @@ const DocumentsTable = ({ docs, checklist }) => {
               display: "flex",
               alignItems: "center",
               gap: "4px",
+              color: statusDisplay.color === "green" ? "#52c41a" : statusDisplay.color === "red" ? "#f5222d" : "inherit",
             }}
           >
             {statusDisplay.text}

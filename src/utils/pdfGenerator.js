@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { formatDate } from "./checklistUtils";
 
 export const generateChecklistPDF = async (checklist, documents, comments = []) => {
   try {

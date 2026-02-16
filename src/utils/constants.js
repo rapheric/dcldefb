@@ -4,16 +4,26 @@ export const ACCENT_LIME = "#b5d334";
 export const SECONDARY_PURPLE = "#7e6496";
 export const API_BASE_URL = import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
-// Status Colors Mapping
+// Status Colors Mapping - Consistent across all modals
 export const STATUS_COLORS = {
-  submitted: { bg: "#d1fae5", color: "#065f46", tag: "green" },
-  pendingrm: { bg: "#fee2e2", color: "#991b1b", tag: "red" },
-  pendingco: { bg: "#fef3c7", color: "#991b1b", tag: "red" },
-  waived: { bg: "#fef3c7", color: "#92400e", tag: "orange" },
-  sighted: { bg: "#dbeafe", color: "#1e40af", tag: "blue" },
-  deferred: { bg: "#e0e7ff", color: "#3730a3", tag: "purple" },
-  tbo: { bg: "#f1f5f9", color: "#475569", tag: "gray" },
-  default: { bg: "#f1f5f9", color: "#64748b", tag: "default" }
+  // Submitted = Green (same as Approved)
+  submitted: { bg: "#f6ffed", color: "#52c41a", tag: "#52c41a" },
+  
+  // Pending statuses
+  pendingrm: { bg: "#fff7e6", color: "#faad14", tag: "#faad14" },
+  pendingco: { bg: "#fff7e6", color: "#faad14", tag: "#faad14" },
+  
+  // Deferral statuses = Volcano/Orange
+  deferred: { bg: "#fff2e8", color: "#fa541c", tag: "#fa541c" },
+  deferral_requested: { bg: "#fff2e8", color: "#fa541c", tag: "#fa541c" },
+  
+  // Document review statuses
+  waived: { bg: "#f9f0ff", color: "#722ed1", tag: "#722ed1" },
+  sighted: { bg: "#e6f7ff", color: "#1890ff", tag: "#1890ff" },
+  tbo: { bg: "#fff7e6", color: "#faad14", tag: "#faad14" },
+  
+  // Default
+  default: { bg: "#fafafa", color: "#d9d9d9", tag: "default" }
 };
 
 // Allowed Document Actions

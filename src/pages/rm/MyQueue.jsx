@@ -21,6 +21,7 @@ import {
   CustomerServiceOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { formatDateTime } from "../../utils/checklistUtils";
 
 import RmReviewChecklistModal from "../../components/modals/RmReviewChecklistModalComponents/RmReviewChecklistModal";
 import { useGetAllCoCreatorChecklistsQuery } from "../../api/checklistApi";
@@ -536,7 +537,7 @@ const MyQueue = ({ userId }) => {
       >
         <Row justify="space-between" align="middle">
           <Col>
-            Report generated on: {dayjs().format("DD/MM/YYYY HH:mm:ss")}
+            Report generated on: {formatDateTime(new Date())}
           </Col>
           <Col>
             <Text type="secondary">
