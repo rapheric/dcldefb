@@ -107,17 +107,16 @@ export const useChecklistOperations = (
         key: "checkerSubmit",
       });
 
-      // ✅ CRITICAL FIX: Nest documents by category to match backend structure
-      // Backend expects: { category, docList: [...] } structure
-      const nestedDocuments = docs.reduce((acc, doc) => {
-        let categoryGroup = acc.find((c) => c.category === doc.category);
-        if (!categoryGroup) {
-          categoryGroup = { category: doc.category, docList: [] };
-          acc.push(categoryGroup);
-        }
-        categoryGroup.docList.push({
+      // ✅ CRITICAL FIX: Send documents as a FLAT list matching CoCreatorDocumentDto
+      // NOT as nested categories with docList!
+      // Backend expects: { id, category, name, status, creatorStatus, ... }
+      // NOT: { category, docList: [...] }
+      const flatDocuments = [];
+      docs.forEach((doc) => {
+        flatDocuments.push({
           id: doc._id || doc.id,
           _id: doc._id || doc.id,
+          category: doc.category,
           name: doc.name,
           status: doc.action || doc.status,
           creatorStatus: doc.creatorStatus, // PRESERVE creator status
@@ -126,21 +125,21 @@ export const useChecklistOperations = (
           fileUrl: doc.fileUrl || null,
           expiryDate: doc.expiryDate || null,
           deferralNo: doc.deferralNo || null,
+          deferralReason: doc.deferralReason || null,
         });
-        return acc;
-      }, []);
+      });
 
       const payload = {
         dclNo: checklist.dclNo,
         status: "co_checker_review",
-        documents: nestedDocuments, // Now properly nested by category
+        documents: flatDocuments, // FLAT list, not nested!
         supportingDocs,
       };
 
       console.log("📤 BEFORE SUBMISSION:");
       console.log("   Payload:", JSON.stringify(payload, null, 2));
       console.log("   Documents count:", docs.length);
-      console.log("   Nested structure count:", nestedDocuments.length);
+      console.log("   Flat documents count:", flatDocuments.length);
 
       const result = await updateChecklistStatus(payload).unwrap();
 
@@ -166,7 +165,7 @@ export const useChecklistOperations = (
           id: checklist.id || checklist._id,
           dclNo: checklist.dclNo,
           status: "CoCheckerReview",
-          documents: nestedDocuments,
+          documents: flatDocuments,
           message: "Checklist submitted to Co-Checker",
         };
         

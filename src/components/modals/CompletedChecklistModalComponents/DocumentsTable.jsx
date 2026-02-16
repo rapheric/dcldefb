@@ -110,7 +110,6 @@ const DocumentsTable = ({ docs, checklist }) => {
         return (
           <Tag
             color={statusDisplay.color}
-            icon={statusDisplay.icon}
             style={{
               fontWeight: "bold",
               display: "flex",

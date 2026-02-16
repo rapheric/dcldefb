@@ -163,7 +163,6 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
           return (
             <Tag
               color={statusDisplay.color}
-              icon={getStatusIcon(statusDisplay.icon)}
               style={{
                 fontWeight: "bold",
                 display: "flex",
