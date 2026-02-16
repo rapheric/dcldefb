@@ -100,15 +100,10 @@ const CommentHistory = ({ comments = [], isLoading }) => {
   return (
     <div
       style={{
-        maxHeight: "320px",
-        overflowY: "auto",
         display: "flex",
         flexDirection: "column",
-        gap: "8px",
-        padding: "8px 4px",
-        border: "1px solid #e5e7eb",
-        borderRadius: "6px",
-        background: "#fafbfc",
+        gap: 6,
+        padding: 4,
       }}
     >
       {/* Title */}
@@ -117,9 +112,7 @@ const CommentHistory = ({ comments = [], isLoading }) => {
           fontSize: "12px",
           fontWeight: 700,
           color: "#1f2937",
-          padding: "0 8px",
-          borderBottom: "1px solid #e5e7eb",
-          paddingBottom: "6px",
+          padding: 4,
         }}
       >
         Comment Trail ({sortedComments.length})
@@ -131,63 +124,65 @@ const CommentHistory = ({ comments = [], isLoading }) => {
           key={item._id || index}
           style={{
             display: "flex",
-            flexDirection: "column",
-            gap: "4px",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
             fontSize: "12px",
             color: "#374151",
-            padding: "8px 8px",
+            padding: 6,
             borderRadius: "4px",
             background: "#ffffff",
-            border: "1px solid #f0f0f0",
+            border: "1px solid #e5e7eb",
           }}
         >
-          {/* Header: Avatar, Name, Role, Time */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {/* Avatar */}
-            <Avatar
-              size={20}
-              icon={<UserOutlined />}
-              style={{ backgroundColor: "#164679", flexShrink: 0 }}
-            />
+          {/* Avatar */}
+          <Avatar
+            size={20}
+            icon={<UserOutlined />}
+            style={{ backgroundColor: "#164679", flexShrink: 0 }}
+          />
 
-            {/* Name */}
-            <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
-              {item.userId?.name ||
-                (typeof item.user === "object" ? item.user?.name : item.user) ||
-                "Unknown"}
-            </span>
+          {/* Name */}
+          <span style={{ fontWeight: 600, flexShrink: 0 }}>
+            {item.userId?.name ||
+              (typeof item.user === "object" ? item.user?.name : item.user) ||
+              "Unknown"}
+          </span>
 
-            {/* Role */}
+          {/* Role */}
+          <div style={{ flexShrink: 0 }}>
             {getRoleTag(item.userId?.role || item.role)}
-
-            {/* Time */}
-            <span
-              style={{
-                fontSize: "11px",
-                color: "#9ca3af",
-                marginLeft: "auto",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {new Date(item.createdAt || item.timestamp).toLocaleString([], {
-                dateStyle: "short",
-                timeStyle: "short",
-              })}
-            </span>
           </div>
 
           {/* Comment Text */}
           <div
             style={{
               color: "#4b5563",
-              lineHeight: "1.4",
-              wordBreak: "break-word",
-              paddingLeft: "28px",
-              fontSize: "12px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              minWidth: 100,
+              maxWidth: 300,
             }}
+            title={item.message || item.comment}
           >
             {item.message || item.comment}
           </div>
+
+          {/* Time */}
+          <span
+            style={{
+              fontSize: "11px",
+              color: "#9ca3af",
+              flexShrink: 0,
+              marginLeft: "auto",
+            }}
+          >
+            {new Date(item.createdAt || item.timestamp).toLocaleString([], {
+              dateStyle: "short",
+              timeStyle: "short",
+            })}
+          </span>
         </div>
       ))}
     </div>

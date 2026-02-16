@@ -2298,7 +2298,7 @@ const Deferrals = ({ userId, hideFilters = false }) => {
       <Card
         style={{
           marginBottom: 8,
-          background: "#fafafa",
+          // background: "#fafafa",
           border: `1px solid ${PRIMARY_BLUE}20`,
         }}
         size="small"
@@ -4577,70 +4577,80 @@ const Deferrals = ({ userId, hideFilters = false }) => {
                     };
 
                     return (
-                      <div className="max-h-52 overflow-y-auto">
-                        <List
-                          dataSource={sorted}
-                          itemLayout="horizontal"
-                          renderItem={(item, idx) => {
-                            const roleLabel = item.userRole;
-                            const name = formatUsername(item.user) || "System";
-                            const text = item.comment || "No comment provided";
-                            const timestamp = item.date;
-                            return (
-                              <List.Item key={idx}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 10,
-                                    }}
-                                  >
-                                    <Avatar
-                                      icon={<UserOutlined />}
-                                      style={{ backgroundColor: PRIMARY_BLUE }}
-                                    />
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 8,
-                                        flexWrap: "wrap",
-                                      }}
-                                    >
-                                      <b
-                                        style={{
-                                          fontSize: 14,
-                                          color: PRIMARY_BLUE,
-                                        }}
-                                      >
-                                        {name}
-                                      </b>
-                                      {roleLabel && getRoleTag(roleLabel)}
-                                      <span style={{ color: "#4a4a4a" }}>
-                                        {text}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div style={{ fontSize: 12, color: "#777" }}>
-                                    {timestamp
-                                      ? dayjs(timestamp).format(
-                                          "M/D/YY, h:mm A",
-                                        )
-                                      : ""}
-                                  </div>
-                                </div>
-                              </List.Item>
-                            );
-                          }}
-                        />
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 6,
+                          padding: 4,
+                        }}
+                      >
+                        {sorted.map((item, idx) => {
+                          const roleLabel = item.userRole;
+                          const name = formatUsername(item.user) || "System";
+                          const text = item.comment || "No comment provided";
+                          const timestamp = item.date;
+                          return (
+                            <div
+                              key={idx}
+                              style={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 8,
+                                padding: 6,
+                                border: "1px solid #e8e8e8",
+                                borderRadius: 4,
+                                backgroundColor: "#fafafa",
+                              }}
+                            >
+                              <Avatar
+                                icon={<UserOutlined />}
+                                style={{ backgroundColor: PRIMARY_BLUE, flexShrink: 0 }}
+                              />
+                              <b
+                                style={{
+                                  fontSize: 13,
+                                  color: PRIMARY_BLUE,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {name}
+                              </b>
+                              <div style={{ flexShrink: 0 }}>
+                                {roleLabel && getRoleTag(roleLabel)}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  color: "#4a4a4a",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  minWidth: 100,
+                                  maxWidth: 300,
+                                }}
+                                title={text}
+                              >
+                                {text}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  color: "#999",
+                                  flexShrink: 0,
+                                  marginLeft: "auto",
+                                }}
+                              >
+                                {timestamp
+                                  ? dayjs(timestamp).format(
+                                      "M/D/YY, h:mm A",
+                                    )
+                                  : ""}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })()}
