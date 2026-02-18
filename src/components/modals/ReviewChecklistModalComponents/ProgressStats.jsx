@@ -171,7 +171,7 @@ const ProgressStats = ({ docs }) => {
         <div
           style={{
             fontWeight: "700",
-            color: pendingFromRM > 0 ? "#f59e0b" : "#8b5cf6",
+            color: pendingFromRM > 0 ? "#FF4D4F" : "#8b5cf6",
           }}
         >
           Pending RM: {pendingFromRM}
@@ -179,25 +179,25 @@ const ProgressStats = ({ docs }) => {
         <div
           style={{
             fontWeight: "700",
-            color: "#8b5cf6",
-            border: pendingFromCo > 0 ? "2px solid #8b5cf6" : "none",
+            color: "#FF4D4F",
+            border: pendingFromCo > 0 ? "2px solid #FF4D4F" : "none",
             padding: "2px 6px",
             borderRadius: "4px",
-            background: pendingFromCo > 0 ? "#f3f4f6" : "transparent",
+            background: pendingFromCo > 0 ? "#ffebe6" : "transparent",
           }}
         >
           Pending Co: {pendingFromCo}
         </div>
-        <div style={{ fontWeight: "700", color: "#ef4444" }}>
+        <div style={{ fontWeight: "700", color: "#FAAD14" }}>
           Deferred: {deferred}
         </div>
-        <div style={{ fontWeight: "700", color: "#3b82f6" }}>
+        <div style={{ fontWeight: "700", color: "#52C41A" }}>
           Sighted: {sighted}
         </div>
-        <div style={{ fontWeight: "700", color: "#f59e0b" }}>
+        <div style={{ fontWeight: "700", color: "#FAAD14" }}>
           Waived: {waived}
         </div>
-        <div style={{ fontWeight: "700", color: "#06b6d4" }}>
+        <div style={{ fontWeight: "700", color: "#FAAD14" }}>
           TBO: {tbo}
         </div>
       </div>

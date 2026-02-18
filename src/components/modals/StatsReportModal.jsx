@@ -1,19 +1,10 @@
 // StatsReportModal.jsx
 import React, { useMemo, useState } from "react";
 import { Modal, Divider, Button, Select, Row, Col, Card } from "antd";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { generateStatsPDF } from "../../utils/reportGenerator";
 
-// Placeholder for chart PNG download
-const downloadChartAsPNG = (chartId, fileName) => {
-  const chart = document.getElementById(chartId);
-  if (!chart) return alert("Chart not found");
-  html2canvas(chart).then((canvas) => {
-    canvas.toBlob((blob) => saveAs(blob, `${fileName}.png`));
-  });
-};
 
 import {
   PieChart,
@@ -91,17 +82,23 @@ export default function StatsReportModal({ open, onClose }) {
   const dclOptions = [...new Set(checklists.map((c) => c.dclNo))];
 
   // ------------------- EXPORT -------------------
-  const exportPDF = async () => {
-    const input = document.getElementById("stats-report");
-    if (!input) return;
-    const canvas = await html2canvas(input, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save("Checklist-Report.pdf");
+  const exportPDF = () => {
+    const statsData = {
+      "Total Checklists": safeChecklists.length,
+      "Approved": safeChecklists.filter((c) => c.status === "approved").length,
+      "Rejected": safeChecklists.filter((c) => c.status === "rejected").length,
+      "In Progress": safeChecklists.filter(
+        (c) => !["approved", "rejected"].includes(c.status)
+      ).length,
+      "Unique Loan Types": loanTypeData.length,
+      "Average Docs per DCL": (
+        safeChecklists.reduce((sum, c) => sum + (c.documents?.length || 0), 0) /
+        Math.max(safeChecklists.length, 1)
+      ).toFixed(2),
+      "Filter - RM": filterRM || "All",
+      "Filter - Loan Type": filterLoan || "All",
+    };
+    generateStatsPDF(statsData, "Checklist Statistics Report");
   };
 
   const exportExcel = () => {
@@ -263,11 +260,6 @@ export default function StatsReportModal({ open, onClose }) {
         </Button>
         <Button onClick={exportExcel}>Export Excel</Button>
         <Button onClick={printReport}>Print</Button>
-        <Button
-          onClick={() => downloadChartAsPNG("chart-status", "status-chart")}
-        >
-          Download Status Chart PNG
-        </Button>
         <Button disabled>AI Insights (Coming Soon)</Button>
       </div>
 

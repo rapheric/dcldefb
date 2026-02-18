@@ -10,6 +10,7 @@ import {
 import dayjs from "dayjs";
 
 import { formatDate } from "../../utils/checklistUtils";
+import { getStatusColor } from "../../utils/statusColors";
 import { useGetAllCoCreatorChecklistsQuery } from "../../api/checklistApi";
 
 import {
@@ -89,29 +90,21 @@ const normalizeStatus = (status) => {
 };
 
 const renderChecklistStatus = (status) => {
-  const normalizedStatus = normalizeStatus(status);
-  const meta = CHECKLIST_STATUS_META[normalizedStatus] || CHECKLIST_STATUS_META[status];
-
-  if (!meta) {
-    return (
-      <Tag color="default" title={`Status: ${status}`}>
-        {status || "Unknown"}
-      </Tag>
-    );
-  }
+  const statusConfig = getStatusColor(status);
 
   return (
     <Tag
-      color={meta.color}
-      icon={meta.icon}
       style={{
         fontWeight: 600,
         fontSize: 11,
-        borderRadius: 999,
-        textTransform: "uppercase",
+        borderRadius: 4,
+        border: `1px solid ${statusConfig.borderColor}`,
+        color: statusConfig.textColor,
+        backgroundColor: statusConfig.bgColor,
+        padding: "4px 8px",
       }}
     >
-      {meta.label}
+      {status || "Unknown"}
     </Tag>
   );
 };
@@ -157,7 +150,7 @@ const getModalComponent = (status) => {
   }
 };
 
-export default function AllDCLsTable({ filters }) {
+export default function AllDCLsTable({ filters, onDataLoaded }) {
   // State for modal
   const [selectedChecklist, setSelectedChecklist] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -180,8 +173,12 @@ export default function AllDCLsTable({ filters }) {
         status: firstItem?.status,
         statusType: typeof firstItem?.status,
       });
+      // Notify parent of loaded data
+      if (onDataLoaded) {
+        onDataLoaded(data);
+      }
     }
-  }, [data]);
+  }, [data, onDataLoaded]);
 
   const filtered = data.filter((d) =>
     !filters.searchText

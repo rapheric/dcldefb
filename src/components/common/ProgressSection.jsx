@@ -46,13 +46,13 @@ const ProgressSection = ({ docs = [] }) => {
                 <div style={{ fontWeight: "700", color: PRIMARY_BLUE }}>
                     Total: {total}
                 </div>
-                <div style={{ fontWeight: "700", color: SECONDARY_PURPLE }}>
+                <div style={{ fontWeight: "700", color: "#FF4D4F" }}>
                     Pending: {pending}
                 </div>
-                <div style={{ fontWeight: "700", color: "green" }}>
+                <div style={{ fontWeight: "700", color: "#52C41A" }}>
                     Submitted: {submitted}
                 </div>
-                <div style={{ fontWeight: "700", color: "orange" }}>
+                <div style={{ fontWeight: "700", color: "#FAAD14" }}>
                     Deferred: {deferred}
                 </div>
             </div>

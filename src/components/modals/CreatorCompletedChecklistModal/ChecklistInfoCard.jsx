@@ -1,10 +1,13 @@
 import React from "react";
 import { Card, Descriptions, Tag } from "antd";
+import { getStatusColor, getStatusTagProps } from "../../../utils/statusColors";
 import { checklistInfoCardStyles } from "../../styles/componentStyle";
 // import { checklistInfoCardStyles } from "../styles";
 
 const ChecklistInfoCard = ({ checklist }) => {
   if (!checklist) return null;
+
+  const statusColorConfig = getStatusColor(checklist.status);
 
   return (
     <Card
@@ -40,7 +43,17 @@ const ChecklistInfoCard = ({ checklist }) => {
           {checklist.assignedToCoChecker?.name || "Pending"}
         </Descriptions.Item>
         <Descriptions.Item label="Status">
-          <Tag color="green">{checklist.status || "N/A"}</Tag>
+          <Tag 
+            {...getStatusTagProps(checklist.status)}
+            style={{
+              backgroundColor: statusColorConfig.bgColor,
+              color: statusColorConfig.textColor,
+              borderColor: statusColorConfig.borderColor,
+              fontWeight: "500",
+            }}
+          >
+            {checklist.status || "N/A"}
+          </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Completed At">
           {checklist.completedAt || checklist.updatedAt || "N/A"}

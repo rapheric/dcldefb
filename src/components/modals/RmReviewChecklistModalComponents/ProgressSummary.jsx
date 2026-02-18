@@ -38,25 +38,25 @@ const ProgressSummary = ({ documentStats }) => {
         <div style={{ fontWeight: "700", color: PRIMARY_BLUE }}>
           Total: {total}
         </div>
-        <div style={{ fontWeight: "700", color: "green" }}>
+        <div style={{ fontWeight: "700", color: "#52C41A" }}>
           Submitted: {submitted}
         </div>
-        <div style={{ fontWeight: "700", color: "#f59e0b" }}>
+        <div style={{ fontWeight: "700", color: "#FF4D4F" }}>
           Pending RM: {pendingFromRM}
         </div>
-        <div style={{ fontWeight: "700", color: "#8b5cf6" }}>
+        <div style={{ fontWeight: "700", color: "#FF4D4F" }}>
           Pending CO: {pendingFromCo}
         </div>
-        <div style={{ fontWeight: "700", color: "#ef4444" }}>
+        <div style={{ fontWeight: "700", color: "#FAAD14" }}>
           Deferred: {deferred}
         </div>
-        <div style={{ fontWeight: "700", color: "#3b82f6" }}>
+        <div style={{ fontWeight: "700", color: "#52C41A" }}>
           Sighted: {sighted}
         </div>
-        <div style={{ fontWeight: "700", color: "#f59e0b" }}>
+        <div style={{ fontWeight: "700", color: "#FAAD14" }}>
           Waived: {waived}
         </div>
-        <div style={{ fontWeight: "700", color: "#06b6d4" }}>
+        <div style={{ fontWeight: "700", color: "#FAAD14" }}>
           TBO: {tbo}
         </div>
       </div>

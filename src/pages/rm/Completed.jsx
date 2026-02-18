@@ -22,7 +22,7 @@ import {
 import dayjs from "dayjs";
 
 import CompletedChecklistModal from "../../components/modals/CompletedChecklistModalComponents/CompletedChecklistModal";
-
+import { getStatusColor } from "../../utils/statusColors";
 import { useGetAllCoCreatorChecklistsQuery } from "../../api/checklistApi";
 
 const { Text } = Typography;
@@ -37,17 +37,6 @@ const SUCCESS_GREEN = "#52c41a";
 const ERROR_RED = "#ff4d4f";
 const WARNING_ORANGE = "#faad14";
 const INFO_BLUE = "#1890ff";
-
-const STATUS_CONFIG = {
-  Submitted: { color: SUCCESS_GREEN, textColor: "white" },
-  "Pending from RM": { color: WARNING_ORANGE, textColor: "white" },
-  "Pending from CO": { color: INFO_BLUE, textColor: "white" },
-  Deferred: { color: SECONDARY_BLUE, textColor: "white" },
-  Waived: { color: PRIMARY_PURPLE, textColor: "white" },
-  TBO: { color: "#666666", textColor: "white" },
-  Approved: { color: SUCCESS_GREEN, textColor: "white" },
-  Completed: { color: SUCCESS_GREEN, textColor: "white" },
-};
 
 const Completed = ({ userId }) => {
   const [selectedChecklist, setSelectedChecklist] = useState(null);
@@ -87,21 +76,18 @@ const Completed = ({ userId }) => {
   const clearFilters = () => setSearchText("");
 
   const renderStatusTag = (status) => {
-    const config = STATUS_CONFIG[status] || {
-      color: "#d9d9d9",
-      textColor: "#000",
-    };
+    const statusConfig = getStatusColor(status);
     return (
       <Tag
-        color={config.color}
         style={{
           fontWeight: "bold",
           fontSize: 10,
-          padding: "2px 8px",
-          borderRadius: 10,
-          border: "none",
-          color: config.textColor,
-          minWidth: 100,
+          padding: "4px 8px",
+          borderRadius: 4,
+          border: `1px solid ${statusConfig.borderColor}`,
+          color: statusConfig.textColor,
+          backgroundColor: statusConfig.bgColor,
+          minWidth: 80,
           textAlign: "center",
         }}
       >

@@ -6,21 +6,20 @@ export const API_BASE_URL = import.meta.env?.VITE_APP_API_URL || "http://localho
 
 // Status Colors Mapping - Consistent across all modals
 export const STATUS_COLORS = {
-  // Submitted = Green (same as Approved)
+  // GREEN - Success/Approved/Submitted/Sighted
   submitted: { bg: "#f6ffed", color: "#52c41a", tag: "#52c41a" },
+  approved: { bg: "#f6ffed", color: "#52c41a", tag: "#52c41a" },
+  sighted: { bg: "#f6ffed", color: "#52c41a", tag: "#52c41a" },
   
-  // Pending statuses
-  pendingrm: { bg: "#fff7e6", color: "#faad14", tag: "#faad14" },
-  pendingco: { bg: "#fff7e6", color: "#faad14", tag: "#faad14" },
+  // RED - Pending statuses (need action)
+  pendingrm: { bg: "#ffebe6", color: "#FF4D4F", tag: "#FF4D4F" },
+  pendingco: { bg: "#ffebe6", color: "#FF4D4F", tag: "#FF4D4F" },
   
-  // Deferral statuses = Volcano/Orange
-  deferred: { bg: "#fff2e8", color: "#fa541c", tag: "#fa541c" },
-  deferral_requested: { bg: "#fff2e8", color: "#fa541c", tag: "#fa541c" },
-  
-  // Document review statuses
-  waived: { bg: "#f9f0ff", color: "#722ed1", tag: "#722ed1" },
-  sighted: { bg: "#e6f7ff", color: "#1890ff", tag: "#1890ff" },
-  tbo: { bg: "#fff7e6", color: "#faad14", tag: "#faad14" },
+  // AMBER - Deferred/Waived/TBO (needs attention)
+  deferred: { bg: "#fffbe6", color: "#FAAD14", tag: "#FAAD14" },
+  deferral_requested: { bg: "#fffbe6", color: "#FAAD14", tag: "#FAAD14" },
+  waived: { bg: "#fffbe6", color: "#FAAD14", tag: "#FAAD14" },
+  tbo: { bg: "#fffbe6", color: "#FAAD14", tag: "#FAAD14" },
   
   // Default
   default: { bg: "#fafafa", color: "#d9d9d9", tag: "default" }

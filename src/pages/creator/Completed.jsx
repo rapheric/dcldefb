@@ -187,85 +187,45 @@ const Completed = () => {
       const response = await reviveChecklist(checklistId).unwrap();
 
       console.log("✅ [Completed.jsx] API Response:", response);
+      console.log("✅ [Completed.jsx] Full response data:", JSON.stringify(response, null, 2));
 
-      // Get the current checklist to find its original DCL number
-      const currentChecklist = allChecklists.find((c) => c._id === checklistId);
-      const originalDCL = currentChecklist?.dclNo;
+      // Get the newly created checklist ID from the response - handle various response formats
+      const newChecklistId = 
+        response.newChecklistId ||
+        response.checklist?.id || 
+        response.checklist?._id ||
+        response.data?.newChecklistId ||
+        response.data?.id;
+      
+      const newDCLNumber = 
+        response.newDCLNumber ||
+        response.checklist?.dclNo ||
+        response.data?.newDCL ||
+        response.dclNo;
 
-      // Update the newly created copy's DCL number with "Copy X" suffix
-      if (response.data?.newChecklistId && originalDCL) {
-        try {
-          const newDCLNumber = await updateRevivedDCLNumber(
-            response.data.newChecklistId,
-            originalDCL,
-            allChecklists,
-          );
-          console.log(
-            "✅ [Completed.jsx] DCL number updated to:",
-            newDCLNumber,
-          );
-        } catch (dclError) {
-          console.error(
-            "⚠️ [Completed.jsx] Failed to update DCL number:",
-            dclError,
-          );
-          // Continue even if DCL update fails
-        }
+      if (!newChecklistId) {
+        console.error("❌ New checklist ID not found. Response structure:", Object.keys(response));
+        throw new Error("New checklist ID not found in response");
       }
 
-      // Update the newly created copy's status to co_creator_review so it shows as "Revived"
-      if (response.data?.newChecklistId) {
-        try {
-          console.log(
-            "📝 [Completed.jsx] Updating new checklist status to co_creator_review...",
-          );
-          await updateChecklistStatusMutation({
-            checklistId: response.data.newChecklistId,
-            status: "co_creator_review",
-          }).unwrap();
-          console.log(
-            "✅ [Completed.jsx] New checklist status updated to co_creator_review",
-          );
-        } catch (statusError) {
-          console.error(
-            "⚠️ [Completed.jsx] Failed to update status, but revival was successful:",
-            statusError,
-          );
-        }
-      }
+      console.log("✅ [Completed.jsx] New checklist ID:", newChecklistId);
+      console.log("✅ [Completed.jsx] New DCL Number:", newDCLNumber);
 
       message.success({
-        content: response?.message || "Checklist revived successfully!",
+        content: response?.message || `Checklist revived successfully as ${newDCLNumber}!`,
         key: "revive",
         duration: 3,
       });
 
-      // Log the state after revive for debugging
+      // Refetch and redirect after short delay
       setTimeout(() => {
+        refetch();
+        // Navigate to creator home to see the revived checklist in Created Checklists For Review
         console.log(
-          "🔍 [Completed.jsx] After revive - Current checklists:",
-          allChecklists.map((c) => ({
-            dclNo: c.dclNo,
-            status: c.status,
-            id: c._id?.substring(0, 8),
-          })),
+          "🚀 [Completed.jsx] Navigating to creator home to see revived copy...",
         );
-      }, 1000);
-
-      refetch();
-
-      // Navigate to creator home to see the revived checklist in Created Checklists For Review
-      console.log(
-        "🚀 [Completed.jsx] Navigating to creator home to see revived copy...",
-      );
-      window.location.href = "/cocreator";
-
-      if (response.data?.newDCL) {
-        message.info({
-          content: `New checklist copy created: ${response.data.newDCL}`,
-          duration: 5,
-        });
-      }
+        navigate("/cocreator");
+      }, 800);
 
       return response;
     } catch (error) {
@@ -273,122 +233,28 @@ const Completed = () => {
       console.error("❌ Full error object:", JSON.stringify(error, null, 2));
       console.error("❌ Error status:", error?.status);
       console.error("❌ Error data:", error?.data);
+      console.error("❌ Error message:", error?.message);
 
-      // If auth fails, try the alternative method
-      if (error.status === 401 || error.status === 403) {
-        console.log(
-          "🔄 Trying alternative revive method with creatorId in body...",
-        );
-
-        try {
-          const response = await reviveChecklistWithCreatorMutation({
-            checklistId,
-            creatorId,
-          }).unwrap();
-
-          console.log("✅ Alternative method success:", response);
-
-          // Get the current checklist to find its original DCL number
-          const currentChecklist = allChecklists.find(
-            (c) => c._id === checklistId,
-          );
-          const originalDCL = currentChecklist?.dclNo;
-
-          // Update the newly created copy's DCL number with "Copy X" suffix
-          if (response.data?.newChecklistId && originalDCL) {
-            try {
-              const newDCLNumber = await updateRevivedDCLNumber(
-                response.data.newChecklistId,
-                originalDCL,
-                allChecklists,
-              );
-              console.log(
-                "✅ [Completed.jsx] DCL number updated to:",
-                newDCLNumber,
-              );
-            } catch (dclError) {
-              console.error(
-                "⚠️ [Completed.jsx] Failed to update DCL number:",
-                dclError,
-              );
-              // Continue even if DCL update fails
-            }
-          }
-
-          // Update the newly created copy's status to co_creator_review so it shows as "Revived"
-          if (response.data?.newChecklistId) {
-            try {
-              console.log(
-                "📝 [Completed.jsx] Updating new checklist status to co_creator_review...",
-              );
-              await updateChecklistStatusMutation({
-                checklistId: response.data.newChecklistId,
-                status: "co_creator_review",
-              }).unwrap();
-              console.log(
-                "✅ [Completed.jsx] New checklist status updated to co_creator_review",
-              );
-            } catch (statusError) {
-              console.error(
-                "⚠️ [Completed.jsx] Failed to update status, but revival was successful:",
-                statusError,
-              );
-            }
-          }
-
-          message.success({
-            content: response?.message || "Checklist revived successfully!",
-            key: "revive",
-            duration: 3,
-          });
-
-          // Log the state after revive for debugging
-          setTimeout(() => {
-            console.log(
-              "🔍 [Completed.jsx] After revive - Current checklists:",
-              allChecklists.map((c) => ({
-                dclNo: c.dclNo,
-                status: c.status,
-                id: c._id?.substring(0, 8),
-              })),
-            );
-          }, 1000);
-
-          refetch();
-
-          // Navigate to creator home to see the revived checklist in Created Checklists For Review
-          console.log(
-            "🚀 [Completed.jsx] Navigating to creator home to see revived copy...",
-          );
-          window.location.href = "/cocreator";
-
-          if (response.data?.newDCL) {
-            message.info({
-              content: `New checklist copy created: ${response.data.newDCL}`,
-              duration: 5,
-            });
-          }
-
-          return response;
-        } catch (altError) {
-          console.error("❌ Alternative method also failed:", altError);
-          // Continue to show error message
-        }
-      }
-
-      // If auth fails, try the alternative method
       let errorMessage = "Failed to revive checklist. Please try again.";
 
-      if (error?.status === 403) {
-        errorMessage = "You don't have permission to revive checklists.";
+      if (error?.status === 403 || error?.status === 401) {
+        errorMessage = "You don't have permission to revive this checklist.";
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message;
       } else if (error?.data?.error) {
         errorMessage = error.data.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
 
       message.error({
         content: errorMessage,
         key: "revive",
+        duration: 4,
       });
+
+      console.error("❌ [Completed.jsx] Final error message:", errorMessage);
+      throw error;
     }
   };
 

@@ -1,19 +1,18 @@
 import React from 'react';
 import { Button, message } from 'antd';
 import { FilePdfOutlined } from "@ant-design/icons";
-// import { usePDFGenerator } from '../../hooks/usePDFGenerator';
 import { PRIMARY_BLUE } from '../../../utils/constants';
-import usePDFGenerator from '../../../hooks/usePDFGenerator';
-// import usePDFGenerator from '../../../hooks/usePDFGenerator';
+import { generateChecklistPDF } from '../../../utils/reportGenerator';
+import { calculateDocumentStats } from '../../../utils/checklistUtils';
 
 const PDFGenerator = ({
     checklist,
     docs,
     supportingDocs = [],
     creatorComment,
-    comments
+    comments = []
 }) => {
-    const { generatePDF, isGenerating } = usePDFGenerator();
+    const [isGenerating, setIsGenerating] = React.useState(false);
 
     const handleGeneratePDF = async () => {
         try {
@@ -22,16 +21,20 @@ const PDFGenerator = ({
                 return;
             }
 
-            await generatePDF({
-                checklist,
-                documents: docs || [],
-                supportingDocs: supportingDocs || [],
-                creatorComment: creatorComment || '',
-                comments: comments || []
-            });
+            setIsGenerating(true);
+            
+            // Calculate document statistics
+            const documentStats = calculateDocumentStats(docs || []);
+            
+            // Generate PDF using unified function
+            generateChecklistPDF(checklist, docs || [], documentStats, comments || []);
+            
+            message.success("PDF generated successfully!");
         } catch (error) {
             console.error("PDF generation error:", error);
             message.error(error.message || "Failed to generate PDF");
+        } finally {
+            setIsGenerating(false);
         }
     };
 

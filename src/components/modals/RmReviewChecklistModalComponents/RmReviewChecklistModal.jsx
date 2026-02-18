@@ -489,6 +489,17 @@ const RmReviewChecklistModal = ({
       skip: !checklist?.id && !checklist?._id,
     });
 
+  // DEBUG: Log comment fetching
+  React.useEffect(() => {
+    const checklistId = checklist?.id || checklist?._id;
+    console.log("🔶 RmReviewChecklistModal - Checklist ID for comments:", checklistId);
+    console.log("🔶 Comments Loading:", commentsLoading);
+    console.log("🔶 Comments Data:", comments);
+    if (comments && Array.isArray(comments)) {
+      console.log(`🔶 Total comments fetched: ${comments.length}`);
+    }
+  }, [checklist?.id, checklist?._id, comments, commentsLoading]);
+
   const handleChecklistUpdate = (updatedChecklist) => {
     // Update local state
     setLocalChecklist(updatedChecklist);

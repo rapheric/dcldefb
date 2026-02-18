@@ -43,6 +43,17 @@ const ReviewChecklistModal = ({
       skip: !checklist?.id && !checklist?._id,
     });
 
+  // DEBUG: Log comment fetching
+  React.useEffect(() => {
+    const checklistId = checklist?.id || checklist?._id;
+    console.log("📋 ReviewChecklistModal - Checklist ID for comments:", checklistId);
+    console.log("📋 Comments Loading:", commentsLoading);
+    console.log("📋 Comments Data:", comments);
+    if (comments && Array.isArray(comments)) {
+      console.log(`📋 Total comments fetched: ${comments.length}`);
+    }
+  }, [checklist?.id, checklist?._id, comments, commentsLoading]);
+
   const isActionDisabled = readOnly;
   // Check if checklist status allows actions (Creator can act on pending or cocreatorreview)
   const checklistStatus = (
@@ -123,29 +134,56 @@ const ReviewChecklistModal = ({
 
   useEffect(() => {
     const sourceChecklist = localChecklist || checklist;
-    if (!sourceChecklist || !sourceChecklist.documents) return;
+    if (!sourceChecklist) {
+      console.warn("⚠️ No checklist available for document loading");
+      setDocs([]);
+      return;
+    }
 
-    const flatDocs = sourceChecklist.documents.reduce((acc, item) => {
-      if (item.docList && Array.isArray(item.docList) && item.docList.length) {
+    // Try multiple document sources: documents, docList, items
+    const documentArray = sourceChecklist.documents || sourceChecklist.docList || sourceChecklist.items || [];
+    
+    if (!Array.isArray(documentArray)) {
+      console.warn("⚠️ Document array is not an array:", documentArray);
+      setDocs([]);
+      return;
+    }
+
+    console.log("📋 Raw document array from sourceChecklist:", {
+      documentsCount: documentArray.length,
+      firstDoc: documentArray[0]
+    });
+
+    const flatDocs = documentArray.reduce((acc, item) => {
+      // Handle nested structure with docList
+      if (item.docList && Array.isArray(item.docList) && item.docList.length > 0) {
         const nestedDocs = item.docList.map((doc) => ({
           ...doc,
-          category: item.category,
+          category: item.category || doc.category,
           checkerStatus: doc.checkerStatus || item.checkerStatus,
         }));
         return acc.concat(nestedDocs);
       }
-      if (item.category) return acc.concat(item);
+      // Handle flat structure (direct documents)
+      if (item.title || item.fileName || item.status) {
+        return acc.concat(item);
+      }
       return acc;
     }, []);
+
+    console.log("📋 Flattened documents:", {
+      count: flatDocs.length,
+      firstDoc: flatDocs[0]
+    });
 
     const preparedDocs = flatDocs.map((doc, idx) => ({
       ...doc,
       docIdx: idx,
-      status: doc.status, // PRESERVE original status from backend
+      status: doc.status || doc.action || "pending", // PRESERVE original status from backend
       creatorStatus: doc.creatorStatus, // PRESERVE creator status from backend
       checkerStatus: doc.checkerStatus, // PRESERVE checker status from backend
       checkerComment: doc.checkerComment || "", // ✅ Include checker comment from backend
-      action: doc.action || doc.status, // Use action if it exists, otherwise use status
+      action: doc.action || doc.status || "pending", // Use action if it exists, otherwise use status
       comment: doc.comment || "",
       fileUrl: doc.fileUrl || null,
       expiryDate: doc.expiryDate || null,
@@ -155,7 +193,11 @@ const ReviewChecklistModal = ({
       rmStatus: doc.rmStatus || "",
     }));
 
-    console.log("📋 Documents loaded in ReviewChecklistModal:", preparedDocs); // ✅ Debug logging
+    console.log("📋 Documents prepared in ReviewChecklistModal:", {
+      count: preparedDocs.length,
+      firstDoc: preparedDocs[0]
+    });
+    
     setDocs(preparedDocs);
   }, [localChecklist, checklist]);
 

@@ -12,9 +12,9 @@ const getRoleTag = (role) => {
     case "rm":
       return <Tag color="blue">RM</Tag>;
     case "cochecker":
-      return <Tag color="green">CO</Tag>;
+      return <Tag color="green">CO CHECKER</Tag>;
     case "cocreator":
-      return <Tag color="purple">CREATOR</Tag>;
+      return <Tag color="purple">CO CREATOR</Tag>;
     default:
       return <Tag>{role || "UNKNOWN"}</Tag>;
   }
@@ -22,29 +22,63 @@ const getRoleTag = (role) => {
 
 /* ---------------------------
    System message detector
-   (status & workflow text)
+   (COMPREHENSIVE - removes ALL auto-generated messages)
 ---------------------------- */
 const isSystemGeneratedMessage = (text = "") => {
-  const message = text.toLowerCase();
+  if (!text) return true;
+  
+  const message = text.toLowerCase().trim();
 
+  // EXTENSIVE list of system-generated message patterns
   const systemPatterns = [
-    // workflow / status transitions
-    "checklist submitted",
-    "submitted back",
+    // Status transitions & workflow
     "submitted to",
     "returned to",
-    "approved",
-    "rejected",
+    "approved by",
+    "rejected by",
     "completed",
-    "initiated",
     "status updated",
-
-    // auto activity
+    "initiated",
+    "submitted for",
+    "sent to",
+    "assigned to",
+    
+    // Auto-activity logs
     "document uploaded",
     "checklist created",
     "draft saved",
+    "revived from",
+    
+    // Co-Creator workflow messages
+    "submitted to co-checker",
+    "submitted to co",
+    "submitted to rm",
+    "checklist updated",
+    "documents updated",
+    
+    // RM workflow messages
+    "submitted back to co-creator",
+    "returned to co-creator",
+    
+    // Checker workflow messages
+    "sent for approval",
+    "approved checklist",
+    "rejected checklist",
+    
+    // Supporting docs
+    "supporting document",
+    "document reference",
+    "file uploaded",
+    
+    // Status change patterns
+    "status changed",
+    "status: ",
+    "checklist status",
+    "has been",
+    "document",
   ];
 
+  // If message matches any system pattern, it's auto-generated
   return systemPatterns.some((pattern) => message.includes(pattern));
 };
 
@@ -52,6 +86,17 @@ const isSystemGeneratedMessage = (text = "") => {
    Component
 ---------------------------- */
 const CommentHistory = ({ comments = [], isLoading }) => {
+  // Debug logging
+  React.useEffect(() => {
+    console.log("📝 CommentHistory - Raw comments received:", comments);
+    console.log("📝 CommentHistory - Is Loading:", isLoading);
+    if (comments && comments.length > 0) {
+      comments.forEach((c, idx) => {
+        console.log(`   [${idx}] Message: "${c.message || c.comment}" | Role: ${c.userId?.role || c.role} | ID: ${c._id || c.id}`);
+      });
+    }
+  }, [comments, isLoading]);
+
   if (isLoading) {
     return (
       <div style={{ padding: 12, display: "flex", justifyContent: "center" }}>
@@ -67,15 +112,28 @@ const CommentHistory = ({ comments = [], isLoading }) => {
   const filteredComments = comments.filter((item) => {
     const role = (item.userId?.role || item.role || "").toLowerCase();
     const message = item.message || item.comment || "";
+    const isSystem = isSystemGeneratedMessage(message);
+    const isEmpty = !message.trim();
+
+    // Debug each comment
+    if (!isSystem && !isEmpty && role !== "system") {
+      console.log(`   ✅ KEEPING: "${message.substring(0, 50)}..." (${role})`);
+    } else if (isSystem) {
+      console.log(`   ❌ FILTERING (SYSTEM): "${message.substring(0, 50)}..."`);
+    } else if (isEmpty) {
+      console.log(`   ❌ FILTERING (EMPTY)`);
+    } else if (role === "system") {
+      console.log(`   ❌ FILTERING (SYSTEM ROLE)`);
+    }
 
     // 1. Remove system role completely
     if (role === "system") return false;
 
     // 2. Remove auto-generated workflow/status messages
-    if (isSystemGeneratedMessage(message)) return false;
+    if (isSystem) return false;
 
     // 3. Remove empty / whitespace-only comments
-    if (!message.trim()) return false;
+    if (isEmpty) return false;
 
     return true;
   });

@@ -295,10 +295,10 @@ export const getCheckerStatusDisplay = (checkerStatus, checklistStatus) => {
       };
     case "deferred":
       return {
-        color: "volcano",
+        color: "warning",
         text: "⏱️ Deferred",
         icon: "ClockCircleOutlined",
-        tagColor: "#fa541c",
+        tagColor: "#FAAD14",
       };
     default:
       return {

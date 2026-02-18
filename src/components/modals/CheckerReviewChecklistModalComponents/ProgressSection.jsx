@@ -85,19 +85,19 @@ const ProgressSection = ({ documentStats, total }) => {
         <div style={{ fontWeight: "700", color: PRIMARY_BLUE }}>
           Total: {totalDocuments}
         </div>
-        <div style={{ fontWeight: "700", color: "green" }}>
+        <div style={{ fontWeight: "700", color: "#52C41A" }}>
           Submitted: {submitted || 0}
         </div>
-        <div style={{ fontWeight: "700", color: "#3b82f6" }}>
+        <div style={{ fontWeight: "700", color: "#52C41A" }}>
           Sighted: {sighted || 0}
         </div>
-        <div style={{ fontWeight: "700", color: "#f59e0b" }}>
+        <div style={{ fontWeight: "700", color: "#FAAD14" }}>
           Waived: {waived || 0}
         </div>
-        <div style={{ fontWeight: "700", color: "#06b6d4" }}>
+        <div style={{ fontWeight: "700", color: "#FAAD14" }}>
           TBO: {tbo || 0}
         </div>
-        <div style={{ fontWeight: "700", color: "#ef4444" }}>
+        <div style={{ fontWeight: "700", color: "#FAAD14" }}>
           Deferred: {deferred || 0}
         </div>
         {checkerReviewed > 0 && (

@@ -115,8 +115,7 @@ import {
   Select,
   Badge,
 } from "antd";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { generateAuditPDF } from "../../utils/reportGenerator";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -274,19 +273,7 @@ const DashboardSummary = ({
   ];
 
   const exportPDF = (logs, title) => {
-    const doc = new jsPDF();
-    doc.text(title, 14, 15);
-    doc.autoTable({
-      startY: 20,
-      head: [["User", "Action", "Status", "Date"]],
-      body: logs.map((l) => [
-        l.userName || l.performedBy?.name || "—",
-        l.activity || l.action || "—",
-        l.status || "success",
-        new Date(l.createdAt || l.timestamp).toLocaleString(),
-      ]),
-    });
-    doc.save(`${title.replace(" ", "_")}.pdf`);
+    generateAuditPDF(logs, title);
   };
 
   if (loading)

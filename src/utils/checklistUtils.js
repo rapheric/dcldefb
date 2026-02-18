@@ -90,45 +90,42 @@ export const getExpiryStatus = (expiryDate) => {
 export const getStatusConfig = (status) => {
     const statusLower = (status || "").toLowerCase().replace(/\s+/g, "_");
 
-    // Consistent color codes
-    const GREEN = "green";      // #52c41a - Approved, Submitted (NEW)
-    const RED = "red";          // #ff4d4f - Rejected
-    const ORANGE = "orange";    // #faad14 - Pending, TBO (changed from cyan)
-    const BLUE = "blue";        // #1890ff - Sighted (changed from lime/cyan), Review status
-    const PURPLE = "purple";    // #722ed1 - Co-related
-    const VOLCANO = "volcano";  // #fa541c - Deferred, Deferral Requested
+    // Consistent color codes matching user specification
+    const RED = "red";          // #FF4D4F - PendingRM, PendingCo (awaiting action)
+    const GREEN = "green";      // #52c41a - Approved, Submitted, Sighted (success)
+    const AMBER = "warning";    // #FAAD14 - Deferred, Waived, TBO (needs attention)
     const DEFAULT = "default";  // #d9d9d9 - Draft
 
     const configs = {
-        // Commission/Approval statuses - Using consistent color scheme
+        // Commission/Approval statuses - GREEN (Success)
         approved: { color: GREEN, bgColor: "#f6ffed", label: "Approved" },
-        submitted: { color: GREEN, bgColor: "#f6ffed", label: "Submitted" },              // Changed from BLUE to GREEN
-        submitted_for_review: { color: GREEN, bgColor: "#f6ffed", label: "Submitted for Review" }, // Changed from BLUE to GREEN
+        submitted: { color: GREEN, bgColor: "#f6ffed", label: "Submitted" },              
+        submitted_for_review: { color: GREEN, bgColor: "#f6ffed", label: "Submitted for Review" },
         
-        // Pending statuses - All warnings/amber
-        pending: { color: ORANGE, bgColor: "#fff7e6", label: "Pending" },
-        pending_from_customer: { color: ORANGE, bgColor: "#fff7e6", label: "Pending from Customer" }, // Changed from GOLD to ORANGE
-        pendingrm: { color: ORANGE, bgColor: "#fff7e6", label: "Pending RM" },
-        pendingco: { color: PURPLE, bgColor: "#f9f0ff", label: "Pending Co" },
+        // Pending statuses - RED (Awaiting action)
+        pending: { color: RED, bgColor: "#ffebe6", label: "Pending" },
+        pending_from_customer: { color: RED, bgColor: "#ffebe6", label: "Pending from Customer" },
+        pendingrm: { color: RED, bgColor: "#ffebe6", label: "Pending RM" },
+        pendingco: { color: RED, bgColor: "#ffebe6", label: "Pending Co" },
         
-        // Document review/sighting statuses
-        sighted: { color: BLUE, bgColor: "#e6f7ff", label: "Sighted" },                  // Changed from LIME to BLUE
-        tbo: { color: ORANGE, bgColor: "#fff7e6", label: "TBO" },                        // Changed from CYAN to ORANGE
+        // Document review/sighting statuses - GREEN (Success)
+        sighted: { color: GREEN, bgColor: "#f6ffed", label: "Sighted" },                  
+        tbo: { color: AMBER, bgColor: "#fffbe6", label: "TBO" },                        
         
         // Rejection/Deferral
-        rejected: { color: RED, bgColor: "#fff2f0", label: "Rejected" },
-        deferred: { color: VOLCANO, bgColor: "#fff2e8", label: "Deferred" },
-        defferal_requested: { color: VOLCANO, bgColor: "#fff2e8", label: "Deferral Requested" },
+        rejected: { color: RED, bgColor: "#ffebe6", label: "Rejected" },
+        deferred: { color: AMBER, bgColor: "#fffbe6", label: "Deferred" },
+        defferal_requested: { color: AMBER, bgColor: "#fffbe6", label: "Deferral Requested" },
         
         // Miscellaneous
-        waived: { color: PURPLE, bgColor: "#f9f0ff", label: "Waived" },
-        expired: { color: RED, bgColor: "#fff2f0", label: "Expired" },
+        waived: { color: AMBER, bgColor: "#fffbe6", label: "Waived" },
+        expired: { color: RED, bgColor: "#ffebe6", label: "Expired" },
         current: { color: GREEN, bgColor: "#f6ffed", label: "Current" },
         
-        // Review stages
-        co_review: { color: PURPLE, bgColor: "#f9f0ff", label: "Co Review" },
-        rm_review: { color: BLUE, bgColor: "#e6f7ff", label: "RM Review" },
-        co_checker_review: { color: PURPLE, bgColor: "#f9f0ff", label: "Co-Checker Review" },
+        // Review stages (using same color scheme)
+        co_review: { color: RED, bgColor: "#ffebe6", label: "Co Review" },
+        rm_review: { color: RED, bgColor: "#ffebe6", label: "RM Review" },
+        co_checker_review: { color: RED, bgColor: "#ffebe6", label: "Co-Checker Review" },
         
         // Completion statuses
         completed: { color: GREEN, bgColor: "#f6ffed", label: "Completed" },

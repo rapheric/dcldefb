@@ -439,7 +439,7 @@ const DeferralStatusAlert = ({ deferral }) => {
   return null;
 };
 
-const Deferrals = ({ userId, hideFilters = false }) => {
+const Deferrals = ({ userId, hideFilters = false, onDataLoaded }) => {
   // Get token from Redux
   const token = useSelector((state) => state.auth.token);
 
@@ -692,6 +692,13 @@ const Deferrals = ({ userId, hideFilters = false }) => {
     );
     setFilteredDeferrals(pending);
   };
+
+  // Notify parent when deferrals are loaded
+  useEffect(() => {
+    if (onDataLoaded && deferrals.length > 0) {
+      onDataLoaded(deferrals);
+    }
+  }, [deferrals, onDataLoaded]);
 
   // Apply filters
   useEffect(() => {

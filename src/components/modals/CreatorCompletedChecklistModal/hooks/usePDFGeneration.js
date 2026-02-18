@@ -1,6 +1,7 @@
 // src/components/modals/CreatorCompletedChecklistModal/hooks/usePDFGeneration.js
 import { useState } from "react";
 import { message } from "antd";
+import { generateChecklistPDF } from "../../../../utils/reportGenerator";
 
 export const usePDFGeneration = () => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -8,9 +9,9 @@ export const usePDFGeneration = () => {
   const generatePDF = async (checklist, docs, documentStats, comments) => {
     setIsGeneratingPDF(true);
     try {
-      // CORRECT PATH: Import from the same folder structure
-      const { PDFGenerator } = await import("../PDFGenerator");
-      await PDFGenerator.generatePDF(checklist, docs, documentStats, comments);
+      // Use unified PDF export function
+      generateChecklistPDF(checklist, docs, documentStats, comments);
+      message.success("Checklist PDF generated successfully!");
     } catch (error) {
       console.error("Error in PDF generation:", error);
       message.error("Failed to generate PDF. Please try again.");

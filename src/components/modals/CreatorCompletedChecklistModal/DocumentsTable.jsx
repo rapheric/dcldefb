@@ -12,6 +12,7 @@ import {
   getExpiryStatus,
 } from "../../../utils/checklistConstants";
 import { formatDate } from "../../../utils/checklistUtils";
+import { getStatusTagProps, getStatusColor, formatStatusText } from "../../../utils/statusColors";
 import { tableStyles } from "../../styles/componentStyle";
 
 const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
@@ -56,20 +57,6 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
     );
   }
 
-  const STATUS_CONFIG = {
-    CO_STATUS_COLORS: {
-      submitted: "#52c41a",      // GREEN - Submitted (changed from "green" ant color)
-      approved: "#52c41a",       // GREEN - Approved
-      pendingrm: "#6E0C05",      // Dark red - Pending RM
-      pendingco: "#6E0549",      // Dark purple - Pending CO
-      deferred: "#fa541c",       // VOLCANO - Deferred (changed to match standard)
-      deferral_requested: "#fa541c", // VOLCANO - Deferral Requested
-      sighted: "#1890ff",        // LIGHT BLUE - Sighted (changed from cyan)
-      waived: "#C4AA1D",         // Gold - Waived
-      tbo: "#faad14",            // AMBER/ORANGE - TBO (changed from blue)
-    },
-  };
-
   const getStatusIcon = (iconName) => {
     switch (iconName) {
       case "CheckCircleOutlined":
@@ -108,17 +95,24 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
       return {
         ...col,
         render: (status, record) => {
-          const statusLower = (status || "").toLowerCase();
-          const color =
-            STATUS_CONFIG.CO_STATUS_COLORS[statusLower] || "default";
-
           const statusLabel =
             status === "deferred" && record.deferralNo
               ? `Deferred (${record.deferralNo})`
-              : status || "Pending";
+              : formatStatusText(status || "Pending");
+
+          const colorConfig = getStatusColor(status);
 
           return (
-            <Tag className="status-tag" color={color}>
+            <Tag 
+              className="status-tag" 
+              {...getStatusTagProps(status)}
+              style={{
+                backgroundColor: colorConfig.bgColor,
+                color: colorConfig.textColor,
+                borderColor: colorConfig.borderColor,
+                fontWeight: "500",
+              }}
+            >
               {statusLabel}
             </Tag>
           );

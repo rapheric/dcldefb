@@ -17,7 +17,7 @@ import DocumentSidebar from "./DocumentSidebar";
 import HeaderSection from "./HeaderSection";
 import SupportingDocsSection from "./SupportingDocsSection";
 import { calculateDocumentStats } from "../../../utils/checklistUtils";
-import { downloadChecklistAsPDF } from "../../../utils/pdfExport";
+import { generateChecklistPDF } from "../../../utils/reportGenerator";
 
 const CheckerReviewChecklistModal = ({
   checklist,
@@ -51,6 +51,17 @@ const CheckerReviewChecklistModal = ({
       skip: !checklist?.id && !checklist?._id,
     });
 
+  // DEBUG: Log comment fetching
+  React.useEffect(() => {
+    const checklistId = checklist?.id || checklist?._id;
+    console.log("🛡️ CheckerReviewChecklistModal - Checklist ID for comments:", checklistId);
+    console.log("🛡️ Comments Loading:", commentsLoading);
+    console.log("🛡️ Comments Data:", comments);
+    if (comments && Array.isArray(comments)) {
+      console.log(`🛡️ Total comments fetched: ${comments.length}`);
+    }
+  }, [checklist?.id, checklist?._id, comments, commentsLoading]);
+
   const uploadedDocsCount = useMemo(() => {
     return docs.filter((doc) => doc.fileUrl).length;
   }, [docs]);
@@ -72,22 +83,49 @@ const CheckerReviewChecklistModal = ({
   };
 
   useEffect(() => {
-    if (!checklist?.documents) return;
-    const flatDocs = checklist.documents.reduce((acc, item) => {
-      if (item.docList?.length) {
+    if (!checklist) {
+      console.warn("⚠️ No checklist available for document loading");
+      setDocs([]);
+      return;
+    }
+
+    // Try multiple document sources
+    const documentArray = checklist.documents || checklist.docList || checklist.items || [];
+    
+    if (!Array.isArray(documentArray) || documentArray.length === 0) {
+      console.warn("⚠️ No documents found in checklist", {
+        hasDocuments: !!checklist.documents,
+        hasDocList: !!checklist.docList,
+        hasItems: !!checklist.items
+      });
+      setDocs([]);
+      return;
+    }
+
+    const flatDocs = documentArray.reduce((acc, item) => {
+      // Handle nested structure with docList
+      if (item.docList && Array.isArray(item.docList) && item.docList.length > 0) {
         const nested = item.docList.map((doc) => ({
           ...doc,
-          category: item.category,
+          category: item.category || doc.category,
           coStatus: doc.status || doc.action || "pending",
         }));
         return acc.concat(nested);
       }
-      if (item.category) return acc.concat(item);
+      // Handle flat structure
+      if (item.title || item.fileName || item.status) {
+        return acc.concat(item);
+      }
       return acc;
     }, []);
 
     const shouldForceApproved =
       effectiveReadOnly || checklist?.status?.toLowerCase() === "approved";
+
+    console.log("📋 Processing documents for CheckerReviewChecklistModal:", {
+      totalDocs: flatDocs.length,
+      shouldForceApproved
+    });
 
     setDocs(
       flatDocs.map((doc, idx) => ({
@@ -114,12 +152,7 @@ const CheckerReviewChecklistModal = ({
   const handlePdfDownload = async () => {
     setIsGeneratingPDF(true);
     try {
-      await downloadChecklistAsPDF({
-        checklist,
-        docs,
-        documentStats,
-        isCompletedChecklist: effectiveReadOnly,
-      });
+      generateChecklistPDF(checklist, docs, documentStats, comments?.data || comments || []);
       message.success("Checklist PDF generated successfully!");
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -404,7 +437,7 @@ const CheckerReviewChecklistModal = ({
     <div className="fixed inset-0 z-50 overflow-auto bg-black/40 flex justify-center items-start pt-10">
       <div className="review-checklist-modal w-[95%] max-w-7xl bg-white rounded-xl shadow-2xl overflow-hidden my-6">
         {/* Header Section with Gradient */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+        <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white">
           <HeaderSection
             checklist={checklist}
             onClose={onClose}
@@ -522,3 +555,4 @@ const CheckerReviewChecklistModal = ({
 };
 
 export default CheckerReviewChecklistModal;
+

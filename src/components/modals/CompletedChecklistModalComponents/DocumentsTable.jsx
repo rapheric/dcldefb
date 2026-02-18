@@ -14,6 +14,7 @@ import {
   getExpiryStatus,
   SECONDARY_PURPLE,
 } from "../../../utils/checklistConstants.js";
+import { getStatusTagProps, getStatusColor, formatStatusText } from "../../../utils/statusColors.js";
 
 const DocumentsTable = ({ docs, checklist }) => {
   const columns = [
@@ -39,45 +40,24 @@ const DocumentsTable = ({ docs, checklist }) => {
       dataIndex: "status",
       width: 120,
       render: (status, record) => {
-        let color = "#d9d9d9"; // default gray
-        const statusLower = (status || "").toLowerCase();
-
-        // Consistent color scheme for all statuses
-        switch (statusLower) {
-          case "submitted":
-          case "approved":
-            color = "#52c41a"; // GREEN - Approved/Submitted
-            break;
-          case "pendingrm":
-            color = "#6E0C05"; // Keep existing dark red for pending RM
-            break;
-          case "pendingco":
-            color = "#6E0549"; // Keep existing dark purple for pending CO
-            break;
-          case "waived":
-            color = "#C4AA1D"; // Keep existing gold for waived
-            break;
-          case "sighted":
-            color = "#1890ff"; // LIGHT BLUE - Sighted
-            break;
-          case "deferred":
-          case "deferral_requested":
-            color = "#fa541c"; // VOLCANO - Deferred/Deferral Requested
-            break;
-          case "tbo":
-            color = "#faad14"; // AMBER/ORANGE - TBO
-            break;
-          default:
-            color = "#d9d9d9";
-        }
-
         const statusLabel =
           status === "deferred" && record.deferralNo
             ? `Deferred (${record.deferralNo})`
-            : status;
+            : formatStatusText(status);
+
+        const colorConfig = getStatusColor(status);
 
         return (
-          <Tag className="status-tag" color={color}>
+          <Tag 
+            className="status-tag" 
+            {...getStatusTagProps(status)}
+            style={{
+              backgroundColor: colorConfig.bgColor,
+              color: colorConfig.textColor,
+              borderColor: colorConfig.borderColor,
+              fontWeight: "500",
+            }}
+          >
             {statusLabel}
           </Tag>
         );

@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { formatDateTime } from "../../utils/checklistUtils";
+import { getStatusColor, getStatusTagProps } from "../../utils/statusColors";
 
 import RmReviewChecklistModal from "../../components/modals/RmReviewChecklistModalComponents/RmReviewChecklistModal";
 import { useGetAllCoCreatorChecklistsQuery } from "../../api/checklistApi";
@@ -62,63 +63,6 @@ const MyQueue = ({ userId }) => {
 
   // ... (Theme colors and other constants) ...
 
-  // MAPPING: Backend Status Code -> Display Name/Color Config
-  const STATUS_CONFIG = {
-    // Existing Statuses (Assuming these are the *display* names)
-    Submitted: {
-      color: SUCCESS_GREEN,
-      textColor: "white",
-      display: "Submitted",
-    },
-    "Pending from RM": {
-      color: WARNING_ORANGE,
-      textColor: "white",
-      display: "Pending from RM",
-    },
-    "Pending from CO": {
-      color: INFO_BLUE,
-      textColor: "white",
-      display: "Pending from CO",
-    },
-    Deferred: {
-      color: SECONDARY_BLUE,
-      textColor: "white",
-      display: "Deferred",
-    },
-    Waived: { color: PRIMARY_PURPLE, textColor: "white", display: "Waived" },
-    TBO: { color: "#666666", textColor: "white", display: "TBO" },
-
-    // Add the new status codes with their user-friendly display names (camelCase from backend)
-    cocreatorreview: {
-      color: INFO_BLUE,
-      textColor: "white",
-      display: "Pending from CO-Creator",
-    },
-    rmreview: {
-      color: WARNING_ORANGE,
-      textColor: "white",
-      display: "Pending from RM",
-    }, // Matches existing 'Pending from RM' color
-    cocheckerreview: {
-      color: INFO_BLUE,
-      textColor: "white",
-      display: "Pending from CO-Checker",
-    },
-
-    // Ensure 'pending' is handled
-    pending: {
-      color: WARNING_ORANGE,
-      textColor: "white",
-      display: "Pending Submission",
-    },
-    approved: { color: SUCCESS_GREEN, textColor: "white", display: "Approved" },
-    rejected: { color: ERROR_RED, textColor: "white", display: "Rejected" },
-
-    // Catch-all for unknown or default
-    default: { color: "#d9d9d9", textColor: "#000", display: "Processing" },
-  };
-  // NOTE: Use the backend status code as the key, and the display name in the 'display' property
-
   // Filter checklists assigned to this RM and queue status
   const filteredData = useMemo(() => {
     if (!checklists) return [];
@@ -137,18 +81,12 @@ const MyQueue = ({ userId }) => {
         // Map and Inject the displayStatus field
         .map((c) => {
           const backendStatus = (c.status || "default").toLowerCase();
-
-          // Find the config using the backend status code.
-          // If not found, fall back to a default config or the status itself
-          const config =
-            STATUS_CONFIG[backendStatus] ||
-            STATUS_CONFIG[c.displayStatus || "default"] || // Fallback to existing displayStatus if status is not a code
-            STATUS_CONFIG.default;
+          const statusConfig = getStatusColor(backendStatus);
 
           return {
             ...c,
             // Set the displayStatus property for the Table column
-            displayStatus: config.display || c.status,
+            displayStatus: c.status,
           };
         })
 
@@ -169,21 +107,18 @@ const MyQueue = ({ userId }) => {
   const clearFilters = () => setSearchText("");
 
   const renderStatusTag = (status) => {
-    const config = STATUS_CONFIG[status] || {
-      color: "#d9d9d9",
-      textColor: "#000",
-    };
+    const statusConfig = getStatusColor(status);
     return (
       <Tag
-        color={config.color}
         style={{
           fontWeight: "bold",
           fontSize: 10,
-          padding: "2px 8px",
-          borderRadius: 10,
-          border: "none",
-          color: config.textColor,
-          minWidth: 100,
+          padding: "4px 8px",
+          borderRadius: 4,
+          border: `1px solid ${statusConfig.borderColor}`,
+          color: statusConfig.textColor,
+          backgroundColor: statusConfig.bgColor,
+          minWidth: 80,
           textAlign: "center",
         }}
       >

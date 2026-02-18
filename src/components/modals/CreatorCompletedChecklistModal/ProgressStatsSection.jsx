@@ -22,23 +22,23 @@ const ProgressStatsSection = ({ docs }) => {
 
   const stats = [
     { label: "Total", value: total, color: COLORS.PRIMARY_BLUE },
-    { label: "Submitted", value: submitted, color: "green" },
+    { label: "Submitted", value: submitted, color: "#52C41A" },
     {
       label: "Pending RM",
       value: pendingFromRM,
-      color: pendingFromRM > 0 ? "#f59e0b" : "#8b5cf6",
+      color: pendingFromRM > 0 ? "#FF4D4F" : "#8b5cf6",
       highlight: pendingFromRM > 0,
     },
     {
       label: "Pending Co",
       value: pendingFromCo,
-      color: "#8b5cf6",
+      color: "#FF4D4F",
       highlight: pendingFromCo > 0,
     },
-    { label: "Deferred", value: deferred, color: "#ef4444" },
-    { label: "Sighted", value: sighted, color: "#3b82f6" },
-    { label: "Waived", value: waived, color: "#f59e0b" },
-    { label: "TBO", value: tbo, color: "#06b6d4" },
+    { label: "Deferred", value: deferred, color: "#FAAD14" },
+    { label: "Sighted", value: sighted, color: "#52C41A" },
+    { label: "Waived", value: waived, color: "#FAAD14" },
+    { label: "TBO", value: tbo, color: "#FAAD14" },
   ];
 
   return (

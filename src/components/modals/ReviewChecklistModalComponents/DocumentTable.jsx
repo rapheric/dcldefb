@@ -13,6 +13,7 @@ import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import { getExpiryStatus, getStatusColor } from "../../../utils/documentUtils";
 import { PRIMARY_BLUE, SECONDARY_PURPLE } from "../../../utils/constants";
 import { getFullUrl } from "../../../utils/checklistUtils";
+import { getStatusTagProps, getStatusColor as getStatusColorStandard, formatStatusText } from "../../../utils/statusColors";
 
 const { Option } = Select;
 
@@ -146,27 +147,36 @@ const DocumentTable = ({
       title: "Checker Status",
       dataIndex: "finalCheckerStatus",
       render: (checkerStatus) => {
-        let color = "default";
+        const colorConfig = getStatusColorStandard(checkerStatus);
         let label = checkerStatus || "Pending";
 
         switch ((checkerStatus || "").toLowerCase()) {
           case "approved":
-            color = "green";
-            label = "Approved";
+            label = "✅ Approved";
             break;
           case "rejected":
-            color = "red";
-            label = "Rejected";
+            label = "❌ Rejected";
             break;
           case "pending":
-            color = "gold";
-            label = "Pending";
+            label = "⏳ Pending";
             break;
           default:
-            color = "default";
+            label = checkerStatus || "Pending";
         }
 
-        return <Tag color={color}>{label}</Tag>;
+        return (
+          <Tag 
+            {...getStatusTagProps(checkerStatus)}
+            style={{
+              backgroundColor: colorConfig.bgColor,
+              color: colorConfig.textColor,
+              borderColor: colorConfig.borderColor,
+              fontWeight: "500",
+            }}
+          >
+            {label}
+          </Tag>
+        );
       },
     },
     {
@@ -248,27 +258,21 @@ const DocumentTable = ({
 
         let color = "blue";
 
-        switch ((status || "").toLowerCase()) {
-          case "submitted_for_review":
-            color = "success";
-            break;
-          case "approved":
-            color = "green";
-            break;
-          case "defferal_requested":
-            color = "purple";
-            break;
-          case "pending_from_customer":
-            color = "orange";
-            break;
-          default:
-            color = "default";
-        }
+        const colorConfig = getStatusColorStandard(status);
+        const displayColor = colorConfig.color || "default";
 
         return (
           <div className="flex items-center gap-2">
-            <Tag className="status-tag" color={color}>
-              {status.replace(/_/g, " ")}
+            <Tag 
+              className="status-tag" 
+              style={{
+                backgroundColor: colorConfig.bgColor,
+                color: colorConfig.textColor,
+                borderColor: colorConfig.borderColor,
+                fontWeight: "500",
+              }}
+            >
+              {formatStatusText(status)}
             </Tag>
 
             {status.toLowerCase() === "defferal_requested" &&
@@ -328,7 +332,7 @@ const DocumentTable = ({
           description="This action cannot be undone."
           okText="Yes, Delete"
           cancelText="Cancel"
-          okButtonProps={{ danger: true }}
+          okButtonProps={{ danger: true }}  
           onConfirm={() => onDelete(record.docIdx)}
           disabled={!canActOnDoc(record)}
         >

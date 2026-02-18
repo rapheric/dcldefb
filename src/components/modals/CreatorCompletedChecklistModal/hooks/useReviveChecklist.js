@@ -11,31 +11,51 @@ export const useReviveChecklist = (
   const [showReviveConfirm, setShowReviveConfirm] = useState(false);
 
   const handleReviveChecklist = () => {
-    if (!checklist?._id) {
+    console.log("🔄 [useReviveChecklist] handleReviveChecklist called");
+    console.log("   Checklist ID:", checklist?.id || checklist?._id);
+    console.log("   onRevive function exists:", !!onRevive);
+    console.log("   onRevive is function:", typeof onRevive === "function");
+
+    if (!checklist?._id && !checklist?.id) {
+      console.error("❌ Checklist ID missing:", checklist);
       message.error("Cannot revive: Checklist ID is missing");
       return;
     }
 
     if (!onRevive || typeof onRevive !== "function") {
+      console.error("❌ onRevive is not a function:", onRevive);
       message.error("Cannot revive: Missing revive function");
       return;
     }
 
+    console.log("✅ Opening confirmation modal...");
     setShowReviveConfirm(true);
   };
 
   const handleConfirmRevive = async () => {
+    console.log("🚀 [useReviveChecklist] handleConfirmRevive called");
+    console.log("   Closing confirmation modal...");
     setShowReviveConfirm(false);
+    
+    console.log("   Setting isReviving to true...");
     setIsReviving(true);
 
+    const checklistId = checklist?.id || checklist?._id;
+    console.log("   Checklist ID for revive:", checklistId);
+
     try {
+      console.log("   Showing loading message...");
       message.loading({
         content: "Creating new checklist from template...",
         duration: 0,
         key: "revive",
       });
 
-      const result = await onRevive(checklist.id || checklist._id);
+      console.log("   Calling onRevive with checklistId:", checklistId);
+      const result = await onRevive(checklistId);
+
+      console.log("   ✅ onRevive completed successfully!");
+      console.log("   Result:", result);
 
       message.success({
         content:
@@ -45,12 +65,21 @@ export const useReviveChecklist = (
         key: "revive",
       });
 
+      console.log("   Calling onRefreshData...");
       onRefreshData?.();
 
+      console.log("   Closing modal after 500ms...");
       setTimeout(() => {
+        console.log("   Modal closing...");
         onClose();
       }, 500);
     } catch (error) {
+      console.error("❌ Error in handleConfirmRevive:", error);
+      console.error("   Error type:", error?.constructor?.name);
+      console.error("   Error status:", error?.status);
+      console.error("   Error message:", error?.message);
+      console.error("   Error data:", error?.data);
+
       let errorMessage = "Failed to revive checklist. Please try again.";
 
       if (error?.status === 500) {
@@ -76,6 +105,7 @@ export const useReviveChecklist = (
         errorMessage = error.message;
       }
 
+      console.error("   Final error message:", errorMessage);
       message.error({
         content: errorMessage,
         duration: 5,
@@ -88,11 +118,13 @@ export const useReviveChecklist = (
         setTimeout(() => onClose(), 100);
       }
     } finally {
+      console.log("   Setting isReviving to false");
       setIsReviving(false);
     }
   };
 
   const handleCancelRevive = () => {
+    console.log("🚫 [useReviveChecklist] handleCancelRevive called");
     setShowReviveConfirm(false);
   };
 

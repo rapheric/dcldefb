@@ -40,21 +40,40 @@ const reviveModalStyles = {
 };
 
 const ReviveConfirmationModal = ({ open, onCancel, onConfirm, loading }) => {
+  React.useEffect(() => {
+    console.log("🎯 [ReviveConfirmationModal] Modal state changed");
+    console.log("   open:", open);
+    console.log("   loading:", loading);
+    console.log("   onConfirm exists:", !!onConfirm);
+    console.log("   onCancel exists:", !!onCancel);
+  }, [open, loading, onConfirm, onCancel]);
+
+  const handleConfirmClick = () => {
+    console.log("✅ [ReviveConfirmationModal] Confirm button clicked!");
+    console.log("   Calling onConfirm...");
+    onConfirm?.();
+  };
+
+  const handleCancelClick = () => {
+    console.log("🚫 [ReviveConfirmationModal] Cancel button clicked");
+    onCancel?.();
+  };
+
   return (
     <Modal
       title={REVIVE_MODAL_CONTENT.TITLE}
       open={open}
-      onCancel={onCancel}
+      onCancel={handleCancelClick}
       centered
       footer={[
-        <Button key="cancel" onClick={onCancel}>
+        <Button key="cancel" onClick={handleCancelClick}>
           Cancel
         </Button>,
         <Button
           key="confirm"
           type="primary"
           loading={loading}
-          onClick={onConfirm}
+          onClick={handleConfirmClick}
           icon={<RedoOutlined />}
           style={buttonStyles.confirmRevive}
         >

@@ -60,7 +60,13 @@ export const useChecklistOperations = (
       // Send document updates to backend BEFORE submitting to RM
       const payload = {
         documents: nestedDocuments,
+        creatorComment: creatorComment || "", // ✅ CRITICAL: Include comment from user
       };
+
+      console.log("📤 RM SUBMISSION:");
+      console.log("   Checklist ID:", checklistId);
+      console.log("   Creator Comment:", creatorComment ? `"${creatorComment.substring(0, 50)}..."` : "(empty)");
+      console.log("   Payload:", JSON.stringify(payload, null, 2));
 
       const result = await submitRmChecklist({
         id: checklistId,
@@ -131,15 +137,15 @@ export const useChecklistOperations = (
 
       const payload = {
         dclNo: checklist.dclNo,
-        status: "co_checker_review",
         documents: flatDocuments, // FLAT list, not nested!
-        supportingDocs,
+        finalComment: creatorComment || "", // ✅ CRITICAL: Include comment from user
       };
 
       console.log("📤 BEFORE SUBMISSION:");
       console.log("   Payload:", JSON.stringify(payload, null, 2));
       console.log("   Documents count:", docs.length);
       console.log("   Flat documents count:", flatDocuments.length);
+      console.log("   Creator Comment:", creatorComment ? `"${creatorComment.substring(0, 50)}..."` : "(empty)");
 
       const result = await updateChecklistStatus(payload).unwrap();
 

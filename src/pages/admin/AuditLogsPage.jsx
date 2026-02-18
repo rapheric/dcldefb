@@ -418,8 +418,7 @@ import {
 } from "@ant-design/icons";
 import { useGetUsersQuery } from "../../api/userApi";
 import axios from "axios";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import { generateAuditPDF } from "../../utils/reportGenerator";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 
@@ -544,7 +543,6 @@ const AuditLogsPage = () => {
 
     const generateUserActivityPDF = async (user, activities = null) => {
         try {
-            console.log("📄 Starting PDF generation for user:", user.name);
             message.loading({ content: "Generating PDF...", key: "pdf" });
 
             let userActivities = activities;
@@ -569,103 +567,18 @@ const AuditLogsPage = () => {
                 userActivities = response.data.activities || [];
             }
 
-            console.log("📊 Using activities:", userActivities.length);
+            // Format activities for PDF export
+            const formattedActivities = (userActivities || []).map((item) => ({
+                timestamp: item.date || item.timestamp || item.createdAt,
+                userName: user.name,
+                action: item.action || item.activity || "N/A",
+                description: item.details || item.description || "N/A",
+                status: item.status || "success"
+            }));
 
-            const doc = new jsPDF();
-            const pageWidth = doc.internal.pageSize.getWidth();
-
-            // Header
-            doc.setFillColor(43, 28, 103);
-            doc.rect(0, 0, pageWidth, 40, "F");
-
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(20);
-            doc.text("User Activity Report", pageWidth / 2, 20, { align: "center" });
-
-            doc.setFontSize(10);
-            doc.text(`Generated: ${dayjs().format("YYYY-MM-DD HH:mm:ss")}`, pageWidth / 2, 30, {
-                align: "center",
-            });
-
-            // User Information
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(14);
-            doc.text("User Information", 14, 55);
-
-            const userInfo = [
-                ["Name", user.name || "N/A"],
-                ["Email", user.email || "N/A"],
-                ["Role", (user.role || "").toUpperCase()],
-                ["Status", user.active ? "Active" : "Inactive"],
-                ["Customer Number", user.customerNumber || "N/A"],
-                ["RM ID", user.rmId || "N/A"],
-                ["Account Created", user.createdAt ? dayjs(user.createdAt).format("YYYY-MM-DD HH:mm:ss") : "N/A"],
-                ["Last Updated", user.updatedAt ? dayjs(user.updatedAt).format("YYYY-MM-DD HH:mm:ss") : "N/A"],
-            ];
-
-            autoTable(doc, {
-                startY: 60,
-                head: [["Field", "Value"]],
-                body: userInfo,
-                theme: "striped",
-                headStyles: { fillColor: [43, 28, 103] },
-            });
-
-            // Activity Log Section
-            let finalY = doc.lastAutoTable.finalY + 15;
-            doc.setFontSize(14);
-            doc.text(`Recent Activity (${userActivities.length} records)`, 14, finalY);
-
-            if (userActivities.length > 0) {
-                // Use real activity data
-                const activityData = userActivities.slice(0, 50).map(activity => [
-                    dayjs(activity.date).format("YYYY-MM-DD HH:mm:ss"),
-                    activity.action.replace(/_/g, ' '),
-                    activity.details || "No details available",
-                    activity.status || "Success"
-                ]);
-
-                autoTable(doc, {
-                    startY: finalY + 5,
-                    head: [["Date", "Action", "Details", "Status"]],
-                    body: activityData,
-                    theme: "grid",
-                    headStyles: { fillColor: [43, 28, 103] },
-                    styles: { fontSize: 8 },
-                    columnStyles: {
-                        0: { cellWidth: 40 },
-                        1: { cellWidth: 35 },
-                        2: { cellWidth: 80 },
-                        3: { cellWidth: 25 }
-                    }
-                });
-            } else {
-                // No activity found
-                doc.setFontSize(10);
-                doc.setTextColor(128, 128, 128);
-                doc.text("No activity records found for this user.", 14, finalY + 10);
-            }
-
-            // Footer
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(128, 128, 128);
-                doc.text(
-                    `Page ${i} of ${pageCount}`,
-                    pageWidth / 2,
-                    doc.internal.pageSize.getHeight() - 10,
-                    { align: "center" }
-                );
-            }
-
-            // Save PDF
-            const filename = `${user.name.replace(/[^a-z0-9]/gi, '_')}_Activity_Report_${dayjs().format("YYYY-MM-DD")}.pdf`;
-            console.log("💾 Saving PDF as:", filename);
-            doc.save(filename);
-
-            console.log("✅ PDF generated successfully");
+            // Use unified PDF export
+            generateAuditPDF(formattedActivities, `${user.name} Activity Report`);
+            
             message.success({ content: "PDF downloaded successfully!", key: "pdf", duration: 3 });
         } catch (error) {
             console.error("❌ Error generating PDF:", error);

@@ -47,10 +47,67 @@ const CreatorCompletedChecklistModal = ({
       skip: !checklist?.id && !checklist?._id,
     });
 
+  // DEBUG: Log comment fetching
+  React.useEffect(() => {
+    const checklistId = checklist?.id || checklist?._id;
+    console.log("👤 CreatorCompletedChecklistModal - Checklist ID for comments:", checklistId);
+    console.log("👤 Comments Loading:", commentsLoading);
+    console.log("👤 Comments Data:", comments);
+    if (comments && Array.isArray(comments)) {
+      console.log(`👤 Total comments fetched: ${comments.length}`);
+    }
+  }, [checklist?.id, checklist?._id, comments, commentsLoading]);
+
   const handleDownloadPDF = async () => {
     // Ensure docs is an array before passing to generatePDF
     const safeDocs = Array.isArray(docs) ? docs : [];
     await generatePDF(checklist, safeDocs, documentStats, comments);
+  };
+
+  const handleReviveClick = () => {
+    console.log("🚀 [CreatorCompletedChecklistModal] Revive button clicked!");
+    console.log("📋 Checklist ID:", checklist?._id || checklist?.id);
+    console.log("📋 readOnly:", readOnly);
+    handleReviveChecklist();
+  };
+
+  const renderFooter = () => {
+    // Always show revive button for completed/approved checklists, regardless of readOnly
+    const checklistStatus = checklist?.status?.toLowerCase() || "";
+    const isCompletedOrApproved = 
+      checklistStatus === "approved" || 
+      checklistStatus === "completed" ||
+      checklistStatus === "approvedandcompleted";
+    
+    return (
+      <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+        <Button key="close" onClick={onClose}>
+          Close
+        </Button>
+        {isCompletedOrApproved && (
+          <Button
+            key="revive"
+            icon={<RedoOutlined />}
+            loading={isReviving}
+            disabled={isReviving}
+            onClick={handleReviveClick}
+            style={buttonStyles.revive}
+          >
+            Revive Checklist
+          </Button>
+        )}
+        <Button
+          key="download"
+          icon={<FilePdfOutlined />}
+          loading={isGeneratingPDF}
+          onClick={handleDownloadPDF}
+          type="primary"
+          style={buttonStyles.download}
+        >
+          Download as PDF
+        </Button>
+      </div>
+    );
   };
 
   return (
@@ -71,33 +128,7 @@ const CreatorCompletedChecklistModal = ({
         open={open}
         onCancel={onClose}
         width={1100}
-        footer={[
-          <Button
-            key="download"
-            icon={<FilePdfOutlined />}
-            loading={isGeneratingPDF}
-            onClick={handleDownloadPDF}
-            type="primary"
-            style={buttonStyles.download}
-          >
-            Download as PDF
-          </Button>,
-          !readOnly && (
-            <Button
-              key="revive"
-              icon={<RedoOutlined />}
-              loading={isReviving}
-              disabled={isReviving}
-              onClick={handleReviveChecklist}
-              style={buttonStyles.revive}
-            >
-              Revive Checklist
-            </Button>
-          ),
-          <Button key="close" onClick={onClose}>
-            Close
-          </Button>,
-        ]}
+        footer={renderFooter()}
         styles={modalStyles}
       >
         {checklist ? (
