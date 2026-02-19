@@ -13,7 +13,7 @@ import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import { getExpiryStatus, getStatusColor } from "../../../utils/documentUtils";
 import { PRIMARY_BLUE, SECONDARY_PURPLE } from "../../../utils/constants";
 import { getFullUrl } from "../../../utils/checklistUtils";
-import { getStatusTagProps, getStatusColor as getStatusColorStandard, formatStatusText } from "../../../utils/statusColors";
+import { getStatusTagProps, getStatusColor as getStatusColorStandard, formatStatusText, formatStatusForSnakeCase } from "../../../utils/statusColors";
 
 const { Option } = Select;
 
@@ -272,7 +272,7 @@ const DocumentTable = ({
                 fontWeight: "500",
               }}
             >
-              {formatStatusText(status)}
+              {formatStatusForSnakeCase(status)}
             </Tag>
 
             {status.toLowerCase() === "defferal_requested" &&

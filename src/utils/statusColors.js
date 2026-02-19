@@ -19,6 +19,22 @@ export const formatStatusText = (status) => {
     .join(" ");
 };
 
+/**
+ * Format status for snake_case display in UI
+ * Converts "Pending From Customer" or spaced format to "pending_from_customer"
+ * @param {string} status - Status string (can be title case or spaced)
+ * @returns {string} - Formatted status in snake_case (all lowercase with underscores)
+ */
+export const formatStatusForSnakeCase = (status) => {
+  if (!status) return "unknown";
+  
+  // Convert to lowercase and replace spaces with underscores
+  return status
+    .toLowerCase()
+    .replace(/\s+/g, "_")    // Replace spaces with underscores
+    .replace(/__+/g, "_");   // Replace multiple underscores with single
+};
+
 export const STATUS_COLORS = {
   // RED - Pending statuses (action required)
   pendingrm: {

@@ -153,7 +153,42 @@ export default function DeferralForm({ userId, onSuccess }) {
   const LOAN_THRESHOLD = 75000000; // 75M
 
   const computeDefaultRoles = () => {
-    // Predefined roles removed per user request
+    const hasPrimary = selectedDocuments.some(
+      (d) => String(d?.type || "").toLowerCase() === "primary"
+    );
+    const hasSecondary = selectedDocuments.some(
+      (d) => String(d?.type || "").toLowerCase() === "secondary"
+    );
+    const isAboveThreshold = parsedLoanAmount() > LOAN_THRESHOLD;
+
+    if (hasPrimary) {
+      return isAboveThreshold
+        ? [
+            "Head of Business Segment",
+            "Group Director of Business Unit",
+            "Senior Manager, Retail & Corporate Credit Approvals / Assistant General Manager Corporate Credit Approvals / Head of Retail/Corporate Credit approvals",
+          ]
+        : [
+            "Head of Business Segment / Corporate Sector head",
+            "Director of Business Unit",
+            "Senior Manager, Retail & Corporate Credit Approvals / Assistant General Manager Corporate Credit Approvals / Head of Retail/Corporate Credit approvals",
+          ];
+    }
+
+    if (hasSecondary) {
+      return isAboveThreshold
+        ? [
+            "Head of Business Segment",
+            "Group Director of Business Unit",
+            "Head of Credit Operations",
+          ]
+        : [
+            "Head of Business Segment",
+            "Director of Business Unit",
+            "Head of Credit Operations",
+          ];
+    }
+
     return [];
   };
 
@@ -161,7 +196,7 @@ export default function DeferralForm({ userId, onSuccess }) {
   useEffect(() => {
     const defaultRoles = computeDefaultRoles();
     if (!approverCustomized || approverSlots.length === 0) {
-      setApproverSlots(defaultRoles.map((r) => ({ role: r, userId: "" })));
+      setApproverSlots(defaultRoles.map((r) => ({ role: r, userId: "", isCustom: false })));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDocuments.length, loanAmount]);
@@ -251,15 +286,29 @@ export default function DeferralForm({ userId, onSuccess }) {
   // ----------------------
   // HANDLERS for ApproverSelector (slot-based)
   // ----------------------
-  const addApprover = (role) => {
+  const addApprover = (insertIndex, role) => {
     setApproverCustomized(true);
-    setApproverSlots([...approverSlots, { role: role || "Approver", userId: "" }]);
+    const next = [...approverSlots];
+    const slot = { role: role || "Approver", userId: "", isCustom: true };
+
+    if (typeof insertIndex === "number" && Number.isFinite(insertIndex)) {
+      const clampedIndex = Math.max(1, Math.min(insertIndex, next.length - 1));
+      next.splice(clampedIndex, 0, slot);
+      setApproverSlots(next);
+      return;
+    }
+
+    setApproverSlots([...approverSlots, slot]);
   };
 
-  const updateApprover = (index, userId) => {
+  const updateApprover = (index, userId, role) => {
     setApproverCustomized(true);
     const arr = [...approverSlots];
-    arr[index] = { ...arr[index], userId };
+    arr[index] = {
+      ...arr[index],
+      userId,
+      ...(role ? { role } : {}),
+    };
     setApproverSlots(arr);
   };
 
@@ -437,7 +486,7 @@ export default function DeferralForm({ userId, onSuccess }) {
     try {
       const stored = JSON.parse(localStorage.getItem('user') || 'null');
       const token = stored?.token;
-      const url = `${import.meta.env.VITE_API_URL}/api/deferrals/search-by-dcl?dclNumber=${encodeURIComponent(q)}`;
+      const url = `${import.meta.env.VITE_API_URL}/api/customers/search-dcl?dclNo=${encodeURIComponent(q)}`;
       const res = await fetch(url, {
         headers: {
           ...(token ? { authorization: `Bearer ${token}` } : {}),
@@ -476,14 +525,14 @@ export default function DeferralForm({ userId, onSuccess }) {
     setBusinessName(deferral.businessName || "");
     setCustomerNumber(deferral.customerNumber || "");
     setLoanType(deferral.loanType || "");
-    setSearchDclNumber(deferral.dclNumber || "");
-    setDclNumber(deferral.dclNumber || ""); // Auto-fill DCL number field
-    setSelectedCustomerId(deferral.customer?._id || null);
-    setSelectedDclId(deferral._id); // Store the selected DCL ID
+    setSearchDclNumber(deferral.dclNo || "");
+    setDclNumber(deferral.dclNo || ""); // Auto-fill DCL number field
+    setSelectedCustomerId(deferral.customerId || null);
+    setSelectedDclId(deferral.id); // Store the selected DCL ID
     setIsSearchedByDcl(true); // Mark that DCL search was used
 
     // Fetch and auto-download the DCL file
-    fetchDclFile(deferral._id, deferral.dclNumber);
+    fetchDclFile(deferral.id, deferral.dclNo);
 
     // Auto-proceed to deferral details page
     setIsCustomerFetched(true);
@@ -1073,14 +1122,7 @@ export default function DeferralForm({ userId, onSuccess }) {
               <Text type="secondary" style={{ display: "block", marginTop: 8, color: WARNING_ORANGE }}>
                 DCL document is required for submission
               </Text>
-            ) : (
-              <div>
-                <Text type="success" style={{ display: "block", marginTop: 8, fontSize: '12px' }}>
-                  ✓ DCL document ready: {dclFile.name}
-                </Text>
-
-              </div>
-            )}
+            ) : null}
 
           </Card>
         </Col>
@@ -1232,7 +1274,7 @@ export default function DeferralForm({ userId, onSuccess }) {
 
   const handleSubmitDeferral = async () => {
     // Basic validation
-    if (!selectedCustomerId) {
+    if (!selectedCustomerId && !String(customerNumber || '').trim()) {
       message.error('Please fetch and confirm a customer before submitting');
       return;
     }
@@ -1240,12 +1282,95 @@ export default function DeferralForm({ userId, onSuccess }) {
       message.error('Please enter DCL number');
       return;
     }
+    if (!Array.isArray(selectedDocuments) || selectedDocuments.length === 0) {
+      message.error('Please select at least one document before submitting');
+      return;
+    }
+
+    const expectedRoles = computeDefaultRoles();
+    const selectedApproverSlots = approverSlots.filter((slot) => !!slot.userId);
+    const approverIds = selectedApproverSlots.map((slot) => String(slot.userId));
+    if (new Set(approverIds).size !== approverIds.length) {
+      message.error('Same approver cannot be selected for multiple approval steps');
+      return;
+    }
+    if (selectedApproverSlots.length !== approverSlots.length) {
+      message.error('Please assign all approvers before submitting');
+      return;
+    }
+
+    const normalizedExpectedRoles = expectedRoles.map((role) => String(role || "").trim().toLowerCase());
+    const normalizedSelectedRoles = selectedApproverSlots.map((slot) => String(slot?.role || "").trim().toLowerCase());
+
+    if (normalizedSelectedRoles.length < normalizedExpectedRoles.length) {
+      message.error('Please assign all required approvers before submitting');
+      return;
+    }
+
+    const firstRoleMismatch = normalizedSelectedRoles[0] !== normalizedExpectedRoles[0];
+    const lastRoleMismatch =
+      normalizedSelectedRoles[normalizedSelectedRoles.length - 1] !==
+      normalizedExpectedRoles[normalizedExpectedRoles.length - 1];
+
+    if (firstRoleMismatch || lastRoleMismatch) {
+      message.error('First and final approvers must match the required approval matrix');
+      return;
+    }
+
+    let expectedIndex = 0;
+    for (const role of normalizedSelectedRoles) {
+      if (role === normalizedExpectedRoles[expectedIndex]) {
+        expectedIndex += 1;
+      }
+      if (expectedIndex >= normalizedExpectedRoles.length) break;
+    }
+
+    if (expectedIndex < normalizedExpectedRoles.length) {
+      message.error('Required approval matrix order must be preserved when adding extra approvers');
+      return;
+    }
+
+    const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
     setIsSubmitting(true);
 
     try {
+      const resolvedApprovers = selectedApproverSlots.map((slot) => {
+        const matched = approverList.find(
+          (approver) =>
+            String(approver?._id || approver?.id || approver?.userId || "") === String(slot.userId)
+        );
+
+        const resolvedUserId = matched?.id || matched?._id || matched?.userId || slot.userId;
+        return {
+          role: slot.role,
+          userId: resolvedUserId,
+          user: resolvedUserId,
+        };
+      });
+
+      if (resolvedApprovers.some((approver) => !guidRegex.test(String(approver.userId || "")))) {
+        message.error('One or more selected approvers have invalid IDs. Please reselect approvers and try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const normalizedFacilities = (facilities || []).map((facility) => ({
+        type: facility?.type || facility?.facilityType || facility?.name || "",
+        sanctioned: Number(facility?.sanctioned ?? facility?.amount ?? 0) || 0,
+        balance: Number(facility?.balance ?? 0) || 0,
+        headroom: Number(facility?.headroom ?? Math.max(0, (Number(facility?.amount ?? facility?.sanctioned ?? 0) || 0) - (Number(facility?.balance ?? 0) || 0))) || 0,
+      }));
+
+      const normalizeDocumentType = (doc) => {
+        const rawType = String(doc?.type || "").trim().toLowerCase();
+        if (rawType === "primary") return "Primary";
+        if (rawType === "secondary") return "Secondary";
+        return documentCategory === "Primary" ? "Primary" : "Secondary";
+      };
+
       const payload = {
-        customerId: selectedCustomerId,
+        customerId: selectedCustomerId || undefined,
         customerNumber,
         customerName,
         businessName,
@@ -1256,14 +1381,28 @@ export default function DeferralForm({ userId, onSuccess }) {
         nextDocumentDueDate: nextDueDate ? dayjs(nextDueDate).toISOString() : undefined,
         dclNumber,
         deferralDescription,
-        facilities,
-        approvers: approverSlots.map((s) => ({ role: s.role, user: s.userId })),
+        facilities: normalizedFacilities,
+        approvers: resolvedApprovers,
         // Preserve selected document names/metadata so they appear in pending modal
-        selectedDocuments: (selectedDocuments || []).map(d => (typeof d === 'string' ? { name: d } : d)),
+        selectedDocuments: (selectedDocuments || []).map((doc) => {
+          if (typeof doc === 'string') {
+            return { name: doc, type: documentCategory === "Primary" ? "Primary" : "Secondary" };
+          }
+          return {
+            ...doc,
+            type: normalizeDocumentType(doc),
+          };
+        }),
         // Include posted comments so they appear in the comment trail
         comments: postedComments.map(c => ({
           text: c.message,
-          createdAt: c.timestamp
+          createdAt: c.createdAt,
+          authorName: c.user?.name || currentUser.name || 'RM',
+          authorRole: c.user?.role || currentUser.role || 'RM',
+          author: {
+            name: c.user?.name || currentUser.name || 'RM',
+            role: c.user?.role || currentUser.role || 'RM',
+          },
         }))
       };
 
@@ -1304,6 +1443,14 @@ export default function DeferralForm({ userId, onSuccess }) {
 
       // Use backend deferralNumber
       const finalDeferralNumber = newDeferral.deferralNumber;
+      const createdDeferralId = newDeferral?.id || newDeferral?._id;
+
+      if (!createdDeferralId) {
+        console.error('Create deferral succeeded but response had no id/_id', newDeferral);
+        message.warning('Deferral created but document linking failed: missing deferral ID');
+        navigate('/rm/deferrals/pending');
+        return;
+      }
 
       // Prepare object to display in modal (include DCL and facilities)
       const display = {
@@ -1316,35 +1463,40 @@ export default function DeferralForm({ userId, onSuccess }) {
       };
 
       // Upload any selected files as multipart form uploads (binary)
-      const uploads = [];
+      // Attach selected files as deferral documents using supported backend endpoint
+      const documentRequests = docsToAttach
+        .filter((doc) => !!doc?.name)
+        .map((doc) =>
+          deferralApi.addDocument(createdDeferralId, {
+            name: doc.name,
+            url: doc.url || "",
+            isDCL: doc.isDCL === true,
+            isAdditional: doc.isAdditional === true,
+          })
+        );
 
-      if (dclFile) {
-        uploads.push((async () => {
-          try {
-            await deferralApi.uploadDocument(newDeferral._id, dclFile, { isDCL: true });
-          } catch (e) {
-            console.error('Failed to upload DCL file', e);
-          }
-        })());
+      // Best-effort attach; do not fail deferral creation if a document attachment fails
+      try {
+        await Promise.all(documentRequests);
+      } catch (e) {
+        console.error('One or more document attachments failed', e);
       }
 
-      if (additionalFiles && additionalFiles.length > 0) {
-        uploads.push(...additionalFiles.map((f) => (async () => {
-          try {
-            await deferralApi.uploadDocument(newDeferral._id, f, { isAdditional: true });
-          } catch (e) {
-            console.error('Failed to upload additional file', e);
-          }
-        })()));
-      }
-
-      // Wait for uploads to finish (best-effort)
-      try { await Promise.all(uploads); } catch (e) { /* ignore */ }
+      const attemptedRecipients = Number(newDeferral?.emailNotification?.attemptedRecipients || 0);
+      const hadDispatchError = !!newDeferral?.emailNotification?.hadDispatchError;
 
       // Redirect to My Deferrals after uploads are attempted
       navigate('/rm/deferrals/pending');
 
-      message.success('Deferral request created');
+      if (attemptedRecipients > 0) {
+        message.success(
+          hadDispatchError
+            ? `Deferral request created. Email notifications attempted for ${attemptedRecipients} recipient(s), but dispatch had issues.`
+            : `Deferral request created. Email notifications queued for ${attemptedRecipients} recipient(s).`
+        );
+      } else {
+        message.success('Deferral request created');
+      }
 
       // Dispatch a global event so other dashboards (CO/Creator) can refresh their pending lists
       try { window.dispatchEvent(new CustomEvent('deferral:created', { detail: newDeferral })); } catch (e) { /* ignore */ }
@@ -1368,7 +1520,7 @@ export default function DeferralForm({ userId, onSuccess }) {
 
   const openConfirmModal = async () => {
     // Minimal validation before showing the summary
-    if (!selectedCustomerId) {
+    if (!selectedCustomerId && !String(customerNumber || '').trim()) {
       message.error('Please fetch and confirm a customer before submitting');
       return;
     }
@@ -1415,7 +1567,7 @@ export default function DeferralForm({ userId, onSuccess }) {
 
         <Descriptions.Item label="Loan Type">{formatLoanType(loanType)}</Descriptions.Item>
         <Descriptions.Item label="Days Sought">{daysSought || '-'}</Descriptions.Item>
-        <Descriptions.Item label="Next Due Date">{nextDueDate || '-'}</Descriptions.Item>
+        <Descriptions.Item label="Deferred due date">{nextDueDate || '-'}</Descriptions.Item>
 
         <Descriptions.Item label="Document(s) to be deferred">
           {selectedDocuments && selectedDocuments.length > 0 ? (
@@ -1424,6 +1576,8 @@ export default function DeferralForm({ userId, onSuccess }) {
               dataSource={selectedDocuments}
               renderItem={(doc) => {
                 const docName = typeof doc === 'string' ? doc : doc.name || doc.label || 'Document';
+                const docTypeRaw = typeof doc === 'string' ? '' : String(doc.type || '').trim().toLowerCase();
+                const docType = docTypeRaw === 'primary' ? 'Primary' : docTypeRaw === 'secondary' ? 'Secondary' : documentCategory;
                 const uploadedFiles = [...(dclFile ? [{ name: dclFile.name, fileObj: dclFile }] : []), ...additionalFiles.map(f => ({ name: f.name, fileObj: f }))];
                 const uploaded = uploadedFiles.find(u => u.name && docName && u.name.toLowerCase().includes(docName.toLowerCase()));
                 return (
@@ -1431,6 +1585,11 @@ export default function DeferralForm({ userId, onSuccess }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                       <div>
                         <div style={{ fontWeight: 600 }}>{docName}</div>
+                        <div style={{ marginTop: 4 }}>
+                          <Tag color={docType === 'Primary' ? 'purple' : 'orange'} style={{ margin: 0 }}>
+                            {docType}
+                          </Tag>
+                        </div>
                         {uploaded && <div style={{ fontSize: 12, color: '#666' }}>Uploaded as: {uploaded.name}</div>}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1557,6 +1716,8 @@ export default function DeferralForm({ userId, onSuccess }) {
         onSubmitDeferral={openConfirmModal}
         isSubmitting={isSubmitting}
         currentUser={currentUser}
+        selectedDocuments={selectedDocuments}
+        loanAmount={loanAmount}
         // dclFileReady={!!dclFile}
         onCancel={() => navigate('/rm/deferrals/pending')}
       />
@@ -1769,7 +1930,7 @@ export default function DeferralForm({ userId, onSuccess }) {
                           }}>
                             {dclSearchResults.map((dcl) => (
                               <div
-                                key={dcl._id}
+                                key={dcl.id}
                                 onClick={() => handleSelectDcl(dcl)}
                                 style={{
                                   padding: '12px',
@@ -1780,7 +1941,7 @@ export default function DeferralForm({ userId, onSuccess }) {
                                   gap: 4
                                 }}
                               >
-                                <div style={{ fontWeight: 600, color: PRIMARY_PURPLE }}>{dcl.dclNumber}</div>
+                                <div style={{ fontWeight: 600, color: PRIMARY_PURPLE }}>{dcl.dclNo}</div>
                                 <div style={{ fontSize: 12, color: '#666' }}>
                                   {dcl.customerName} ({dcl.customerNumber})
                                 </div>

@@ -102,77 +102,130 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white p-10 rounded-xl shadow-lg">
-          {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-blue-100 p-4 rounded-full">
-              <FiCheckCircle className="text-blue-600" size={32} />
-            </div>
+    <div className="min-h-screen bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        
+        {/* LEFT SIDE - LOGIN FORM */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8 lg:p-12 order-2 lg:order-1">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+              Log in to your Account
+            </h1>
+            <p className="text-gray-500 text-lg">
+              Access the Document Checklist System
+            </p>
           </div>
 
-          {/* Title */}
-          <h1 className="text-3xl font-extrabold text-center text-gray-800">
-            Document Checklist System
-          </h1>
-          <p className="text-center text-gray-500 mb-8">
-            Secure access for authorized personnel
-          </p>
-
           {/* Login Form */}
-          <form onSubmit={handleLoginSubmit} className="space-y-5">
+          <form onSubmit={handleLoginSubmit} className="space-y-6 mb-8">
             {/* EMAIL */}
-            <div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Email</label>
               <input
                 type="email"
-                placeholder="Email"
-                className="w-full px-4 py-3 border rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="enter your email"
+                className="w-full px-5 py-3 border-2 border-gray-200 rounded-lg text-gray-700 focus:border-blue-600 focus:ring-0 outline-none transition"
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
               />
             </div>
 
             {/* PASSWORD */}
-            <div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Password</label>
               <input
                 type="password"
-                placeholder="Password"
-                className="w-full px-4 py-3 border rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="enter your password"
+                className="w-full px-5 py-3 border-2 border-gray-200 rounded-lg text-gray-700 focus:border-blue-600 focus:ring-0 outline-none transition"
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
               />
+            </div>
+
+            {/* Remember & Forgot Password */}
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="rounded w-4 h-4" />
+                <span className="text-gray-600">Remember me</span>
+              </label>
+              <a href="#" className="text-blue-600 hover:underline font-semibold">
+                Forgot password?
+              </a>
             </div>
 
             {/* BUTTON */}
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 text-white font-semibold rounded-lg transition ${
+              className={`w-full py-3 text-white font-bold rounded-lg transition duration-300 text-lg ${
                 isLoading
-                  ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
               }`}
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? "⏳ Signing in..." : "🔓 Sign in"}
             </button>
           </form>
 
           {/* SSO Login Options */}
-          <div className="mt-8">
+          <div className="mb-8">
             <SSOLogin onSuccess={handleSSOSuccess} />
           </div>
 
+          {/* Divider */}
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-gray-400">or</span>
+            </div>
+          </div>
+
           {/* Register Link */}
-          <p className="text-sm text-center text-gray-600 mt-6">
-            Dont have an account?{" "}
+          <p className="text-center text-gray-600">
+            Don't have an account?{" "}
             <span
               onClick={() => navigate("/register")}
-              className="text-blue-600 font-semibold cursor-pointer hover:underline"
+              className="text-blue-600 font-bold cursor-pointer hover:underline hover:text-blue-700"
             >
-              Register here
+              Sign up here
             </span>
           </p>
+        </div>
+
+        {/* RIGHT SIDE - VISUAL SHOWCASE */}
+        <div className="hidden lg:flex flex-col items-center justify-center text-white order-1 lg:order-2">
+          <div className="mb-12 text-center">
+            <h2 className="text-5xl font-bold mb-4">Welcome!</h2>
+            <p className="text-xl text-blue-100 max-w-sm">
+              Streamline your document workflow with our intelligent checklist system
+            </p>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="space-y-6 w-full max-w-md">
+            {[
+              { icon: "✓", title: "Quick Review", desc: "Process documents faster" },
+              { icon: "🔐", title: "Secure Access", desc: "Advanced security features" },
+              { icon: "📊", title: "Track Progress", desc: "Real-time status updates" },
+              { icon: "👥", title: "Team Collab", desc: "Work together seamlessly" },
+            ].map((feature, idx) => (
+              <div
+                key={idx}
+                className="bg-white/15 backdrop-blur-md rounded-xl p-4 border border-white/30 hover:bg-white/25 transition"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="text-4xl">{feature.icon}</div>
+                  <div>
+                    <h3 className="font-bold text-lg">{feature.title}</h3>
+                    <p className="text-blue-100 text-sm">{feature.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

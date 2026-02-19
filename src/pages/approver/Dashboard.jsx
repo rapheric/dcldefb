@@ -847,7 +847,7 @@ const Approver = ({ userId = "approver_current" }) => {
 
   const handleApprove = async (id, comments) => {
     try {
-      const updated = await deferralApi.approveDeferral(id, null, comments);
+      const updated = await deferralApi.approveDeferral(id, { comment: comments || "" });
       // Remove from queue and add to actioned list (so actioned tab shows it)
       setQueueData((prev) => prev.filter((d) => d._id !== id));
       setActionedData((prev) => {
@@ -884,7 +884,7 @@ const Approver = ({ userId = "approver_current" }) => {
 
   const handleReject = async (id, comments) => {
     try {
-      const updated = await deferralApi.rejectDeferral(id, comments);
+      const updated = await deferralApi.rejectDeferral(id, { reason: comments || "" });
       setQueueData((prev) => prev.filter((d) => d._id !== id));
       setActionedData((prev) => {
         const exists = prev.some((p) => p._id === updated._id);

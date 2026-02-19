@@ -9,6 +9,7 @@ import {
     Space,
     Descriptions,
     Tag,
+    Card,
     Upload,
     List,
     Tooltip,
@@ -20,8 +21,12 @@ import {
     DownloadOutlined,
     DeleteOutlined,
     FileOutlined,
+    FileDoneOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import UniformTag from "../common/UniformTag";
+import { formatDeferralDocumentType } from "../../utils/deferralDocumentType";
+import { getDeferralDocumentBuckets } from "../../utils/deferralDocuments";
 
 const PRIMARY_BLUE = "#164679";
 const ERROR_RED = "#ff4d4f";
@@ -36,6 +41,7 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
     const computedNextDueDate = currentDueDate && requestedDays
         ? dayjs(currentDueDate).add(Number(requestedDays), "day")
         : null;
+    const { requestedDocs, uploadedDocs } = getDeferralDocumentBuckets(deferral);
 
     const handleSupportingUpload = (file) => {
         setSupportingFiles((prev) => [...prev, file]);
@@ -117,6 +123,63 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
                             : "Not set"}
                     </Descriptions.Item>
                 </Descriptions>
+
+                <Card
+                    size="small"
+                    title={<span style={{ color: PRIMARY_BLUE }}>Document(s) to be deferred ({requestedDocs.length})</span>}
+                    style={{ marginBottom: 20 }}
+                >
+                    {requestedDocs.length > 0 ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {requestedDocs.map((doc, idx) => {
+                                const isUploaded = uploadedDocs.some((u) =>
+                                    (u.name || "").toLowerCase().includes((doc.name || "").toLowerCase())
+                                );
+                                const uploadedVersion = uploadedDocs.find((u) =>
+                                    (u.name || "").toLowerCase().includes((doc.name || "").toLowerCase())
+                                );
+
+                                return (
+                                    <div
+                                        key={doc.id || idx}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            padding: "12px 16px",
+                                            backgroundColor: isUploaded ? "#f6ffed" : "#fff7e6",
+                                            borderRadius: 6,
+                                            border: isUploaded ? "1px solid #b7eb8f" : "1px solid #ffd591",
+                                        }}
+                                    >
+                                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                            <FileDoneOutlined style={{ color: isUploaded ? "#52c41a" : "#faad14", fontSize: 16 }} />
+                                            <div>
+                                                <div style={{ fontWeight: 500, fontSize: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                                                    {doc.name}
+                                                    <UniformTag color={isUploaded ? "green" : "orange"} text={isUploaded ? "Uploaded" : "Requested"} />
+                                                </div>
+                                                <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+                                                    <b>Type:</b> {formatDeferralDocumentType(doc)}
+                                                </div>
+                                                {uploadedVersion && (
+                                                    <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+                                                        Uploaded as: {uploadedVersion.name}
+                                                        {uploadedVersion.uploadDate
+                                                            ? ` • ${dayjs(uploadedVersion.uploadDate).format("DD MMM YYYY HH:mm")}`
+                                                            : ""}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <span style={{ color: "#8c8c8c" }}>Not specified</span>
+                    )}
+                </Card>
 
                 <Form
                     form={form}
@@ -243,4 +306,3 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
 };
 
 export default ExtensionApplicationModal;
-

@@ -26,8 +26,9 @@ const UserTable = ({ users, onToggleActive }) => {
     return activeUsers.filter((u) => {
       const name = (u.name || "").toLowerCase();
       const email = (u.email || "").toLowerCase();
+      const customerNumber = (u.customerNumber || "").toLowerCase();
       const query = searchText.toLowerCase();
-      return name.includes(query) || email.includes(query);
+      return name.includes(query) || email.includes(query) || customerNumber.includes(query);
     });
   }, [activeUsers, searchText]);
 
@@ -46,6 +47,19 @@ const UserTable = ({ users, onToggleActive }) => {
       sorter: (a, b) => a.email.localeCompare(b.email),
       render: (email) => (
         <span className="text-gray-700 dark:text-gray-300">{email}</span>
+      ),
+    },
+    {
+      title: <span className="text-gray-700 dark:text-gray-300">Customer #</span>,
+      dataIndex: "customerNumber",
+      sorter: (a, b) => (a.customerNumber || "").localeCompare(b.customerNumber || ""),
+      render: (customerNumber) => (
+        <Tag
+          color={customerNumber ? "blue" : "default"}
+          className="dark:text-gray-200"
+        >
+          {customerNumber || "N/A"}
+        </Tag>
       ),
     },
     {

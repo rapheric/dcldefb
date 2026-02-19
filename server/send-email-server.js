@@ -129,6 +129,7 @@ const server = http.createServer(async (req, res) => {
         const subject = `DEFERRAL REQUEST (${deferralNumber})`;
 
         const appUrl = process.env.APP_URL || "http://localhost:5173";
+        const loginUrl = process.env.APP_LOGIN_URL || `${appUrl.replace(/\/$/, "")}/login`;
         let approvalLink = `${appUrl}/public/approver/review/${encodeURIComponent(deferralNumber)}`;
         const approverPos = deferralData.targetApproverPosition || deferralData.approver;
         if (approverPos) approvalLink += `?approver=${encodeURIComponent(approverPos)}`;
@@ -137,7 +138,7 @@ const server = http.createServer(async (req, res) => {
         const sep = approvalLink.includes("?") ? "&" : "?";
         approvalLink += `${sep}preview=${preview}`;
 
-        const body = `A deferral has been requested for ${customerName}.\nDeferral Number: ${deferralNumber}\nDocument requested: ${documentRequested}\n\nApproval link:\n${approvalLink}`;
+        const body = `A deferral has been requested for ${customerName}.\nDeferral Number: ${deferralNumber}\nDocument requested: ${documentRequested}\n\nApproval link:\n${approvalLink}\n\nLogin to DCL System:\n${loginUrl}`;
 
         let messageId, sentVia;
 
@@ -145,7 +146,10 @@ const server = http.createServer(async (req, res) => {
           const htmlBody = `<p>A deferral has been requested for <strong>${customerName}</strong>.</p>
             <p><strong>Deferral Number:</strong> ${deferralNumber}<br/>
             <strong>Document requested:</strong> ${documentRequested}</p>
-            <p>Approval link: <a href="${approvalLink}">${approvalLink}</a></p>`;
+            <p>Approval link: <a href="${approvalLink}">${approvalLink}</a></p>
+            <div style="margin: 20px 0;">
+              <a href="${loginUrl}" style="display:inline-block;background-color:#164679;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-weight:600;font-family:Arial,sans-serif;">Login to DCL System</a>
+            </div>`;
 
           if (SENDGRID_KEY) {
             try {
