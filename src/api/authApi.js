@@ -27,8 +27,27 @@ export const authApi = createApi({
         body: data,
       }),
     }),
+    verifyEmailMFA: builder.mutation({
+      query: (data) => ({
+        url: "admin/auth/verify-email-mfa",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    resendMFACode: builder.mutation({
+      query: (sessionToken) => ({
+        url: "admin/auth/resend-mfa-code",
+        method: "POST",
+        body: { sessionToken },
+      }),
+    }),
   }),
 });
 
-export const { useRegisterAdminMutation, useLoginMutation } = authApi;
+export const {
+  useRegisterAdminMutation,
+  useLoginMutation,
+  useVerifyEmailMFAMutation,
+  useResendMFACodeMutation,
+} = authApi;
 

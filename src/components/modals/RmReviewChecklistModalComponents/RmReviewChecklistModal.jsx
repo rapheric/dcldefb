@@ -1,4 +1,8 @@
+
+
+// // export default RmReviewChecklistModal;
 // import React, { useState, useEffect, useMemo } from "react";
+// import { useSelector } from "react-redux";
 // import { Modal, Button, message, Upload, Space, Tag } from "antd";
 // import {
 //   UploadOutlined,
@@ -27,30 +31,57 @@
 //   onClose,
 //   refetch,
 //   readOnly = false,
+//   onChecklistUpdate = null, // Callback to update parent with fresh checklist data
 // }) => {
+//   const auth = useSelector((state) => state.auth);
+//   const token = auth?.token || localStorage.getItem("token");
+
 //   const [docs, setDocs] = useState([]);
 //   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
 //   const [rmGeneralComment, setRmGeneralComment] = useState("");
 //   const [supportingDocs, setSupportingDocs] = useState([]);
 //   const [uploadingSupportingDoc, setUploadingSupportingDoc] = useState(false);
 //   const [uploadingDocs, setUploadingDocs] = useState({});
+//   const [localChecklist, setLocalChecklist] = useState(checklist);
 
 //   const [submitRmChecklistToCoCreator, { isLoading }] =
 //     useRmSubmitChecklistToCoCreatorMutation();
 
 //   // Add this query for comments
 //   const { data: comments, isLoading: commentsLoading } =
-//     useGetChecklistCommentsQuery(checklist?._id, { skip: !checklist?._id });
+//     useGetChecklistCommentsQuery(checklist?.id || checklist?._id, {
+//       skip: !checklist?.id && !checklist?._id,
+//     });
+
+//   // DEBUG: Log comment fetching
+//   React.useEffect(() => {
+//     const checklistId = checklist?.id || checklist?._id;
+//     console.log("🔶 RmReviewChecklistModal - Checklist ID for comments:", checklistId);
+//     console.log("🔶 Comments Loading:", commentsLoading);
+//     console.log("🔶 Comments Data:", comments);
+//     if (comments && Array.isArray(comments)) {
+//       console.log(`🔶 Total comments fetched: ${comments.length}`);
+//     }
+//   }, [checklist?.id, checklist?._id, comments, commentsLoading]);
+
+//   const handleChecklistUpdate = (updatedChecklist) => {
+//     // Update local state
+//     setLocalChecklist(updatedChecklist);
+//     // Call parent callback if provided
+//     if (onChecklistUpdate) {
+//       onChecklistUpdate(updatedChecklist);
+//     }
+//   };
 
 //   useEffect(() => {
 //     if (!checklist || !checklist.documents) return;
 
 //     const flattenedDocs = checklist.documents.reduce((acc, categoryObj) => {
-//       const filteredDocs = categoryObj.docList
+//       const filteredDocs = (categoryObj.docList || [])
 //         .filter((doc) => doc.name?.trim() !== "")
 //         .map((doc) => ({
 //           ...doc,
-//           category: categoryObj.category,
+//           category: categoryObj.category || "Missing Category",
 //         }));
 //       return acc.concat(filteredDocs);
 //     }, []);
@@ -80,6 +111,9 @@
 //     }
 //   }, [checklist]);
 
+//   const API_BASE_URL =
+//     import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
+
 //   const getInitialRmStatus = (doc) => {
 //     if (doc.rmStatus !== undefined && doc.rmStatus !== null) {
 //       return doc.rmStatus;
@@ -87,40 +121,116 @@
 //     return doc.status || "pendingrm";
 //   };
 
-//   const isActionAllowed = !readOnly && checklist?.status === "rm_review";
+//   // Allow actions ONLY when checklist status is "rmreview", otherwise read-only
+//   const isActionAllowed =
+//     !readOnly && checklist?.status?.toLowerCase() === "rmreview";
 
+//   // Calculate stats based on ONLY CoCreator status, not RM status
 //   const documentStats = useMemo(() => {
-//     return calculateDocumentStats(docs);
+//     const total = docs.length;
+
+//     const submitted = docs.filter(
+//       (d) =>
+//         d.status?.toLowerCase() === "submitted" ||
+//         d.action?.toLowerCase() === "submitted",
+//     ).length;
+
+//     const pendingFromRM = docs.filter(
+//       (d) => d.status?.toLowerCase() === "pendingrm",
+//     ).length;
+
+//     const pendingFromCo = docs.filter(
+//       (d) => d.status?.toLowerCase() === "pendingco",
+//     ).length;
+
+//     const deferred = docs.filter(
+//       (d) => d.status?.toLowerCase() === "deferred",
+//     ).length;
+
+//     const sighted = docs.filter(
+//       (d) => d.status?.toLowerCase() === "sighted",
+//     ).length;
+
+//     const waived = docs.filter(
+//       (d) => d.status?.toLowerCase() === "waived",
+//     ).length;
+
+//     const tbo = docs.filter((d) => d.status?.toLowerCase() === "tbo").length;
+
+//     const progressPercent =
+//       total === 0
+//         ? 0
+//         : Math.round(
+//             ((submitted + deferred + sighted + waived + tbo) / total) * 100,
+//           );
+
+//     return {
+//       total,
+//       submitted,
+//       pendingFromRM,
+//       pendingFromCo,
+//       deferred,
+//       sighted,
+//       waived,
+//       tbo,
+//       progressPercent,
+//     };
 //   }, [docs]);
 
 //   const handleUploadSupportingDoc = async (file) => {
 //     try {
 //       setUploadingSupportingDoc(true);
 
-//       const docId = `support_${Date.now()}`;
-//       const result = await uploadFileToBackend(
-//         file,
-//         checklist._id,
-//         docId,
-//         file.name,
-//         "Supporting"
+//       const checklistId = checklist?.id || checklist?._id;
+//       if (!checklistId) {
+//         throw new Error("Checklist ID missing");
+//       }
+
+//       const formData = new FormData();
+//       formData.append("files", file);
+
+//       const response = await fetch(
+//         `${API_BASE_URL}/api/cocreatorChecklist/${checklistId}/upload`,
+//         {
+//           method: "POST",
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//           body: formData,
+//         },
 //       );
 
-//       if (result) {
-//         const newSupportingDoc = {
-//           id: result._id || docId,
-//           name: file.name,
-//           fileUrl: `${API_BASE_URL}${result.fileUrl}`,
-//           uploadData: result,
-//           uploadedAt: new Date().toISOString(),
-//         };
-
-//         setSupportingDocs((prev) => [...prev, newSupportingDoc]);
-//         message.success(`"${file.name}" uploaded successfully!`);
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         throw new Error(`Upload failed: ${response.status} ${errorText}`);
 //       }
+
+//       const result = await response.json();
+
+//       if (!result.supportingDocs || result.supportingDocs.length === 0) {
+//         throw new Error(result.message || "Upload failed");
+//       }
+
+//       const uploadedDoc = result.supportingDocs[0];
+//       const newSupportingDoc = {
+//         id: uploadedDoc.id,
+//         fileName: uploadedDoc.fileName,
+//         fileUrl: uploadedDoc.fileUrl,
+//         fileSize: uploadedDoc.fileSize,
+//         fileType: uploadedDoc.fileType,
+//         uploadedBy: uploadedDoc.uploadedBy,
+//         uploadedById: uploadedDoc.uploadedById,
+//         uploadedByRole: uploadedDoc.uploadedByRole,
+//         uploadedAt: uploadedDoc.uploadedAt,
+//       };
+
+//       // Add new supporting doc to the state
+//       setSupportingDocs((prev) => [...prev, newSupportingDoc]);
+
+//       message.success(`"${file.name}" uploaded successfully!`);
 //     } catch (error) {
-//       // Error is handled in uploadUtils but we can catch extra here if needed
 //       console.error("Supporting doc upload failed", error);
+//       message.error(error.message || "Upload failed");
 //     } finally {
 //       setUploadingSupportingDoc(false);
 //     }
@@ -181,17 +291,18 @@
 //         document._id,
 //         document.name,
 //         document.category,
+//         token,
 //       );
 
 //       setDocs((prev) =>
 //         prev.map((d, idx) =>
 //           idx === docIdx
 //             ? {
-//               ...d,
-//               uploadData: uploadResult,
-//               fileUrl: `${API_BASE_URL}${uploadResult.fileUrl}`,
-//               isUploading: false,
-//             }
+//                 ...d,
+//                 uploadData: uploadResult,
+//                 fileUrl: `${API_BASE_URL}${uploadResult.fileUrl}`,
+//                 isUploading: false,
+//               }
 //             : d,
 //         ),
 //       );
@@ -208,7 +319,8 @@
 
 //   const submitRM = async () => {
 //     try {
-//       if (!checklist?._id) throw new Error("Checklist ID missing");
+//       const checklistId = checklist?._id || checklist?.id;
+//       if (!checklistId) throw new Error("Checklist ID missing");
 
 //       const missingDeferral = docs.find(
 //         (doc) =>
@@ -227,27 +339,32 @@
 //       }
 
 //       const payload = {
-//         checklistId: checklist._id,
+//         checklistId: checklistId,
 //         documents: docs.map((doc) => ({
 //           _id: doc._id,
-//           name: doc.name,
+//           id: doc.id,
 //           category: doc.category,
 //           status: doc.status,
 //           action: doc.action,
-//           comment: doc.comment,
+//           comment: doc.comment || "",
 //           fileUrl: doc.uploadData?.fileUrl || null,
-//           uploadData: doc.uploadData || null,
-//           deferralReason: doc.deferralReason,
-//           rmStatus: doc.rmStatus,
-//           deferralNumber: doc.deferralNumber,
-//           deferralNo: doc.deferralNumber || doc.deferralNo,
+//           deferralReason: doc.deferralReason || "",
+//           rmStatus: doc.rmStatus || null,
+//           deferralNumber: doc.deferralNumber || "",
 //         })),
-//         rmGeneralComment,
-//         supportingDocs,
+//         supportingDocs: supportingDocs.map((doc) => ({
+//           id: doc.id,
+//           name: doc.name,
+//           fileUrl: doc.fileUrl,
+//         })),
+//         rmGeneralComment: rmGeneralComment || "",
 //       };
 
 //       await submitRmChecklistToCoCreator(payload).unwrap();
 //       if (refetch) refetch();
+
+//       // Call callback with updated checklist status signal
+//       handleChecklistUpdate({ ...localChecklist, status: "CoCreatorReview" });
 
 //       message.success("Checklist submitted to CO-Checker!");
 //       onClose();
@@ -256,9 +373,6 @@
 //       message.error(err?.data?.error || "Failed to submit checklist");
 //     }
 //   };
-
-//   const API_BASE_URL =
-//     import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
 //   const getFullUrl = (url) => {
 //     if (!url) return null;
@@ -281,9 +395,25 @@
 //             fontWeight: 600,
 //             fontSize: "1.15rem",
 //             letterSpacing: "0.5px",
+//             display: "flex",
+//             justifyContent: "space-between",
+//             alignItems: "center",
 //           }}
 //         >
-//           Review Checklist — {checklist?.customerNumber || ""}
+//           <span>Review Checklist — {checklist?.customerNumber || ""}</span>
+//           {!isActionAllowed && (
+//             <span
+//               style={{
+//                 fontSize: "0.85rem",
+//                 fontWeight: 400,
+//                 backgroundColor: "rgba(255,255,255,0.2)",
+//                 padding: "4px 12px",
+//                 borderRadius: "4px",
+//               }}
+//             >
+//               Read-Only
+//             </span>
+//           )}
 //         </div>
 //       }
 //       open={open}
@@ -297,7 +427,10 @@
 //       footer={[
 //         <PDFGenerator
 //           key="download"
-//           checklist={{ ...checklist, dclNo: checklist?.dclNo || checklist?._id }}
+//           checklist={{
+//             ...checklist,
+//             dclNo: checklist?.dclNo || checklist?._id,
+//           }}
 //           docs={docs}
 //           supportingDocs={supportingDocs || []}
 //           creatorComment=""
@@ -403,7 +536,8 @@
 //             handleFileUpload={handleFileUpload}
 //             uploadingDocs={uploadingDocs}
 //             getFullUrl={getFullUrl}
-//             readOnly={readOnly}
+//             readOnly={!isActionAllowed}
+//             checklistStatus={checklist?.status}
 //           />
 
 //           <CommentSection
@@ -411,18 +545,11 @@
 //             rmGeneralComment={rmGeneralComment}
 //             setRmGeneralComment={setRmGeneralComment}
 //             isActionAllowed={isActionAllowed}
+//             comments={comments}
+//             commentsLoading={commentsLoading}
 //           />
 
-//           {/* Add Comment History Section - Place this before or after CommentSection based on your preference */}
-//           <div style={{ marginTop: 24, marginBottom: 24 }}>
-//             <h4
-//               style={{ color: PRIMARY_BLUE, fontWeight: 700, marginBottom: 12 }}
-//             >
-//               Comment Trail & History
-//             </h4>
-//             <CommentHistory comments={comments} isLoading={commentsLoading} />
-//           </div>
-
+//           {/* Supporting Documents - RM can upload and delete */}
 //           <SupportingDocsSection
 //             supportingDocs={supportingDocs}
 //             handleDeleteSupportingDoc={handleDeleteSupportingDoc}
@@ -437,29 +564,28 @@
 // };
 
 // export default RmReviewChecklistModal;
+
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { Modal, Button, message, Upload, Space, Tag } from "antd";
+import { Modal, Button, message, Upload, Tag } from "antd";
 import {
   UploadOutlined,
-  DownloadOutlined,
   RightOutlined,
   LeftOutlined,
 } from "@ant-design/icons";
 import DocumentSidebar from "./DocumentSidebar";
 import ChecklistInfoCard from "./ChecklistInfoCard";
-import SupportingDocsSection from "./SupportingDocsSection";
-import CommentSection from "./CommentSection";
 import ProgressSummary from "./ProgressSummary";
-import SaveDraftButton from "./SaveDraftButton";
-import PDFGenerator from "./PDFGenerator";
 import DocumentTable from "./DocumentTable";
-import { PRIMARY_BLUE } from "../../../utils/colors";
-import { calculateDocumentStats } from "../../../utils/documentStats";
+import CommentSection from "./CommentSection";
+import SupportingDocsSection from "./SupportingDocsSection";
+import PDFGenerator from "./PDFGenerator.jsx";
+import SaveDraftButton from "./SaveDraftButton";
 import { useRmSubmitChecklistToCoCreatorMutation } from "../../../api/checklistApi";
+import { useGetChecklistCommentsQuery } from "../../../api/checklistApi";
 import { uploadFileToBackend } from "../../../utils/uploadUtils";
-import CommentHistory from "../../common/CommentHistory"; // Add this import
-import { useGetChecklistCommentsQuery } from "../../../api/checklistApi"; // Add this import
+
+const PRIMARY_BLUE = "#0033a0";
 
 const RmReviewChecklistModal = ({
   checklist,
@@ -467,7 +593,7 @@ const RmReviewChecklistModal = ({
   onClose,
   refetch,
   readOnly = false,
-  onChecklistUpdate = null, // Callback to update parent with fresh checklist data
+  onChecklistUpdate = null,
 }) => {
   const auth = useSelector((state) => state.auth);
   const token = auth?.token || localStorage.getItem("token");
@@ -483,72 +609,20 @@ const RmReviewChecklistModal = ({
   const [submitRmChecklistToCoCreator, { isLoading }] =
     useRmSubmitChecklistToCoCreatorMutation();
 
-  // Add this query for comments
   const { data: comments, isLoading: commentsLoading } =
     useGetChecklistCommentsQuery(checklist?.id || checklist?._id, {
       skip: !checklist?.id && !checklist?._id,
     });
 
-  // DEBUG: Log comment fetching
-  React.useEffect(() => {
-    const checklistId = checklist?.id || checklist?._id;
-    console.log("🔶 RmReviewChecklistModal - Checklist ID for comments:", checklistId);
-    console.log("🔶 Comments Loading:", commentsLoading);
-    console.log("🔶 Comments Data:", comments);
-    if (comments && Array.isArray(comments)) {
-      console.log(`🔶 Total comments fetched: ${comments.length}`);
-    }
-  }, [checklist?.id, checklist?._id, comments, commentsLoading]);
+  const API_BASE_URL =
+    import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
   const handleChecklistUpdate = (updatedChecklist) => {
-    // Update local state
     setLocalChecklist(updatedChecklist);
-    // Call parent callback if provided
     if (onChecklistUpdate) {
       onChecklistUpdate(updatedChecklist);
     }
   };
-
-  useEffect(() => {
-    if (!checklist || !checklist.documents) return;
-
-    const flattenedDocs = checklist.documents.reduce((acc, categoryObj) => {
-      const filteredDocs = (categoryObj.docList || [])
-        .filter((doc) => doc.name?.trim() !== "")
-        .map((doc) => ({
-          ...doc,
-          category: categoryObj.category || "Missing Category",
-        }));
-      return acc.concat(filteredDocs);
-    }, []);
-
-    const preparedDocs = flattenedDocs.map((doc, idx) => ({
-      ...doc,
-      docIdx: idx,
-      status: doc.status || "pendingrm",
-      comment: doc.comment || "",
-      action: doc.status || "pendingrm",
-      fileUrl: doc.fileUrl || null,
-      deferralReason: doc.deferralReason || "",
-      deferralNumber: doc.deferralNumber || doc.deferralNo || "",
-      deferralNo: doc.deferralNo || doc.deferralNumber || "",
-      rmStatus: getInitialRmStatus(doc),
-      rmTouched: doc.rmStatus != null,
-      uploadData: doc.uploadData || null,
-    }));
-
-    setDocs(preparedDocs);
-
-    // Initialize supporting docs if they exist
-    if (checklist.supportingDocs && Array.isArray(checklist.supportingDocs)) {
-      setSupportingDocs(checklist.supportingDocs);
-    } else {
-      setSupportingDocs([]);
-    }
-  }, [checklist]);
-
-  const API_BASE_URL =
-    import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
   const getInitialRmStatus = (doc) => {
     if (doc.rmStatus !== undefined && doc.rmStatus !== null) {
@@ -557,11 +631,79 @@ const RmReviewChecklistModal = ({
     return doc.status || "pendingrm";
   };
 
-  // Allow actions ONLY when checklist status is "rmreview", otherwise read-only
+  useEffect(() => {
+    if (!checklist || !checklist.documents) return;
+
+    let docIdxCounter = 0;
+    const flattenedDocs = checklist.documents.reduce((acc, categoryObj) => {
+      const filteredDocs = (categoryObj.docList || [])
+        .filter((doc) => doc.name?.trim() !== "")
+        .map((doc) => ({
+          ...doc,
+          category: categoryObj.category || "Missing Category",
+          rmStatus: getInitialRmStatus(doc),
+          rmTouched: doc.rmStatus != null,
+          uploadData: doc.uploadData || null,
+          docIdx: docIdxCounter++
+        }));
+      return [...acc, ...filteredDocs];
+    }, []);
+
+    setDocs(flattenedDocs);
+  }, [checklist]);
+
+  // Fetch supporting docs from backend when modal opens or checklist changes
+  useEffect(() => {
+    const checklistId = checklist?.id || checklist?._id;
+    
+    if (!checklistId || !open) return;
+
+    const fetchSupportingDocs = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/uploads/checklist/${checklistId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("📄 Supporting docs API response:", result);
+          if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+            // Transform to include role information and category for grouping
+            const transformedDocs = result.data.map(doc => ({
+              ...doc,
+              id: doc.id || doc._id,
+              category: 'Supporting Documents',
+              isSupporting: true,
+              uploadedByRole: doc.uploadedByRole || 'UNKNOWN'
+            }));
+            setSupportingDocs(transformedDocs);
+            console.log("📄 Supporting docs fetched successfully (", transformedDocs.length, " docs)");
+          } else {
+            console.log("✓ API returned ok but no supporting docs for checklist", checklistId);
+            setSupportingDocs([]);
+          }
+        } else {
+          console.warn(`⚠️ API returned ${response.status} for checklist ${checklistId}:`, await response.text());
+          // Don't clear existing docs on error - keep what we have
+        }
+      } catch (error) {
+        console.error("❌ Error fetching supporting docs:", error.message);
+        // Don't clear existing docs on error - supporting docs are optional
+      }
+    };
+
+    // Always fetch from API
+    fetchSupportingDocs();
+  }, [checklist?.id, checklist?._id, open, token]);
+
   const isActionAllowed =
     !readOnly && checklist?.status?.toLowerCase() === "rmreview";
 
-  // Calculate stats based on ONLY CoCreator status, not RM status
   const documentStats = useMemo(() => {
     const total = docs.length;
 
@@ -613,6 +755,28 @@ const RmReviewChecklistModal = ({
     };
   }, [docs]);
 
+  // 🔹 FILTER SUPPORTING DOCS BY UPLOADER ROLE
+  const rmSupportingDocs = useMemo(() => {
+    return (supportingDocs || []).filter(doc => {
+      // Check multiple possible locations for the role
+      const uploadedByRole =
+        doc.uploadedByRole ||
+        doc.uploadedBy?.role ||
+        doc.uploadData?.uploadedByRole;
+      return uploadedByRole?.toLowerCase() === 'rm';
+    });
+  }, [supportingDocs]);
+
+  const creatorSupportingDocs = useMemo(() => {
+    return (supportingDocs || []).filter(doc => {
+      const uploadedByRole =
+        doc.uploadedByRole ||
+        doc.uploadedBy?.role ||
+        doc.uploadData?.uploadedByRole;
+      return !uploadedByRole || uploadedByRole?.toLowerCase() !== 'rm';
+    });
+  }, [supportingDocs]);
+
   const handleUploadSupportingDoc = async (file) => {
     try {
       setUploadingSupportingDoc(true);
@@ -625,8 +789,9 @@ const RmReviewChecklistModal = ({
       const formData = new FormData();
       formData.append("files", file);
 
+      // Use RM-specific endpoint for supporting docs upload
       const response = await fetch(
-        `${API_BASE_URL}/api/cocreatorChecklist/${checklistId}/upload`,
+        `${API_BASE_URL}/api/rmChecklist/${checklistId}/supporting-docs`,
         {
           method: "POST",
           headers: {
@@ -643,26 +808,28 @@ const RmReviewChecklistModal = ({
 
       const result = await response.json();
 
-      if (!result.supportingDocs || result.supportingDocs.length === 0) {
+      // Handle RM endpoint response format (returns 'files' array)
+      const uploadedFiles = result.files || result.supportingDocs || [];
+      if (uploadedFiles.length === 0) {
         throw new Error(result.message || "Upload failed");
       }
 
-      const uploadedDoc = result.supportingDocs[0];
+      const uploadedDoc = uploadedFiles[0];
       const newSupportingDoc = {
-        id: uploadedDoc.id,
+        id: uploadedDoc.id || uploadedDoc._id,
+        _id: uploadedDoc.id || uploadedDoc._id,
         fileName: uploadedDoc.fileName,
+        name: uploadedDoc.fileName,
         fileUrl: uploadedDoc.fileUrl,
         fileSize: uploadedDoc.fileSize,
         fileType: uploadedDoc.fileType,
-        uploadedBy: uploadedDoc.uploadedBy,
+        uploadedBy: uploadedDoc.uploadedBy || { name: 'RM User', role: 'rm' },
         uploadedById: uploadedDoc.uploadedById,
-        uploadedByRole: uploadedDoc.uploadedByRole,
+        uploadedByRole: 'rm', // Set by RM endpoint
         uploadedAt: uploadedDoc.uploadedAt,
       };
 
-      // Add new supporting doc to the state
       setSupportingDocs((prev) => [...prev, newSupportingDoc]);
-
       message.success(`"${file.name}" uploaded successfully!`);
     } catch (error) {
       console.error("Supporting doc upload failed", error);
@@ -679,12 +846,15 @@ const RmReviewChecklistModal = ({
     try {
       const response = await fetch(`${API_BASE_URL}/api/uploads/${docId}`, {
         method: "DELETE",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
       });
 
       const result = await response.json();
 
       if (result.success) {
-        setSupportingDocs((prev) => prev.filter((doc) => doc.id !== docId));
+        setSupportingDocs((prev) => prev.filter((doc) => doc.id !== docId && doc._id !== docId));
         message.success("Document deleted!");
       } else {
         message.error(result.error || "Delete failed");
@@ -789,9 +959,10 @@ const RmReviewChecklistModal = ({
           deferralNumber: doc.deferralNumber || "",
         })),
         supportingDocs: supportingDocs.map((doc) => ({
-          id: doc.id,
-          name: doc.name,
+          id: doc.id || doc._id,
+          name: doc.fileName || doc.name,
           fileUrl: doc.fileUrl,
+          uploadedByRole: doc.uploadedByRole,
         })),
         rmGeneralComment: rmGeneralComment || "",
       };
@@ -799,7 +970,6 @@ const RmReviewChecklistModal = ({
       await submitRmChecklistToCoCreator(payload).unwrap();
       if (refetch) refetch();
 
-      // Call callback with updated checklist status signal
       handleChecklistUpdate({ ...localChecklist, status: "CoCreatorReview" });
 
       message.success("Checklist submitted to CO-Checker!");
@@ -875,7 +1045,6 @@ const RmReviewChecklistModal = ({
           buttonText="Download PDF"
           variant="primary"
         />,
-
         !readOnly && (
           <SaveDraftButton
             key="save-draft"
@@ -886,7 +1055,6 @@ const RmReviewChecklistModal = ({
             isActionAllowed={isActionAllowed}
           />
         ),
-
         !readOnly && (
           <Upload
             key="upload-support"
@@ -907,11 +1075,9 @@ const RmReviewChecklistModal = ({
             </Button>
           </Upload>
         ),
-
         <Button key="cancel" onClick={onClose} style={{ borderRadius: "6px" }}>
           Close
         </Button>,
-
         !readOnly && (
           <Button
             key="submit"
@@ -930,7 +1096,6 @@ const RmReviewChecklistModal = ({
         ),
       ]}
     >
-      {/* View Documents Button */}
       <div style={{ position: "absolute", top: 16, right: 90, zIndex: 10 }}>
         <Button
           icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
@@ -945,7 +1110,6 @@ const RmReviewChecklistModal = ({
         </Button>
       </div>
 
-      {/* Document Sidebar */}
       <DocumentSidebar
         documents={docs}
         supportingDocs={supportingDocs}
@@ -985,13 +1149,16 @@ const RmReviewChecklistModal = ({
             commentsLoading={commentsLoading}
           />
 
-          {/* Supporting Documents - RM can upload and delete */}
+          {/* 🔹 UPDATED: Only show RM uploaded supporting docs */}
           <SupportingDocsSection
-            supportingDocs={supportingDocs}
+            supportingDocs={rmSupportingDocs}
             handleDeleteSupportingDoc={handleDeleteSupportingDoc}
             getFullUrl={getFullUrl}
             isActionAllowed={isActionAllowed}
             readOnly={readOnly}
+            title="RM Uploaded Supporting Documents"
+            showCreatorCount={creatorSupportingDocs.length > 0}
+            creatorCount={creatorSupportingDocs.length}
           />
         </>
       )}

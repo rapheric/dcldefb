@@ -174,10 +174,19 @@ const CompletedChecklistModal = ({
   readOnly = false,
 }) => {
   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
-  const [supportingDocs] = useState([]);
+  const [supportingDocs, setSupportingDocs] = useState([]);
 
   // Get documents from the hook
   const { docs, documentCounts } = useChecklistDocuments(checklist);
+
+  // Load supporting docs from checklist data
+  React.useEffect(() => {
+    if (checklist?.supportingDocs && Array.isArray(checklist.supportingDocs)) {
+      setSupportingDocs(checklist.supportingDocs);
+    } else {
+      setSupportingDocs([]);
+    }
+  }, [checklist, checklist?.supportingDocs]);
 
   const { data: comments, isLoading: commentsLoading } =
     useGetChecklistCommentsQuery(checklist?.id || checklist?._id, {

@@ -8,10 +8,13 @@ import {
   Typography, 
   Avatar,
   Space,
-  Divider
+  Divider,
+  message,
+  Popconfirm
 } from 'antd';
 import { 
   DownloadOutlined, 
+  DeleteOutlined,
   FilePdfOutlined, 
   FileWordOutlined, 
   FileExcelOutlined,
@@ -34,7 +37,8 @@ const DocumentSidebar = ({
   documents = [], 
   supportingDocs = [], 
   open, 
-  onClose 
+  onClose,
+  onDeleteSupportingDoc = null
 }) => {
   // Combine regular and supporting documents
   const allDocs = useMemo(() => {
@@ -151,6 +155,21 @@ const DocumentSidebar = ({
     const newWindow = window.open(fullUrl, '_blank', 'noopener,noreferrer');
     if (!newWindow) {
       console.error('Popup blocked! Please allow popups.');
+    }
+  };
+
+  // Handle delete supporting doc
+  const handleDelete = async (doc) => {
+    if (!onDeleteSupportingDoc) {
+      message.error('Delete function not available');
+      return;
+    }
+
+    try {
+      await onDeleteSupportingDoc(doc.id || doc._id, doc.uploadData?.fileName || doc.fileName);
+      message.success(`"${doc.uploadData?.fileName || doc.fileName}" deleted successfully!`);
+    } catch (error) {
+      message.error(error.message || 'Failed to delete document');
     }
   };
 
@@ -442,6 +461,26 @@ const DocumentSidebar = ({
                       >
                         Download
                       </Button>
+                      {doc.isSupporting && onDeleteSupportingDoc && (
+                        <Popconfirm
+                          title="Delete Supporting Document"
+                          description={`Are you sure you want to delete "${doc.uploadData?.fileName || doc.fileName}"?`}
+                          onConfirm={() => handleDelete(doc)}
+                          okText="Delete"
+                          okType="danger"
+                          cancelText="Cancel"
+                        >
+                          <Button
+                            type="text"
+                            danger
+                            size="small"
+                            icon={<DeleteOutlined style={{ fontSize: 12 }} />}
+                            style={{ padding: '2px 6px' }}
+                          >
+                            Delete
+                          </Button>
+                        </Popconfirm>
+                      )}
                     </Space>
                   </div>
                 </Card>

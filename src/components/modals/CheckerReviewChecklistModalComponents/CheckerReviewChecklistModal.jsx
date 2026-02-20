@@ -142,12 +142,54 @@ const CheckerReviewChecklistModal = ({
         deferralNo: doc.deferralNo || null,
       })),
     );
-
-    // Update supporting docs
-    if (checklist?.supportingDocs && Array.isArray(checklist.supportingDocs)) {
-      setSupportingDocs(checklist.supportingDocs);
-    }
   }, [checklist, effectiveReadOnly]);
+
+  // Fetch supporting docs from backend when modal opens or checklist changes
+  useEffect(() => {
+    const checklistId = checklist?.id || checklist?._id;
+    
+    if (!checklistId || !open) return;
+
+    const fetchSupportingDocs = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `http://localhost:5000/api/uploads/checklist/${checklistId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("📄 Supporting docs API response:", result);
+          if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+            // Add category and isSupporting flag for proper sidebar grouping
+            const docsWithCategory = result.data.map(doc => ({
+              ...doc,
+              category: 'Supporting Documents',
+              isSupporting: true
+            }));
+            setSupportingDocs(docsWithCategory);
+            console.log("📄 Supporting docs fetched successfully (", docsWithCategory.length, " docs)");
+          } else {
+            console.log("✓ API returned ok but no supporting docs for checklist", checklistId);
+            setSupportingDocs([]);
+          }
+        } else {
+          console.warn(`⚠️ API returned ${response.status} for checklist ${checklistId}:`, await response.text());
+          // Don't clear existing docs on error - keep what we have
+        }
+      } catch (error) {
+        console.error("❌ Error fetching supporting docs:", error.message);
+        // Don't clear existing docs on error - supporting docs are optional
+      }
+    };
+
+    fetchSupportingDocs();
+  }, [checklist?.id, checklist?._id, open]);
 
   const handlePdfDownload = async () => {
     setIsGeneratingPDF(true);

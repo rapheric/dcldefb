@@ -2,10 +2,8 @@
 
 import http from "http";
 import { Server } from "socket.io";
-import axios from "axios";
 
 const PORT = process.env.SOCKET_PORT || 5001;
-const API_URL = process.env.VITE_API_URL || "http://localhost:5000";
 
 const server = http.createServer();
 const io = new Server(server, {
@@ -43,16 +41,8 @@ io.on("connection", (socket) => {
         users: Array.from(onlineUsers.values()),
       });
 
-      // Notify the .NET backend
-      try {
-        await axios.post(`${API_URL}/api/socket/online`, {
-          userId,
-          status: "online",
-          socketId: socket.id,
-        });
-      } catch (err) {
-        console.error("Failed to notify backend:", err.message);
-      }
+      // Note: Backend API endpoint for online status not implemented yet
+      // Socket tracking is handled on the frontend
     } catch (error) {
       console.error("Error handling user-online:", error);
     }
@@ -91,15 +81,7 @@ io.on("connection", (socket) => {
         users: Array.from(onlineUsers.values()),
       });
 
-      // Notify the .NET backend
-      try {
-        await axios.post(`${API_URL}/api/socket/offline`, {
-          userId,
-          status: "offline",
-        });
-      } catch (err) {
-        console.error("Failed to notify backend:", err.message);
-      }
+      // Note: Backend API endpoint for offline status not implemented yet
     }
   });
 
@@ -110,5 +92,5 @@ io.on("connection", (socket) => {
 
 server.listen(PORT, () => {
   console.log(`🚀 Socket.IO server running on port ${PORT}`);
-  console.log(`📡 Connected to API: ${API_URL}`);
+  console.log(`📡 Ready for WebSocket connections`);
 });

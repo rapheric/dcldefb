@@ -541,7 +541,7 @@ const Deferrals = ({ userId }) => {
   const [approvalConfirmModalVisible, setApprovalConfirmModalVisible] =
     useState(false);
   const [disabledDeferralIds, setDisabledDeferralIds] = useState(new Set());
-  
+ 
   // Reject/Rework confirmation modal states
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const [showReworkConfirm, setShowReworkConfirm] = useState(false);
@@ -817,6 +817,7 @@ const Deferrals = ({ userId }) => {
       if (activeTab === "pending") {
         // PENDING tab: all non-terminal items except final approved
         const hasCreatorApproved = d.creatorApprovalStatus === "approved";
+        const hasCheckerApproved = d.checkerApprovalStatus === "approved";
         const lastReturnedByRole = (d.lastReturnedByRole || "")
           .toString()
           .toLowerCase();
@@ -834,7 +835,10 @@ const Deferrals = ({ userId }) => {
         if (lastReturnedByRole === "checker") return false;
         if (lastReturnedByRole === "creator") return true;
 
-        return !hasCreatorApproved;
+        // Keep deferral in pending if:
+        // 1. Neither creator nor checker has approved (truly pending)
+        // 2. Creator approved but checker hasn't (partially approved, awaiting checker)
+        return !hasCheckerApproved;
       }
       if (activeTab === "approved") {
         // APPROVED tab: final checker-approved deferrals
@@ -1045,7 +1049,7 @@ const Deferrals = ({ userId }) => {
           const userName =
             currentUser.name || currentUser.user?.name || currentUser.email;
           const approvalType = effectiveIsChecker ? "checker" : "creator";
-          
+         
           await deferralApi.sendEmailNotification(
             selectedDeferral._id,
             `approved_by_${approvalType}`,
@@ -2455,7 +2459,7 @@ const Deferrals = ({ userId }) => {
           Return for Re-work
         </Button>,
 
-        
+       
 
         <Button
           key="approve"
@@ -2531,17 +2535,25 @@ const Deferrals = ({ userId }) => {
         Return for Re-work
       </Button>,
 
-      
+     
 
       // APPROVE
       <Button
         key="approve"
         type="primary"
         onClick={handleApproveDeferral}
-        disabled={!allApproversApproved}
-        style={{ backgroundColor: "#164679", borderColor: "#164679", color: "#ffffff" }}
+        disabled={!allApproversApproved || hasCreatorApproved}
+        style={{
+          backgroundColor: hasCreatorApproved ? "#d9d9d9" : "#164679",
+          borderColor: hasCreatorApproved ? "#d9d9d9" : "#164679",
+          color: "#ffffff"
+        }}
       >
-        {!allApproversApproved ? "Awaiting Approver Approval" : "Approve Deferral"}
+        {!allApproversApproved
+          ? "Awaiting Approver Approval"
+          : hasCreatorApproved
+            ? "Awaiting Checker Approval"
+            : "Approve Deferral"}
       </Button>,
     ];
   };
@@ -2628,12 +2640,15 @@ const Deferrals = ({ userId }) => {
           <Tabs.TabPane
             tab={`Pending Deferrals (${deferrals.filter((d) => {
               const s = (d.status || "").toString().toLowerCase();
-              return [
-                "pending_approval",
-                "in_review",
-                "deferral_requested",
-                "partially_approved",
-              ].includes(s);
+              const hasCheckerApproved = d.checkerApprovalStatus === "approved";
+              return (
+                [
+                  "pending_approval",
+                  "in_review",
+                  "deferral_requested",
+                  "partially_approved",
+                ].includes(s) && !hasCheckerApproved
+              );
             }).length
               })`}
             key="pending"
@@ -3330,7 +3345,7 @@ const Deferrals = ({ userId }) => {
                     </Descriptions.Item>
                   </Descriptions>
 
-                  
+                 
 
                   {selectedDeferral.deferralDescription && (
                     <div
@@ -3466,7 +3481,7 @@ const Deferrals = ({ userId }) => {
                     </Card>
                   )}
 
-                
+               
 
                 <Card
                   size="small"
@@ -3578,7 +3593,7 @@ const Deferrals = ({ userId }) => {
                           </Space>
                         </div>
                       ))}
-                      
+                     
                     </div>
                   ) : (
                     <div
@@ -3722,7 +3737,7 @@ const Deferrals = ({ userId }) => {
                           </Space>
                         </div>
                       ))}
-                      
+                     
                     </div>
                   ) : (
                     <div

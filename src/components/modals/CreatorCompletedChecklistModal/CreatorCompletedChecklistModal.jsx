@@ -1,6 +1,6 @@
 import React from "react";
-import { Modal, Button, Spin } from "antd";
-import { FilePdfOutlined, RedoOutlined } from "@ant-design/icons";
+import { Modal, Button, Spin, Tag } from "antd";
+import { FilePdfOutlined, RedoOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { useGetChecklistCommentsQuery } from "../../../api/checklistApi";
 import { calculateDocumentStats } from "../../../utils/documentUtils";
 import ReviveConfirmationModal from "./ReviveConfirmationModal";
@@ -8,6 +8,7 @@ import ChecklistInfoCard from "./ChecklistInfoCard";
 import ProgressStatsSection from "./ProgressStatsSection";
 import DocumentsTable from "./DocumentsTable";
 import CommentHistorySection from "./CommentHistorySection";
+import DocumentSidebarComponent from "../CompletedChecklistModalComponents/DocumentSidebarComponent";
 import { buttonStyles } from "../../styles/componentStyle";
 import { modalStyles } from "../../styles/modalStyle";
 import { useChecklistDocuments } from "../../../hooks/useChecklistDocuments";
@@ -26,6 +27,56 @@ const CreatorCompletedChecklistModal = ({
 }) => {
   // Get documents using custom hook
   const { docs, documentCounts } = useChecklistDocuments(checklist);
+  const [showDocumentSidebar, setShowDocumentSidebar] = React.useState(false);
+  const [supportingDocs, setSupportingDocs] = React.useState([]);
+
+  // Fetch supporting docs from backend when modal opens or checklist changes
+  React.useEffect(() => {
+    const checklistId = checklist?.id || checklist?._id;
+    
+    if (!checklistId || !open) return;
+
+    const fetchSupportingDocs = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `http://localhost:5000/api/uploads/checklist/${checklistId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("📄 Supporting docs API response:", result);
+          if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+            // Add category and isSupporting flag for proper sidebar grouping
+            const docsWithCategory = result.data.map(doc => ({
+              ...doc,
+              category: 'Supporting Documents',
+              isSupporting: true
+            }));
+            setSupportingDocs(docsWithCategory);
+            console.log("📄 Supporting docs fetched successfully (", docsWithCategory.length, " docs)");
+          } else {
+            console.log("✓ API returned ok but no supporting docs for checklist", checklistId);
+            setSupportingDocs([]);
+          }
+        } else {
+          console.warn(`⚠️ API returned ${response.status} for checklist ${checklistId}:`, await response.text());
+          // Don't clear existing docs on error - keep what we have
+        }
+      } catch (error) {
+        console.error("❌ Error fetching supporting docs:", error.message);
+        // Don't clear existing docs on error - supporting docs are optional
+      }
+    };
+
+    // Always fetch from API
+    fetchSupportingDocs();
+  }, [checklist?.id, checklist?._id, open]);
 
   // Calculate document stats - calculateDocumentStats now handles non-array input
   const documentStats = calculateDocumentStats(docs);
@@ -133,6 +184,33 @@ const CreatorCompletedChecklistModal = ({
       >
         {checklist ? (
           <>
+            {/* Document Sidebar Toggle */}
+            <div className="doc-sidebar-toggle" style={{ marginBottom: 16 }}>
+              <Button
+                icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
+                onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
+                style={{ size: 'middle' }}
+              >
+                View Documents
+                <Tag color="green" style={{ marginLeft: 6 }}>
+                  Docs: {docs.filter((d) => d.fileUrl || d.uploadData?.fileUrl).length}
+                </Tag>
+                {supportingDocs.length > 0 && (
+                  <Tag color="blue" style={{ marginLeft: 6 }}>
+                    Supporting: {supportingDocs.length}
+                  </Tag>
+                )}
+              </Button>
+            </div>
+
+            {/* Document Sidebar */}
+            <DocumentSidebarComponent
+              documents={Array.isArray(docs) ? docs : []}
+              supportingDocs={supportingDocs}
+              open={showDocumentSidebar}
+              onClose={() => setShowDocumentSidebar(false)}
+            />
+
             <ChecklistInfoCard checklist={checklist} />
             <ProgressStatsSection docs={docs} />
             <DocumentsTable

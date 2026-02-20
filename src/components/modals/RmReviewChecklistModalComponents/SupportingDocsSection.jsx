@@ -1,93 +1,3 @@
-// import React from "react";
-// import { Card, Button, Space } from "antd";
-// import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
-// import dayjs from "dayjs";
-
-// const SupportingDocsSection = ({
-//   supportingDocs,
-//   handleDeleteSupportingDoc,
-//   getFullUrl,
-//   isActionAllowed,
-//   readOnly,
-// }) => {
-//   if (supportingDocs.length === 0) return null;
-
-//   return (
-//     <div style={{ marginTop: 20 }}>
-//       <div style={{ marginTop: 12 }}>
-//         <h4
-//           style={{
-//             color: "#164679",
-//             fontSize: 14,
-//             marginBottom: 8,
-//           }}
-//         >
-//           📎 Supporting Documents ({supportingDocs.length})
-//         </h4>
-//         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-//           {supportingDocs.map((doc) => (
-//             <Card size="small" key={doc.id} style={{ borderRadius: 6 }}>
-//               <div
-//                 style={{
-//                   display: "flex",
-//                   justifyContent: "space-between",
-//                   alignItems: "center",
-//                 }}
-//               >
-//                 <div>
-//                   <strong style={{ fontSize: 13 }}>{doc.name}</strong>
-//                   <div
-//                     style={{
-//                       fontSize: 11,
-//                       color: "#666",
-//                       marginTop: 2,
-//                     }}
-//                   >
-//                     Uploaded:{" "}
-//                     {dayjs(doc.uploadedAt).format("DD MMM YYYY HH:mm")}
-//                   </div>
-//                 </div>
-//                 <Space>
-//                   <Button
-//                     size="small"
-//                     icon={<EyeOutlined />}
-//                     onClick={() =>
-//                       window.open(
-//                         getFullUrl(doc.fileUrl || doc.uploadData?.fileUrl),
-//                         "_blank"
-//                       )
-//                     }
-//                   >
-//                     View
-//                   </Button>
-//                   {!readOnly && (
-//                     <Button
-//                       size="small"
-//                       danger
-//                       icon={<DeleteOutlined />}
-//                       onClick={() =>
-//                         handleDeleteSupportingDoc(
-//                           doc.uploadData._id || doc.id,
-//                           doc.name
-//                         )
-//                       }
-//                       disabled={!isActionAllowed}
-//                     >
-//                       Delete
-//                     </Button>
-//                   )}
-//                 </Space>
-//               </div>
-//             </Card>
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SupportingDocsSection;
-
 import React from "react";
 import { Card, Button, Space, Tag } from "antd";
 import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
@@ -99,8 +9,18 @@ const SupportingDocsSection = ({
   getFullUrl,
   isActionAllowed,
   readOnly,
+  // 🔹 NEW PROPS: Added to support filtered view and creator count display
+  title = "RM Uploaded Supporting Documents",
+  showCreatorCount = false,
+  creatorCount = 0
 }) => {
-  if (!supportingDocs || supportingDocs.length === 0) return null;
+  // 🔹 CHANGED: Now shows message when no RM docs but creator docs exist
+  if (!supportingDocs || supportingDocs.length === 0) {
+    if (showCreatorCount && creatorCount > 0) {
+
+    }
+    return null;
+  }
 
   // Function to get role tag color
   const getRoleTagColor = (role) => {
@@ -130,24 +50,45 @@ const SupportingDocsSection = ({
     }
   };
 
+  // 🔹 NEW: Helper function to format file size
+  const formatFileSize = (bytes) => {
+    if (!bytes) return null;
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
   return (
     <div style={{ marginTop: 20 }}>
       <div style={{ marginTop: 12 }}>
+        {/* 🔹 CHANGED: Title is now dynamic and includes count */}
         <h4
           style={{
             color: "#164679",
             fontSize: 14,
             marginBottom: 8,
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
           }}
         >
-          📎 Supporting Documents & Other Uploads ({supportingDocs.length})
+          <span>📎 {title}</span>
+          <Tag color="blue" style={{ borderRadius: "12px" }}>
+            {supportingDocs.length}
+          </Tag>
         </h4>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {supportingDocs.map((doc) => (
             <Card
               size="small"
               key={doc._id || doc.id}
-              style={{ borderRadius: 6 }}
+              style={{
+                borderRadius: 6,
+                // 🔹 NEW: Add left border to visually distinguish RM uploads
+                borderLeft: doc.uploadedByRole === 'rm' ? '3px solid #164679' : 'none'
+              }}
             >
               <div
                 style={{
@@ -186,13 +127,20 @@ const SupportingDocsSection = ({
                     }}
                   >
                     <span>
-                      📅 {dayjs(doc.uploadedAt).format("DD MMM YYYY HH:mm")}
+                      📅 {dayjs(doc.uploadedAt || doc.createdAt).format("DD MMM YYYY HH:mm")}
                     </span>
+                    {/* 🔹 IMPROVED: Better file size formatting */}
                     {doc.fileSize && (
-                      <span>📦 {(doc.fileSize / 1024).toFixed(2)} KB</span>
+                      <span>📦 {formatFileSize(doc.fileSize) || (doc.fileSize / 1024).toFixed(2) + " KB"}</span>
                     )}
                     {doc.fileType && <span>📄 {doc.fileType}</span>}
                   </div>
+                  {/* 🔹 NEW: Show uploader info if available */}
+                  {doc.uploadedBy?.name && (
+                    <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>
+                      👤 Uploaded by: {doc.uploadedBy.name}
+                    </div>
+                  )}
                 </div>
                 <Space>
                   <Button
@@ -207,7 +155,7 @@ const SupportingDocsSection = ({
                   >
                     View
                   </Button>
-                  {!readOnly && (
+                  {!readOnly && (doc.canDelete === undefined || doc.canDelete) && (
                     <Button
                       size="small"
                       danger
@@ -234,3 +182,4 @@ const SupportingDocsSection = ({
 };
 
 export default SupportingDocsSection;
+
