@@ -233,7 +233,14 @@ export default function ApproverSelector({
   const canDetermineMatrix = hasDocuments && hasLoanAmount;
 
   const parsedLoanAmount = useMemo(() => {
-    const normalized = String(loanAmount || "").replace(/[^0-9.-]+/g, "");
+    const loanStr = String(loanAmount || "").toLowerCase().trim();
+    
+    // Handle predefined dropdown values
+    if (loanStr === "above75") return 76000000; // Above threshold
+    if (loanStr === "below75") return 74000000; // Below threshold
+    
+    // Handle numeric input (fallback for direct number entry)
+    const normalized = loanStr.replace(/[^0-9.-]+/g, "");
     return parseFloat(normalized) || 0;
   }, [loanAmount]);
 

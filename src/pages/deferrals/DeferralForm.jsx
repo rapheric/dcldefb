@@ -143,7 +143,14 @@ export default function DeferralForm({ userId, onSuccess }) {
   const parsedLoanAmount = () => {
     if (!loanAmount) return 0;
     try {
-      const normalized = String(loanAmount).replace(/[^0-9.-]+/g, "");
+      const loanStr = String(loanAmount).toLowerCase().trim();
+      
+      // Handle predefined dropdown values
+      if (loanStr === "above75") return 76000000; // Above threshold
+      if (loanStr === "below75") return 74000000; // Below threshold
+      
+      // Handle numeric input (fallback for direct number entry)
+      const normalized = loanStr.replace(/[^0-9.-]+/g, "");
       return parseFloat(normalized) || 0;
     } catch (e) {
       return 0;
@@ -192,14 +199,24 @@ export default function DeferralForm({ userId, onSuccess }) {
     return [];
   };
 
-  // Initialize approver slots when document selection or loan amount changes, unless user customized slots
+  // Initialize approver slots when document selection or loan amount changes
+  // Always update when documents or loan amount change, even if user has customized approvers
   useEffect(() => {
     const defaultRoles = computeDefaultRoles();
-    if (!approverCustomized || approverSlots.length === 0) {
-      setApproverSlots(defaultRoles.map((r) => ({ role: r, userId: "", isCustom: false })));
+    if (defaultRoles.length > 0) {
+      // Use functional update to access current state and avoid stale closure
+      setApproverSlots((prevSlots) => {
+        return defaultRoles.map((role, index) => {
+          const existingSlot = prevSlots[index];
+          return {
+            role,
+            userId: existingSlot?.userId || "",
+            isCustom: existingSlot?.isCustom || false
+          };
+        });
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDocuments.length, loanAmount]);
+  }, [selectedDocuments.length, loanAmount, LOAN_THRESHOLD]);
 
 
   const [daysSought, setDaysSought] = useState("");
