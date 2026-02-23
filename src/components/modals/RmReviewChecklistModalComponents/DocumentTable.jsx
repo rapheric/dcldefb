@@ -404,7 +404,7 @@ const DocumentTable = ({
 
     {
       title: "RM Status",
-      width: 130,
+      width: 185,
       render: (_, record) => {
         const rmStatus = record.rmStatus || "Unknown";
 
@@ -445,7 +445,13 @@ const DocumentTable = ({
                 color: textColor,
                 borderColor: borderColor,
                 fontWeight: 500,
-                padding: "0 8px",
+                padding: "5px 12px",
+                fontSize: 11,
+                whiteSpace: "nowrap",
+                minWidth: 140,
+                display: "inline-block",
+                textAlign: "center",
+                lineHeight: "20px",
               }}
             >
               {displayText}

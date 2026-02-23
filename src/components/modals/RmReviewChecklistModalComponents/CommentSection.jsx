@@ -15,14 +15,14 @@ const CommentSection = ({
   return (
     <>
       {/* Display all comments from all users (CoCreator, RM, Checker) */}
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 12}}>
         <h4 style={{ color: PRIMARY_BLUE, fontWeight: 700, marginBottom: 12 }}>
           Comment Trail & History
         </h4>
         <CommentHistory comments={comments} isLoading={commentsLoading} />
       </div>
 
-      <h3 style={{ marginTop: 24, color: PRIMARY_BLUE, fontWeight: "bold" }}>
+      <h3 style={{ marginTop: 12, color: PRIMARY_BLUE, fontWeight: "bold" }}>
         RM General Comment
       </h3>
       <Input.TextArea

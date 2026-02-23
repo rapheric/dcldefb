@@ -1,7 +1,7 @@
 // export default ReviewChecklistModal;
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Tag, Input } from "antd";
-import { FilePdfOutlined, LeftOutlined } from "@ant-design/icons";
+import { FilePdfOutlined, LeftOutlined, CloseOutlined } from "@ant-design/icons";
 import ActionButtons from "./ActionButtons";
 import DocumentSidebar from "./DocumentSidebar";
 import ChecklistHeader from "./ChecklistHeader";
@@ -251,15 +251,72 @@ const ReviewChecklistModal = ({
   return (
     <>
       <style>{customStyles}</style>
+      <style>{`
+        .review-checklist-modal .ant-modal-header {
+          background: ${PRIMARY_BLUE} !important;
+          border-bottom: none !important;
+        }
+        .review-checklist-modal .ant-modal-title {
+          color: #fff !important;
+        }
+      `}</style>
       <Modal
-        title={`Review Checklist  ${checklist?.title || ""}`}
+        className="review-checklist-modal"
+        closeIcon={null}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
+              {`Review Checklist  ${checklist?.title || ""}`}
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Button
+                icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
+                onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
+                size="small"
+                type="default"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  color: '#fff',
+                }}
+              >
+                View Documents
+                {docs.filter((d) => d.fileUrl).length + supportingDocs.length >
+                  0 && (
+                  <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
+                    {docs.filter((d) => d.fileUrl).length + supportingDocs.length}
+                  </Tag>
+                )}
+              </Button>
+              <Button
+                icon={<CloseOutlined />}
+                onClick={onClose}
+                size="small"
+                type="default"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  color: '#fff',
+                  width: '32px',
+                  height: '32px',
+                  padding: 0,
+                }}
+              />
+            </div>
+          </div>
+        }
         open={open}
         onCancel={onClose}
         width={1150}
         centered={true}
         style={{ marginLeft: '160px' }}
         styles={{ body: { padding: "0 24px 24px" } }}
-        closeIcon={true}
         footer={
           <ActionButtons
             readOnly={readOnly}
@@ -281,22 +338,6 @@ const ReviewChecklistModal = ({
           />
         }
       >
-        {/* Document Sidebar Toggle */}
-        <div className="doc-sidebar-toggle">
-          <Button
-            icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
-            onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
-          >
-            View Documents
-            {docs.filter((d) => d.fileUrl).length + supportingDocs.length >
-              0 && (
-              <Tag color="green" style={{ marginLeft: 6 }}>
-                {docs.filter((d) => d.fileUrl).length + supportingDocs.length}
-              </Tag>
-            )}
-          </Button>
-        </div>
-
         {/* Document Sidebar */}
         <DocumentSidebar
           documents={docs}
@@ -356,7 +397,7 @@ const ReviewChecklistModal = ({
                 style={{
                   color: PRIMARY_BLUE,
                   fontWeight: 700,
-                  marginBottom: 8,
+                  marginBottom: 4,
                   fontSize: 13,
                 }}
               >
@@ -378,7 +419,7 @@ const ReviewChecklistModal = ({
                 style={{
                   color: PRIMARY_BLUE,
                   fontWeight: 700,
-                  marginBottom: 12,
+                  marginBottom: 4,
                   fontSize: 13,
                 }}
               >

@@ -1,6 +1,6 @@
 import React from "react";
 import { Modal, Button, Spin, Tag } from "antd";
-import { FilePdfOutlined, RedoOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { FilePdfOutlined, RedoOutlined, LeftOutlined, RightOutlined, CloseOutlined } from "@ant-design/icons";
 import { useGetChecklistCommentsQuery } from "../../../api/checklistApi";
 import { calculateDocumentStats } from "../../../utils/documentUtils";
 import ReviveConfirmationModal from "./ReviveConfirmationModal";
@@ -181,6 +181,7 @@ const CreatorCompletedChecklistModal = ({
         width={1100}
         centered={true}
         style={{ marginLeft: '160px' }}
+        closeIcon={<CloseOutlined style={{ color: '#fff', fontSize: 18 }} />}
         footer={renderFooter()}
         styles={modalStyles}
       >

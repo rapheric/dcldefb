@@ -572,6 +572,7 @@ import {
   UploadOutlined,
   RightOutlined,
   LeftOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import DocumentSidebar from "./DocumentSidebar";
 import ChecklistInfoCard from "./ChecklistInfoCard";
@@ -1020,9 +1021,7 @@ const RmReviewChecklistModal = ({
         </div>
       )}
       closeIcon={
-        <span style={{ color: "white", fontSize: "24px", fontWeight: "bold" }}>
-          ×
-        </span>
+        <CloseOutlined style={{ color: "white", fontSize: 18 }} />
       }
       footer={[
         <PDFGenerator

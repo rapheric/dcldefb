@@ -153,6 +153,7 @@ import {
   FilePdfOutlined,
   RightOutlined,
   LeftOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { useGetChecklistCommentsQuery } from "../../../api/checklistApi";
 import { useChecklistDocuments } from "../../../hooks/useChecklistDocuments";
@@ -299,6 +300,7 @@ const CompletedChecklistModal = ({
       width={1100}
       centered={true}
       style={{ marginLeft: '160px' }}
+      closeIcon={<CloseOutlined style={{ color: '#fff', fontSize: 18 }} />}
       styles={{
         header: {
           background: PRIMARY_BLUE,

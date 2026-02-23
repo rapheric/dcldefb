@@ -276,10 +276,10 @@ const DocumentTable = ({
     {
       title: "RM Status",
       dataIndex: "rmStatus",
-      width: 120,
+      width: 185,
       render: (status) => {
         if (!status) {
-          return <Tag color="default">—</Tag>;
+          return <Tag color="default" style={{ minWidth: 60 }}>—</Tag>;
         }
 
         // Define colors for each status
@@ -317,8 +317,14 @@ const DocumentTable = ({
                 backgroundColor: bgColor,
                 color: textColor,
                 borderColor: borderColor,
-                fontWeight: "500",
-                padding: "0 4px",
+                fontWeight: 500,
+                padding: "5px 12px",
+                fontSize: 11,
+                whiteSpace: "nowrap",
+                minWidth: 140,
+                display: "inline-block",
+                textAlign: "center",
+                lineHeight: "20px",
               }}
             >
               {displayText}
