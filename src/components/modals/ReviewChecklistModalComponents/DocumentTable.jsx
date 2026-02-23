@@ -13,7 +13,7 @@ import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import { getExpiryStatus, getStatusColor } from "../../../utils/documentUtils";
 import { PRIMARY_BLUE, SECONDARY_PURPLE } from "../../../utils/constants";
 import { getFullUrl } from "../../../utils/checklistUtils";
-import { getStatusTagProps, getStatusColor as getStatusColorStandard, formatStatusText, formatStatusForSnakeCase } from "../../../utils/statusColors";
+import { formatStatusForSnakeCase } from "../../../utils/statusColors";
 
 const { Option } = Select;
 
@@ -147,34 +147,49 @@ const DocumentTable = ({
       title: "Checker Status",
       dataIndex: "finalCheckerStatus",
       render: (checkerStatus) => {
-        const colorConfig = getStatusColorStandard(checkerStatus);
+        // Define colors for each status with better visibility
+        // approved: white background, green text
+        // rejected: white background, red text
+        // pending: light yellow background, orange text
+        let bgColor = "#f5f5f5";
+        let textColor = "#000";
+        let borderColor = "#d9d9d9";
         let label = checkerStatus || "Pending";
 
-        switch ((checkerStatus || "").toLowerCase()) {
-          case "approved":
-            label = "✅ Approved";
-            break;
-          case "rejected":
-            label = "❌ Rejected";
-            break;
-          case "pending":
-            label = "⏳ Pending";
-            break;
-          default:
-            label = checkerStatus || "Pending";
+        const normalizedStatus = String(checkerStatus || "").toLowerCase().replace(/\s+/g, "");
+
+        if (normalizedStatus.includes("approved")) {
+          bgColor = "#FFF";
+          textColor = "#52C41A";  // Green
+          borderColor = "#52C41A";
+          label = "approved";
+        } else if (normalizedStatus.includes("rejected")) {
+          bgColor = "#FFF";
+          textColor = "#FF4D4F";  // Red
+          borderColor = "#FF4D4F";
+          label = "rejected";
+        } else {
+          // Pending or unknown
+          bgColor = "#FFF7E6";
+          textColor = "#FA8C16";  // Orange
+          borderColor = "#FA8C16";
+          label = "pending";
         }
 
+        const displayText = label;
+
         return (
-          <Tag 
-            {...getStatusTagProps(checkerStatus)}
+          <Tag
+            className="status-tag"
             style={{
-              backgroundColor: colorConfig.bgColor,
-              color: colorConfig.textColor,
-              borderColor: colorConfig.borderColor,
-              fontWeight: "500",
+              backgroundColor: bgColor,
+              color: textColor,
+              borderColor: borderColor,
+              fontWeight: "600",
+              textTransform: "lowercase",
             }}
           >
-            {label}
+            {displayText}
           </Tag>
         );
       },
@@ -256,29 +271,51 @@ const DocumentTable = ({
           return <Tag color="default">—</Tag>;
         }
 
-        let color = "blue";
+        // Define colors for each status
+        // submitted_for_review: white background, green text
+        // deferral_requested: white background, amber text
+        // pending_from_customer: red theme
+        let bgColor = "#f5f5f5";
+        let textColor = "#000";
+        let borderColor = "#d9d9d9";
 
-        const colorConfig = getStatusColorStandard(status);
-        const displayColor = colorConfig.color || "default";
+        const normalizedStatus = String(status).toLowerCase().replace(/\s+/g, "");
+
+        if (normalizedStatus.includes("submittedforreview") || normalizedStatus.includes("submitted_for_review")) {
+          bgColor = "#FFF";
+          textColor = "#52C41A";  // Green
+          borderColor = "#52C41A";
+        } else if (normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("defferal_requested")) {
+          bgColor = "#FFF";
+          textColor = "#FAAD14";  // Amber
+          borderColor = "#FAAD14";
+        } else if (normalizedStatus.includes("pendingfromcustomer") || normalizedStatus.includes("pending_from_customer")) {
+          bgColor = "#FFEBE6";
+          textColor = "#FF4D4F";  // Red
+          borderColor = "#FF4D4F";
+        }
+
+        const displayText = formatStatusForSnakeCase(status);
+        const deferralNum = record.deferralNumber || record.deferralNo;
 
         return (
           <div className="flex items-center gap-2">
-            <Tag 
-              className="status-tag" 
+            <Tag
+              className="status-tag"
               style={{
-                backgroundColor: colorConfig.bgColor,
-                color: colorConfig.textColor,
-                borderColor: colorConfig.borderColor,
+                backgroundColor: bgColor,
+                color: textColor,
+                borderColor: borderColor,
                 fontWeight: "500",
               }}
             >
-              {formatStatusForSnakeCase(status)}
+              {displayText}
             </Tag>
 
-            {status.toLowerCase() === "defferal_requested" &&
-              record?.deferralNumber && (
+            {(normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("defferal_requested")) &&
+              deferralNum && (
                 <span className="text-xs text-gray-500">
-                  #{record.deferralNumber}
+                  #{deferralNum}
                 </span>
               )}
           </div>

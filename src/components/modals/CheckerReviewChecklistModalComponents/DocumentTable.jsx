@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import { PRIMARY_BLUE } from "../../../utils/constants";
 import { getFullUrl } from "../../../utils/checklistUtils";
+import { formatStatusForSnakeCase } from "../../../utils/statusColors";
 
 const DocumentTable = ({
   docs,
@@ -127,57 +128,84 @@ const DocumentTable = ({
         const actualStatus = status || record.status || "pending";
         const lowerStatus = actualStatus.toLowerCase();
 
-        // Map to appropriate tag color and label
-        let color = "default";
+        // Use consistent colors matching other modals
+        // GREEN: submitted, approved, sighted
+        // RED: pendingrm, pendingco
+        // AMBER: deferred, waived, tbo
+        let bgColor = "#fafafa";
+        let textColor = "#000";
+        let borderColor = "#d9d9d9";
         let label = actualStatus;
 
         switch (lowerStatus) {
           case "submitted":
-            color = "blue";
-            label = "Submitted";
-            break;
-          case "waived":
-            color = "orange";
-            label = "Waived";
-            break;
-          case "sighted":
-            color = "purple";
-            label = "Sighted";
-            break;
-          case "tbo":
-            color = "cyan";
-            label = "TBO";
-            break;
-          case "deferred":
-            color = "volcano";
-            label = "Deferred";
-            break;
-          case "pending":
-          case "pendingrm":
-          case "pendingco":
-            color = "gold";
-            label = "Pending";
+            bgColor = "#f6ffed";
+            textColor = "#52c41a";
+            borderColor = "#52c41a";
+            label = "submitted";
             break;
           case "approved":
-            color = "green";
-            label = "Approved";
+            bgColor = "#f6ffed";
+            textColor = "#52c41a";
+            borderColor = "#52c41a";
+            label = "approved";
+            break;
+          case "sighted":
+            bgColor = "#f6ffed";
+            textColor = "#52c41a";
+            borderColor = "#52c41a";
+            label = "sighted";
+            break;
+          case "pendingrm":
+          case "pendingco":
+          case "pending":
+            bgColor = "#ffebe6";
+            textColor = "#FF4D4F";
+            borderColor = "#FF4D4F";
+            label = "pending";
+            break;
+          case "deferred":
+          case "deferral_requested":
+            bgColor = "#fffbe6";
+            textColor = "#FAAD14";
+            borderColor = "#FAAD14";
+            label = "deferred";
+            break;
+          case "waived":
+            bgColor = "#fffbe6";
+            textColor = "#FAAD14";
+            borderColor = "#FAAD14";
+            label = "waived";
+            break;
+          case "tbo":
+            bgColor = "#fffbe6";
+            textColor = "#FAAD14";
+            borderColor = "#FAAD14";
+            label = "tbo";
             break;
           case "rejected":
-            color = "red";
-            label = "Rejected";
+            bgColor = "#FFF";
+            textColor = "#FF4D4F";
+            borderColor = "#FF4D4F";
+            label = "rejected";
             break;
           default:
-            color = "default";
+            bgColor = "#fafafa";
+            textColor = "#8c8c8c";
+            borderColor = "#d9d9d9";
         }
 
         return (
           <Tag
-            color={color}
             style={{
+              backgroundColor: bgColor,
+              color: textColor,
+              borderColor: borderColor,
               fontWeight: 500,
               margin: 0,
               minWidth: 60,
               textAlign: "center",
+              textTransform: "lowercase",
             }}
           >
             {label}
@@ -225,6 +253,66 @@ const DocumentTable = ({
           >
             {label}
           </Tag>
+        );
+      },
+    },
+    {
+      title: "RM Status",
+      dataIndex: "rmStatus",
+      width: 160,
+      render: (status, record) => {
+        if (!status) {
+          return <Tag color="default">—</Tag>;
+        }
+
+        // Define colors for each status
+        // submitted_for_review: white background, green text
+        // deferral_requested: white background, amber text
+        // pending_from_customer: red theme
+        let bgColor = "#f5f5f5";
+        let textColor = "#000";
+        let borderColor = "#d9d9d9";
+
+        const normalizedStatus = String(status).toLowerCase().replace(/\s+/g, "");
+
+        if (normalizedStatus.includes("submittedforreview") || normalizedStatus.includes("submitted_for_review")) {
+          bgColor = "#FFF";
+          textColor = "#52C41A";  // Green
+          borderColor = "#52C41A";
+        } else if (normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("defferal_requested")) {
+          bgColor = "#FFF";
+          textColor = "#FAAD14";  // Amber
+          borderColor = "#FAAD14";
+        } else if (normalizedStatus.includes("pendingfromcustomer") || normalizedStatus.includes("pending_from_customer")) {
+          bgColor = "#FFEBE6";
+          textColor = "#FF4D4F";  // Red
+          borderColor = "#FF4D4F";
+        }
+
+        const displayText = formatStatusForSnakeCase(status);
+        const deferralNum = record.deferralNumber || record.deferralNo;
+
+        return (
+          <div className="flex items-center gap-2">
+            <Tag
+              className="status-tag"
+              style={{
+                backgroundColor: bgColor,
+                color: textColor,
+                borderColor: borderColor,
+                fontWeight: "500",
+              }}
+            >
+              {displayText}
+            </Tag>
+
+            {(normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("defferal_requested")) &&
+              deferralNum && (
+                <span className="text-xs text-gray-500">
+                  #{deferralNum}
+                </span>
+              )}
+          </div>
         );
       },
     },

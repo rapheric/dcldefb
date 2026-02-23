@@ -172,12 +172,18 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
       open={open}
       width={380}
       className="document-sidebar"
+      zIndex={1002}
+      getContainer={false}
       styles={{
         header: {
           borderBottom: `2px solid #b5d334`,
           background: "white",
         },
-        body: { padding: "16px" },
+        body: {
+          padding: "16px",
+          overflowY: "auto",
+          maxHeight: "calc(100vh - 80px)"
+        },
       }}
     >
       <div style={{ marginBottom: "16px" }}>

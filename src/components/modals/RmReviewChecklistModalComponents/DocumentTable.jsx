@@ -25,7 +25,7 @@ import dayjs from "dayjs";
 // import { PRIMARY_BLUE } from "../constants/colors";
 import { getExpiryStatus } from "../../../utils/documentStats";
 import { PRIMARY_BLUE } from "../../../utils/colors";
-import { getStatusColor as getStatusColorStandard, formatStatusForSnakeCase } from "../../../utils/statusColors";
+import { formatStatusForSnakeCase } from "../../../utils/statusColors";
 
 const DocumentTable = ({
   docs,
@@ -274,10 +274,10 @@ const DocumentTable = ({
                 disabled={!canActOnDoc(record)}
                 style={{ flex: 1 }}
               >
-                <Option value="DeferralRequested">Deferral Requested</Option>
-                <Option value="SubmittedForReview">Submitted for Review</Option>
+                <Option value="DeferralRequested">deferral_requested</Option>
+                <Option value="SubmittedForReview">submitted_for_review</Option>
                 <Option value="PendingFromCustomer">
-                  Pending from Customer
+                  pending_from_customer
                 </Option>
               </Select>
 
@@ -384,11 +384,29 @@ const DocumentTable = ({
           displayText = `deferral_requested (#${deferralNo})`;
         }
 
-        // Get colors from global status color configuration
-        const colorConfig = getStatusColorStandard(rmStatus);
-        const bgColor = colorConfig?.bgColor || "#f5f5f5";
-        const textColor = colorConfig?.textColor || "#000";
-        const borderColor = colorConfig?.borderColor || "#d9d9d9";
+        // Define colors for each status
+        // submitted_for_review: white background, green text
+        // deferral_requested: white background, amber text
+        // pending_from_customer: red theme
+        let bgColor = "#f5f5f5";
+        let textColor = "#000";
+        let borderColor = "#d9d9d9";
+
+        const normalizedStatus = String(rmStatus).toLowerCase().replace(/\s+/g, "");
+
+        if (normalizedStatus.includes("submittedforreview") || normalizedStatus.includes("submitted_for_review")) {
+          bgColor = "#FFF";
+          textColor = "#52C41A";  // Green
+          borderColor = "#52C41A";
+        } else if (normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("defferal_requested")) {
+          bgColor = "#FFF";
+          textColor = "#FAAD14";  // Amber
+          borderColor = "#FAAD14";
+        } else if (normalizedStatus.includes("pendingfromcustomer") || normalizedStatus.includes("pending_from_customer")) {
+          bgColor = "#FFEBE6";
+          textColor = "#FF4D4F";  // Red
+          borderColor = "#FF4D4F";
+        }
 
         return (
           <Tag

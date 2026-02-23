@@ -21,17 +21,40 @@ export const formatStatusText = (status) => {
 
 /**
  * Format status for snake_case display in UI
- * Converts "Pending From Customer" or spaced format to "pending_from_customer"
- * @param {string} status - Status string (can be title case or spaced)
+ * Converts camelCase "DeferralRequested" or spaced format to "deferral_requested"
+ * @param {string} status - Status string (can be camelCase, title case or spaced)
  * @returns {string} - Formatted status in snake_case (all lowercase with underscores)
  */
 export const formatStatusForSnakeCase = (status) => {
   if (!status) return "unknown";
-  
-  // Convert to lowercase and replace spaces with underscores
-  return status
+
+  // First, handle common camelCase patterns
+  // Convert "DeferralRequested" to "deferral_requested"
+  const camelCaseMap = {
+    "DeferralRequested": "deferral_requested",
+    "SubmittedForReview": "submitted_for_review",
+    "PendingFromCustomer": "pending_from_customer",
+    "PendingRM": "pending_rm",
+    "PendingCO": "pending_co",
+    "deferredrequested": "deferral_requested",
+    "submittedforreview": "submitted_for_review",
+    "pendingfromcustomer": "pending_from_customer",
+  };
+
+  // Check for exact match in map (case-insensitive)
+  const lowerStatus = status.toLowerCase().replace(/\s+/g, "");
+  if (camelCaseMap[status] || camelCaseMap[lowerStatus]) {
+    return camelCaseMap[status] || camelCaseMap[lowerStatus];
+  }
+
+  // Handle camelCase by inserting underscore before uppercase letters
+  const withUnderscores = status
+    .replace(/([a-z])([A-Z])/g, '$1_$2')  // Insert underscore before uppercase letters
+    .replace(/\s+/g, "_");                 // Replace spaces with underscores
+
+  // Convert to lowercase and clean up multiple underscores
+  return withUnderscores
     .toLowerCase()
-    .replace(/\s+/g, "_")    // Replace spaces with underscores
     .replace(/__+/g, "_");   // Replace multiple underscores with single
 };
 
@@ -115,14 +138,14 @@ export const STATUS_COLORS = {
   },
   "submitted for review": {
     color: "#52C41A",      // Green
-    textColor: "#FFF",
-    bgColor: "#F6FFED",
+    textColor: "#52C41A",
+    bgColor: "#FFF",
     borderColor: "#52C41A",
   },
   submitted_for_review: {
     color: "#52C41A",      // Green
-    textColor: "#FFF",
-    bgColor: "#F6FFED",
+    textColor: "#52C41A",
+    bgColor: "#FFF",
     borderColor: "#52C41A",
   },
   "pending from customer": {
@@ -139,20 +162,20 @@ export const STATUS_COLORS = {
   },
   "deferral requested": {
     color: "#FAAD14",      // Amber
-    textColor: "#FFF",
-    bgColor: "#FFFBE6",
+    textColor: "#FAAD14",
+    bgColor: "#FFF",
     borderColor: "#FAAD14",
   },
   deferral_requested: {
     color: "#FAAD14",      // Amber
-    textColor: "#FFF",
-    bgColor: "#FFFBE6",
+    textColor: "#FAAD14",
+    bgColor: "#FFF",
     borderColor: "#FAAD14",
   },
   defferal_requested: {
     color: "#FAAD14",      // Amber (typo variant)
-    textColor: "#FFF",
-    bgColor: "#FFFBE6",
+    textColor: "#FAAD14",
+    bgColor: "#FFF",
     borderColor: "#FAAD14",
   },
   completed: {

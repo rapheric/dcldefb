@@ -476,8 +476,8 @@ const CheckerReviewChecklistModal = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-auto bg-black/40 flex justify-center items-start pt-10">
-      <div className="review-checklist-modal w-[95%] max-w-7xl bg-white rounded-xl shadow-2xl overflow-hidden my-6">
+    <div className="fixed inset-0 z-[1000] overflow-auto bg-black/40 flex justify-center items-start pt-10">
+      <div className="review-checklist-modal w-[95%] max-w-7xl bg-white rounded-xl shadow-2xl overflow-hidden my-6 relative" style={{ zIndex: 1001 }}>
         {/* Header Section with Gradient */}
         <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white">
           <HeaderSection

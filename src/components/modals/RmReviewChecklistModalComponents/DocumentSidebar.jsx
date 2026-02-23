@@ -1,6 +1,6 @@
 import React from "react";
-import { Drawer, Card, Tag, Collapse, Button } from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
+import { Drawer, Card, Tag, Collapse, Button, Upload } from "antd";
+import { DownloadOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { formatFileSize } from "../../../utils/uploadUtils";
 // import { formatFileSize } from "../utils/uploadUtils";
@@ -11,6 +11,8 @@ const DocumentSidebar = ({
   open,
   onClose,
   getFullUrl,
+  onUploadSupportingDoc,
+  readOnly = false,
 }) => {
   // Include docs that are either:
   // 1. Locally uploaded (uploadData exists and not deleted)
@@ -48,6 +50,47 @@ const DocumentSidebar = ({
       open={open}
       onClose={onClose}
     >
+      {/* Upload Additional Documents Section */}
+      {!readOnly && onUploadSupportingDoc && (
+        <Card
+          size="small"
+          style={{
+            marginBottom: 16,
+            border: "1px dashed #b5d334",
+            backgroundColor: "#f8fafc",
+          }}
+        >
+          <div style={{ marginBottom: 8, fontWeight: 600, color: "#164679" }}>
+            📎 Upload Additional Documents
+          </div>
+          <Upload
+            showUploadList={false}
+            beforeUpload={(file) => {
+              onUploadSupportingDoc(file);
+              return false;
+            }}
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+          >
+            <Button
+              type="primary"
+              icon={<UploadOutlined />}
+              size="small"
+              style={{
+                backgroundColor: "#b5d334",
+                borderColor: "#b5d334",
+                color: "#164679",
+                fontWeight: 600,
+              }}
+            >
+              Upload Supporting Document
+            </Button>
+          </Upload>
+          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+            PDF, Word, Excel, Images (Max 10MB)
+          </div>
+        </Card>
+      )}
+
       <div style={{ marginBottom: 12, color: "#6b7280", fontSize: 13 }}>
         📄 Documents uploaded to this checklist
       </div>

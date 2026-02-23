@@ -244,9 +244,15 @@ const DocumentSidebar = ({
       open={open}
       onClose={onClose}
       styles={{
-        body: { padding: '16px' }
+        body: {
+          padding: '16px',
+          overflowY: 'auto',
+          maxHeight: 'calc(100vh - 80px)'
+        }
       }}
     >
+      {/* Scrollable content wrapper */}
+      <div style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
       {/* Summary Info */}
       <div style={{ 
         marginBottom: 20, 
@@ -274,7 +280,7 @@ const DocumentSidebar = ({
           key={category}
           defaultActiveKey={Object.keys(groupedDocs)}
           expandIconPosition="end"
-          style={{ 
+          style={{
             marginBottom: 16,
             border: '1px solid #e5e7eb',
             borderRadius: 8,
@@ -558,6 +564,7 @@ const DocumentSidebar = ({
           </div>
         )}
       </Card>
+      </div>
     </Drawer>
   );
 };
