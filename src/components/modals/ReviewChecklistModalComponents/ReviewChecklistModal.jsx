@@ -16,10 +16,10 @@ import { useGetChecklistCommentsQuery } from "../../../api/checklistApi";
 // import { customStyles } from "../../../styles/theme";
 import { RightOutlined } from "@ant-design/icons";
 // import { LeftOutlined } from "@ant-design/icons";
-import ProgressStats from "./ProgressStats";
 import DocumentTable from "./DocumentTable";
 import { customStyles } from "../../styles/Theme";
 import { useDocumentStats } from "../../../hooks/useDocumentStats";
+import ProgressStats from "./ProgressStats";
 
 const ReviewChecklistModal = ({
   checklist,
@@ -256,7 +256,10 @@ const ReviewChecklistModal = ({
         open={open}
         onCancel={onClose}
         width={1150}
+        centered={true}
+        style={{ marginLeft: '160px' }}
         styles={{ body: { padding: "0 24px 24px" } }}
+        closeIcon={true}
         footer={
           <ActionButtons
             readOnly={readOnly}
@@ -348,12 +351,13 @@ const ReviewChecklistModal = ({
             />
 
             {/* Creator Comment */}
-            <div style={{ marginTop: 24 }}>
+            <div style={{ marginTop: 16 }}>
               <h4
                 style={{
                   color: PRIMARY_BLUE,
                   fontWeight: 700,
                   marginBottom: 8,
+                  fontSize: 13,
                 }}
               >
                 Creator Comment
@@ -364,17 +368,18 @@ const ReviewChecklistModal = ({
                 onChange={(e) => setCreatorComment(e.target.value)}
                 disabled={isActionDisabled || shouldGrayOut}
                 placeholder="Add a comment for RM / Co-Checker"
-                style={{ borderRadius: 8 }}
+                style={{ borderRadius: 6 }}
               />
             </div>
 
             {/* Comment History */}
-            <div style={{ marginTop: 24 }}>
+            <div style={{ marginTop: 16 }}>
               <h4
                 style={{
                   color: PRIMARY_BLUE,
                   fontWeight: 700,
                   marginBottom: 12,
+                  fontSize: 13,
                 }}
               >
                 Comment Trail & History

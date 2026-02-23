@@ -228,16 +228,24 @@ const CommentHistory = ({ comments = [], isLoading }) => {
             {item.message || item.comment}
           </div>
 
-          {/* Time */}
+          {/* Time - Show both created and updated timestamps */}
           <span
             style={{
-              fontSize: "11px",
+              fontSize: "10px",
               color: "#9ca3af",
               flexShrink: 0,
               marginLeft: "auto",
+              textAlign: "right",
             }}
           >
-            {formatDateTime(item.createdAt || item.timestamp)}
+            <div style={{ lineHeight: "1.3" }}>
+              {formatDateTime(item.createdAt || item.timestamp)}
+            </div>
+            {item.updatedAt && item.updatedAt !== item.createdAt && (
+              <div style={{ fontSize: "9px", color: "#b0b0b0", lineHeight: "1.3" }}>
+                Updated: {formatDateTime(item.updatedAt)}
+              </div>
+            )}
           </span>
         </div>
       ))}

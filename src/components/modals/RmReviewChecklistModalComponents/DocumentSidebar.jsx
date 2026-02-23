@@ -1,9 +1,7 @@
 import React from "react";
-import { Drawer, Card, Tag, Collapse, Button, Upload } from "antd";
-import { DownloadOutlined, UploadOutlined } from "@ant-design/icons";
+import { Drawer, Card, Tag, Button, Upload } from "antd";
+import { DownloadOutlined, UploadOutlined, FileOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { formatFileSize } from "../../../utils/uploadUtils";
-// import { formatFileSize } from "../utils/uploadUtils";
 
 const DocumentSidebar = ({
   documents,
@@ -14,9 +12,6 @@ const DocumentSidebar = ({
   onUploadSupportingDoc,
   readOnly = false,
 }) => {
-  // Include docs that are either:
-  // 1. Locally uploaded (uploadData exists and not deleted)
-  // 2. Persisted on backend (fileUrl exists)
   const uploadedDocs = documents.filter(
     (d) => (d.uploadData && d.uploadData.status !== "deleted") || !!d.fileUrl,
   );
@@ -30,39 +25,50 @@ const DocumentSidebar = ({
     return acc;
   }, {});
 
-  const lastUpload =
-    allDocs.length > 0
-      ? allDocs
-          .map((d) => new Date(d.uploadData?.createdAt || d.updatedAt || 0))
-          .sort((a, b) => b - a)[0]
-      : null;
+  const getFileIcon = (fileName) => {
+    if (!fileName) return <FileOutlined style={{ fontSize: "11px" }} />;
+    const ext = fileName.split(".").pop().toLowerCase();
+
+    if (ext === "pdf") return <FileOutlined style={{ fontSize: "11px", color: "#FF4D4F" }} />;
+    if (["jpg", "jpeg", "png", "gif"].includes(ext)) return <FileOutlined style={{ fontSize: "11px", color: "#52C41A" }} />;
+    if (["doc", "docx"].includes(ext)) return <FileOutlined style={{ fontSize: "11px", color: "#1890FF" }} />;
+    if (["xls", "xlsx"].includes(ext)) return <FileOutlined style={{ fontSize: "11px", color: "#FAAD14" }} />;
+    return <FileOutlined style={{ fontSize: "11px" }} />;
+  };
+
+  const getRoleColor = (role) => {
+    if (!role) return "default";
+    const roleLower = role.toLowerCase();
+    if (roleLower === "rm" || roleLower === "admin") return { bg: "#FFF7E6", color: "#FA8C16", text: "RM" };
+    if (roleLower === "cocreator" || roleLower === "co_creator") return { bg: "#E6F7FF", color: "#1890FF", text: "CO" };
+    if (roleLower === "checker" || roleLower === "cochecker") return { bg: "#F9F0FF", color: "#722ED1", text: "Checker" };
+    return { bg: "#F5F5F5", color: "#8C8C8C", text: role };
+  };
+
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return "—";
+    return dayjs(dateStr).format("DD/MM/YYYY HH:mm");
+  };
 
   return (
     <Drawer
       title={
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <span style={{ fontWeight: 600 }}>Uploaded Documents</span>
-          <Tag color="blue">{allDocs.length} doc</Tag>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontWeight: 600, fontSize: "12px", color: "#164679" }}>Documents</span>
+          <Tag color="#164679" style={{ margin: 0, fontSize: "10px" }}>{allDocs.length}</Tag>
         </div>
       }
       placement="right"
-      width={420}
+      width={280}
       open={open}
       onClose={onClose}
+      styles={{
+        header: { borderBottom: "1px solid #E8E8E8", padding: "10px 14px" },
+        body: { padding: "6px 10px", backgroundColor: "#FAFAFA" }
+      }}
     >
-      {/* Upload Additional Documents Section */}
       {!readOnly && onUploadSupportingDoc && (
-        <Card
-          size="small"
-          style={{
-            marginBottom: 16,
-            border: "1px dashed #b5d334",
-            backgroundColor: "#f8fafc",
-          }}
-        >
-          <div style={{ marginBottom: 8, fontWeight: 600, color: "#164679" }}>
-            📎 Upload Additional Documents
-          </div>
+        <div style={{ marginBottom: 10 }}>
           <Upload
             showUploadList={false}
             beforeUpload={(file) => {
@@ -75,245 +81,195 @@ const DocumentSidebar = ({
               type="primary"
               icon={<UploadOutlined />}
               size="small"
+              block
               style={{
-                backgroundColor: "#b5d334",
-                borderColor: "#b5d334",
-                color: "#164679",
-                fontWeight: 600,
+                backgroundColor: "#164679",
+                borderColor: "#164679",
+                fontSize: "10px",
+                height: "26px"
               }}
             >
-              Upload Supporting Document
+              Upload
             </Button>
           </Upload>
-          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
-            PDF, Word, Excel, Images (Max 10MB)
-          </div>
-        </Card>
+        </div>
       )}
 
-      <div style={{ marginBottom: 12, color: "#6b7280", fontSize: 13 }}>
-        📄 Documents uploaded to this checklist
+      <div style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}>
+        {Object.entries(groupedDocs).map(([category, docs]) => (
+          <div key={category} style={{ marginBottom: 8 }}>
+            <div style={{
+              fontSize: "10px",
+              fontWeight: 600,
+              color: "#595959",
+              marginBottom: 4,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px"
+            }}>
+              {category} ({docs.length})
+            </div>
+
+            {docs.map((doc, idx) => {
+              const isSupportingDoc = !!doc.uploadedByRole || !!doc.fileName;
+              const fileName = isSupportingDoc
+                ? doc.fileName
+                : doc.uploadData?.fileName || doc.name;
+              const uploadDate = isSupportingDoc
+                ? doc.uploadedAt
+                : doc.uploadData?.createdAt;
+              const uploadedBy = isSupportingDoc
+                ? doc.uploadedBy?.name || doc.uploadedBy || "Unknown"
+                : doc.uploadData?.uploadedBy || "Unknown";
+              const role = isSupportingDoc
+                ? doc.uploadedByRole
+                : doc.uploadData?.uploadedByRole;
+              const fileUrl = isSupportingDoc
+                ? doc.fileUrl
+                : doc.uploadData?.fileUrl || doc.fileUrl;
+
+              const roleStyle = getRoleColor(role);
+
+              return (
+                <Card
+                  key={idx}
+                  size="small"
+                  style={{
+                    marginBottom: 4,
+                    borderLeft: "2px solid #164679",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                    fontSize: "10px"
+                  }}
+                  bodyStyle={{ padding: "6px 8px" }}
+                >
+                  {/* Document Name */}
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    marginBottom: 4,
+                    fontWeight: 500,
+                    color: "#262626",
+                    fontSize: "10px"
+                  }}>
+                    {getFileIcon(fileName)}
+                    <span style={{
+                      flex: 1,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap"
+                    }}>
+                      {fileName}
+                    </span>
+                  </div>
+
+                  {/* Upload Date & Time */}
+                  <div style={{
+                    fontSize: "9px",
+                    color: "#8C8C8C",
+                    marginBottom: 3
+                  }}>
+                    📅 {formatDateTime(uploadDate)}
+                  </div>
+
+                  {/* Uploader & Role */}
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 4
+                  }}>
+                    <div style={{ fontSize: "9px", color: "#595959" }}>
+                      👤 {uploadedBy}
+                    </div>
+                    <Tag
+                      style={{
+                        margin: 0,
+                        fontSize: "8px",
+                        padding: "0 5px",
+                        height: "16px",
+                        lineHeight: "16px",
+                        backgroundColor: roleStyle.bg,
+                        color: roleStyle.color,
+                        border: "none"
+                      }}
+                    >
+                      {roleStyle.text}
+                    </Tag>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div style={{
+                    display: "flex",
+                    gap: 4,
+                    marginTop: 3
+                  }}>
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      style={{
+                        padding: "0 6px",
+                        fontSize: "9px",
+                        height: "20px",
+                        color: "#164679"
+                      }}
+                      onClick={() => window.open(getFullUrl(fileUrl), "_blank")}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<DownloadOutlined />}
+                      style={{
+                        padding: "0 6px",
+                        fontSize: "9px",
+                        height: "20px",
+                        color: "#52C41A"
+                      }}
+                      onClick={() => window.open(getFullUrl(fileUrl), "_blank")}
+                    >
+                      Download
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        ))}
+
+        {allDocs.length === 0 && (
+          <div style={{
+            textAlign: "center",
+            padding: "30px 12px",
+            color: "#8C8C8C",
+            fontSize: "11px"
+          }}>
+            <FileOutlined style={{ fontSize: "28px", marginBottom: 6, opacity: 0.5 }} />
+            <div>No documents</div>
+          </div>
+        )}
       </div>
 
-      {Object.entries(groupedDocs).map(([category, docs]) => (
-        <Collapse
-          key={category}
-          defaultActiveKey={[category]}
-          expandIconPosition="end"
-          style={{ marginBottom: 16 }}
-          items={[
-            {
-              key: category,
-              label: (
-                <b style={{ color: "#164679" }}>
-                  {category} ({docs.length})
-                </b>
-              ),
-              children: docs.map((doc, idx) => {
-                // Check if this is a supporting doc (has uploadedByRole) or regular doc (has uploadData or fileUrl)
-                const isSupportingDoc = !!doc.uploadedByRole || !!doc.fileName;
-                const hasBackendFile = !!doc.fileUrl && !doc.uploadData;
-
-                return (
-                  <Card
-                    key={idx}
-                    size="small"
-                    style={{
-                      borderRadius: 10,
-                      marginBottom: 12,
-                      border: "1px solid #e5e7eb",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <b>
-                        {isSupportingDoc
-                          ? doc.fileName
-                          : doc.uploadData?.fileName || doc.name}
-                      </b>
-                      <Tag
-                        color={
-                          isSupportingDoc
-                            ? "blue"
-                            : hasBackendFile
-                              ? "green"
-                              : doc.uploadData?.status === "active"
-                                ? "green"
-                                : "red"
-                        }
-                      >
-                        {isSupportingDoc
-                          ? "Supporting"
-                          : hasBackendFile
-                            ? "Uploaded"
-                            : doc.uploadData?.status === "active"
-                              ? "Active"
-                              : "Deleted"}
-                      </Tag>
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "#6b7280",
-                        marginBottom: 6,
-                      }}
-                    >
-                      ID: {doc._id || doc.uploadData?._id || "—"}
-                    </div>
-
-                    <div style={{ fontSize: 12, color: "#374151" }}>
-                      🕒{" "}
-                      {isSupportingDoc
-                        ? doc.uploadedAt
-                          ? dayjs(doc.uploadedAt).format("DD MMM YYYY HH:mm:ss")
-                          : "N/A"
-                        : doc.uploadData?.createdAt
-                          ? dayjs(doc.uploadData.createdAt).format(
-                              "DD MMM YYYY HH:mm:ss",
-                            )
-                          : "N/A"}
-                      {"  •  "}
-                      {isSupportingDoc
-                        ? doc.fileSize
-                          ? formatFileSize(doc.fileSize)
-                          : "N/A"
-                        : doc.uploadData?.fileSize
-                          ? formatFileSize(doc.uploadData.fileSize)
-                          : "N/A"}
-                      {"  •  "}
-                      {isSupportingDoc
-                        ? doc.fileType || "Unknown"
-                        : doc.uploadData?.fileType || "Unknown"}
-                    </div>
-
-                    <div style={{ marginTop: 6 }}>
-                      {isSupportingDoc ? (
-                        <Tag
-                          color={
-                            doc.uploadedByRole === "rm"
-                              ? "orange"
-                              : doc.uploadedByRole === "co_creator"
-                                ? "blue"
-                                : doc.uploadedByRole === "checker"
-                                  ? "purple"
-                                  : "default"
-                          }
-                        >
-                          {doc.uploadedByRole === "rm"
-                            ? "RM Upload"
-                            : doc.uploadedByRole === "co_creator"
-                              ? "CO Upload"
-                              : doc.uploadedByRole === "checker"
-                                ? "Checker Upload"
-                                : "Supporting"}
-                        </Tag>
-                      ) : (
-                        <Tag color="purple">{doc.category}</Tag>
-                      )}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 10,
-                        paddingLeft: 10,
-                        borderLeft: "3px solid #84cc16",
-                        fontSize: 12,
-                      }}
-                    >
-                      <div>
-                        Uploaded by{" "}
-                        <b>
-                          {isSupportingDoc
-                            ? doc.uploadedBy?.name || "Current User"
-                            : doc.uploadData?.uploadedBy || "Current User"}
-                        </b>
-                      </div>
-                      <div style={{ color: "#6b7280" }}>
-                        {isSupportingDoc
-                          ? doc.uploadedAt
-                            ? dayjs(doc.uploadedAt).format(
-                                "DD MMM YYYY HH:mm:ss",
-                              )
-                            : ""
-                          : doc.uploadData?.createdAt
-                            ? dayjs(doc.uploadData.createdAt).format(
-                                "DD MMM YYYY HH:mm:ss",
-                              )
-                            : ""}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        marginTop: 10,
-                        fontSize: 12,
-                      }}
-                    >
-                      <div>
-                        👤 Document:{" "}
-                        <b>
-                          {isSupportingDoc
-                            ? doc.fileName
-                            : doc.uploadData?.documentName || doc.name}
-                        </b>
-                      </div>
-
-                      {(isSupportingDoc ||
-                        doc.uploadData?.status === "active" ||
-                        !!doc.fileUrl) && (
-                        <Button
-                          type="link"
-                          icon={<DownloadOutlined />}
-                          onClick={() =>
-                            window.open(
-                              getFullUrl(
-                                isSupportingDoc
-                                  ? doc.fileUrl
-                                  : doc.uploadData?.fileUrl || doc.fileUrl,
-                              ),
-                              "_blank",
-                            )
-                          }
-                        >
-                          Download
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                );
-              }),
-            },
-          ]}
-        />
-      ))}
-
-      <Card size="small" style={{ marginTop: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <span>Total Documents:</span>
-          <b>{allDocs.length}</b>
+      {/* Footer Summary */}
+      {allDocs.length > 0 && (
+        <div style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "6px 10px",
+          backgroundColor: "#F5F5F5",
+          borderTop: "1px solid #E8E8E8",
+          fontSize: "9px",
+          color: "#595959"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span>Total: <strong>{allDocs.length}</strong></span>
+            <span style={{ color: "#52C41A" }}>● Active</span>
+          </div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: 6,
-          }}
-        >
-          <span>Last Upload:</span>
-          <b>
-            {lastUpload
-              ? dayjs(lastUpload).format("DD MMM YYYY HH:mm:ss")
-              : "—"}
-          </b>
-        </div>
-      </Card>
+      )}
     </Drawer>
   );
 };

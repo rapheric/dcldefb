@@ -239,7 +239,7 @@ export const getCheckerStatusDisplay = (checkerStatus, checklistStatus) => {
   if (checklistStatus === "approved" || checklistStatus === "completed") {
     return {
       color: "green",
-      text: "✅ Approved",
+      text: "Approved",
       icon: "CheckCircleOutlined",
       tagColor: "#52c41a",
     };
@@ -248,7 +248,7 @@ export const getCheckerStatusDisplay = (checkerStatus, checklistStatus) => {
   if (checklistStatus === "rejected") {
     return {
       color: "red",
-      text: "❌ Rejected",
+      text: "Rejected",
       icon: "CloseCircleOutlined",
       tagColor: "#f5222d",
     };
@@ -257,7 +257,7 @@ export const getCheckerStatusDisplay = (checkerStatus, checklistStatus) => {
   if (!checkerStatus) {
     return {
       color: "orange",
-      text: "📞 Pending Review",
+      text: "Pending Review",
       icon: "ClockCircleOutlined",
       tagColor: "#fa8c16",
     };
@@ -268,35 +268,35 @@ export const getCheckerStatusDisplay = (checkerStatus, checklistStatus) => {
     case "approved":
       return {
         color: "green",
-        text: "✅ Approved",
+        text: "Approved",
         icon: "CheckCircleOutlined",
         tagColor: "#52c41a",
       };
     case "rejected":
       return {
         color: "red",
-        text: "❌ Rejected",
+        text: "Rejected",
         icon: "CloseCircleOutlined",
         tagColor: "#f5222d",
       };
     case "pending":
       return {
         color: "orange",
-        text: "📞 Pending Review",
+        text: "Pending Review",
         icon: "ClockCircleOutlined",
         tagColor: "#fa8c16",
       };
     case "reviewed":
       return {
         color: "blue",
-        text: "👁️ Reviewed",
+        text: "Reviewed",
         icon: "EyeOutlined",
         tagColor: "#1890ff",
       };
     case "deferred":
       return {
         color: "warning",
-        text: "⏱️ Deferred",
+        text: "Deferred",
         icon: "ClockCircleOutlined",
         tagColor: "#FAAD14",
       };

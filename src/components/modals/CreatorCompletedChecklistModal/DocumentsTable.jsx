@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Tag, Button } from "antd";
+import { Table, Tag, Button, Tooltip } from "antd";
 import {
   EyeOutlined,
   CheckCircleOutlined,
@@ -78,15 +78,17 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
       return {
         ...col,
         render: (text) => (
-          <span
-            style={{
-              fontSize: 12,
-              color: COLORS.SECONDARY_PURPLE,
-              fontWeight: 500,
-            }}
-          >
-            {text || "N/A"}
-          </span>
+          <Tooltip title={text || "N/A"}>
+            <span
+              style={{
+                fontSize: 11,
+                color: COLORS.SECONDARY_PURPLE,
+                fontWeight: 500,
+              }}
+            >
+              {text || "N/A"}
+            </span>
+          </Tooltip>
         ),
       };
     }
@@ -103,18 +105,20 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
           const colorConfig = getStatusColor(status);
 
           return (
-            <Tag 
-              className="status-tag" 
-              {...getStatusTagProps(status)}
-              style={{
-                backgroundColor: colorConfig.bgColor,
-                color: colorConfig.textColor,
-                borderColor: colorConfig.borderColor,
-                fontWeight: "500",
-              }}
-            >
-              {statusLabel}
-            </Tag>
+            <Tooltip title={statusLabel}>
+              <Tag
+                className="status-tag"
+                {...getStatusTagProps(status)}
+                style={{
+                  backgroundColor: colorConfig.bgColor,
+                  color: colorConfig.textColor,
+                  borderColor: colorConfig.borderColor,
+                  fontWeight: "500",
+                }}
+              >
+                {statusLabel}
+              </Tag>
+            </Tooltip>
           );
         },
       };
@@ -124,7 +128,9 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
       return {
         ...col,
         render: (text) => (
-          <span style={{ fontSize: 13, color: "#666" }}>{text || "-"}</span>
+          <Tooltip title={text || "No deferral number"}>
+            <span style={{ fontSize: 11, color: "#666" }}>{text || "-"}</span>
+          </Tooltip>
         ),
       };
     }
@@ -157,18 +163,20 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
           );
 
           return (
-            <Tag
-              color={statusDisplay.color}
-              style={{
-                fontWeight: "bold",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                color: statusDisplay.color === "green" ? "#52c41a" : statusDisplay.color === "red" ? "#f5222d" : "inherit",
-              }}
-            >
-              {statusDisplay.text}
-            </Tag>
+            <Tooltip title={statusDisplay.text}>
+              <Tag
+                color={statusDisplay.color}
+                style={{
+                  fontWeight: "bold",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  color: statusDisplay.color === "green" ? "#52c41a" : statusDisplay.color === "red" ? "#f5222d" : "inherit",
+                }}
+              >
+                {statusDisplay.text}
+              </Tag>
+            </Tooltip>
           );
         },
       };
@@ -178,7 +186,11 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
       return {
         ...col,
         ellipsis: true,
-        render: (text) => text || "-",
+        render: (text) => (
+          <Tooltip title={text || "No comment"}>
+            <span>{text || "-"}</span>
+          </Tooltip>
+        ),
       };
     }
 
@@ -204,19 +216,21 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
           if (!status) return "-";
 
           return (
-            <Button
-              size="small"
-              type="primary"
-              danger={status === "expired"}
-              style={{
-                backgroundColor: status === "current" ? "#52c41a" : undefined,
-                borderColor: status === "current" ? "#52c41a" : undefined,
-                cursor: "default",
-                fontWeight: "bold",
-              }}
-            >
-              {status === "current" ? "Current" : "Expired"}
-            </Button>
+            <Tooltip title={status === "current" ? "Current" : "Expired"}>
+              <Button
+                size="small"
+                type="primary"
+                danger={status === "expired"}
+                style={{
+                  backgroundColor: status === "current" ? "#52c41a" : undefined,
+                  borderColor: status === "current" ? "#52c41a" : undefined,
+                  cursor: "default",
+                  fontWeight: "bold",
+                }}
+              >
+                {status === "current" ? "Current" : "Expired"}
+              </Button>
+            </Tooltip>
           );
         },
       };
@@ -230,14 +244,16 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
           if (!url) return null;
 
           return (
-            <Button
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => window.open(getFullUrlUtil(url), "_blank")}
-              style={{ borderRadius: 6 }}
-            >
-              View
-            </Button>
+            <Tooltip title="View document">
+              <Button
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => window.open(getFullUrlUtil(url), "_blank")}
+                style={{ borderRadius: 6 }}
+              >
+                View
+              </Button>
+            </Tooltip>
           );
         },
       };
@@ -250,8 +266,38 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
 
   return (
     <div style={tableStyles.container}>
+      <style>{`
+        .doc-table.ant-table .ant-table-thead > tr > th {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+        }
+        .doc-table.ant-table .ant-table-tbody > tr > td {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+        }
+        .doc-table .ant-tag {
+          font-size: 10px !important;
+          padding: 0 4px !important;
+          height: 20px !important;
+          line-height: 18px !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          max-width: 100px !important;
+        }
+        .doc-table .ant-btn-sm {
+          font-size: 10px !important;
+          padding: 0 6px !important;
+          height: 22px !important;
+        }
+        .doc-table .ant-btn-sm .anticon {
+          font-size: 12px !important;
+        }
+      `}</style>
       <Table
         {...tableStyles.table}
+        className="doc-table"
         columns={columns}
         dataSource={safeDocs}
         rowKey="docIdx"

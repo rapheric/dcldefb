@@ -1001,30 +1001,24 @@ const RmReviewChecklistModal = ({
             fontWeight: 600,
             fontSize: "1.15rem",
             letterSpacing: "0.5px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
           }}
         >
-          <span>Review Checklist — {checklist?.customerNumber || ""}</span>
-          {!isActionAllowed && (
-            <span
-              style={{
-                fontSize: "0.85rem",
-                fontWeight: 400,
-                backgroundColor: "rgba(255,255,255,0.2)",
-                padding: "4px 12px",
-                borderRadius: "4px",
-              }}
-            >
-              Read-Only
-            </span>
-          )}
+          Review Checklist — {checklist?.customerNumber || ""}
         </div>
       }
       open={open}
       onCancel={onClose}
       width={1100}
+      centered={true}
+      style={{ marginLeft: '160px' }}
+      modalRender={(node) => (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
+          {node}
+        </div>
+      )}
       closeIcon={
         <span style={{ color: "white", fontSize: "24px", fontWeight: "bold" }}>
           ×
@@ -1096,7 +1090,7 @@ const RmReviewChecklistModal = ({
         ),
       ]}
     >
-      <div style={{ position: "absolute", top: 16, right: 90, zIndex: 10 }}>
+      <div style={{ position: "absolute", top: 16, right: 60, zIndex: 10 }}>
         <Button
           icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
           onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}

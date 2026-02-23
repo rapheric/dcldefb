@@ -933,6 +933,8 @@ const CreatorQueueChecklistModal = ({ checklist, open, onClose }) => {
           if (!submitting) onClose();
         }}
         width={1000}
+        centered={true}
+        style={{ marginLeft: '160px' }}
         footer={[
           <Button
             key="download"

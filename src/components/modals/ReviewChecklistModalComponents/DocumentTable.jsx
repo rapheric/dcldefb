@@ -8,6 +8,7 @@ import {
   Button,
   Popconfirm,
   DatePicker,
+  Tooltip,
 } from "antd";
 import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import { getExpiryStatus, getStatusColor } from "../../../utils/documentUtils";
@@ -47,48 +48,61 @@ const DocumentTable = ({
     {
       title: "Category",
       dataIndex: "category",
-      width: 120,
+      width: 85,
       render: (text) => (
-        <span
-          style={{ fontSize: 12, color: SECONDARY_PURPLE, fontWeight: 500 }}
-        >
-          {text}
-        </span>
+        <Tooltip title={text || "N/A"}>
+          <span
+            style={{
+              fontSize: 11,
+              color: SECONDARY_PURPLE,
+              fontWeight: 500,
+              display: 'block',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {text || "N/A"}
+          </span>
+        </Tooltip>
       ),
     },
     {
       title: "Document Name",
       dataIndex: "name",
-      width: 250,
+      width: 120,
       render: (text, record) => (
-        <Input
-          size="small"
-          value={record.name}
-          onChange={(e) => {
-            const updated = [...docs];
-            updated[record.docIdx].name = e.target.value;
-            setDocs(updated);
-          }}
-          disabled={isActionDisabled}
-        />
+        <Tooltip title={record.name || "N/A"}>
+          <Input
+            size="small"
+            value={record.name || ""}
+            onChange={(e) => {
+              const updated = [...docs];
+              updated[record.docIdx].name = e.target.value;
+              setDocs(updated);
+            }}
+            disabled={isActionDisabled}
+            style={{ fontSize: 11 }}
+          />
+        </Tooltip>
       ),
     },
     {
       title: "Action",
       dataIndex: "action",
-      width: 220,
+      width: 160,
       render: (text, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 4 }}>
           <Select
             size="small"
             value={record.action}
-            style={{ width: record.action === "deferred" ? 110 : "100%" }}
+            style={{ width: record.action === "deferred" ? 85 : "100%", fontSize: 11 }}
             onChange={(val) => onActionChange(record.docIdx, val)}
             disabled={!canActOnDoc(record)}
           >
             <Option value="submitted">Submitted</Option>
-            <Option value="pendingrm">Pending from RM</Option>
-            <Option value="pendingco">Pending from Co</Option>
+            <Option value="pendingrm">Pending RM</Option>
+            <Option value="pendingco">Pending Co</Option>
             <Option value="tbo">TBO</Option>
             <Option value="sighted">Sighted</Option>
             <Option value="waived">Waived</Option>
@@ -103,7 +117,7 @@ const DocumentTable = ({
               onChange={(e) =>
                 onDeferralNoChange(record.docIdx, e.target.value)
               }
-              style={{ width: 100 }}
+              style={{ width: 75, fontSize: 11 }}
               disabled={!canActOnDoc(record)}
             />
           )}
@@ -111,33 +125,37 @@ const DocumentTable = ({
       ),
     },
     {
-      title: "Co status",
+      title: "CO Status",
       dataIndex: "status",
-      width: 150,
+      width: 100,
       render: (status, record) => {
         const statusColor = getStatusColor(status);
         const statusLabel =
           status === "deferred" && record.deferralNo ? "Deferred" : status;
 
         return (
-          <Tag className="status-tag" color={statusColor.tag}>
-            {statusLabel}
-          </Tag>
+          <Tooltip title={statusLabel}>
+            <Tag className="status-tag" color={statusColor.tag} style={{ fontSize: 10 }}>
+              {statusLabel}
+            </Tag>
+          </Tooltip>
         );
       },
     },
     {
       title: "Deferral No",
       dataIndex: "deferralNo",
-      width: 120,
+      width: 85,
       render: (deferralNo, record) => {
         // Show deferral number if it exists in either field
         const deferralNum = record.deferralNo || record.deferralNumber;
         if (deferralNum) {
           return (
-            <Tag color="orange" style={{ fontWeight: "bold" }}>
-              {deferralNum}
-            </Tag>
+            <Tooltip title={deferralNum}>
+              <Tag color="orange" style={{ fontWeight: "bold", fontSize: 10 }}>
+                {deferralNum}
+              </Tag>
+            </Tooltip>
           );
         }
         return "-";
@@ -146,11 +164,12 @@ const DocumentTable = ({
     {
       title: "Checker Status",
       dataIndex: "finalCheckerStatus",
+      width: 100,
       render: (checkerStatus) => {
         // Define colors for each status with better visibility
         // approved: white background, green text
         // rejected: white background, red text
-        // pending: light yellow background, orange text
+        // pending: red background, red text (consistent with other pending statuses)
         let bgColor = "#f5f5f5";
         let textColor = "#000";
         let borderColor = "#d9d9d9";
@@ -169,48 +188,55 @@ const DocumentTable = ({
           borderColor = "#FF4D4F";
           label = "rejected";
         } else {
-          // Pending or unknown
-          bgColor = "#FFF7E6";
-          textColor = "#FA8C16";  // Orange
-          borderColor = "#FA8C16";
+          // Pending or unknown - RED color (consistent with other pending statuses)
+          bgColor = "#FFEBE6";  // Light red background
+          textColor = "#FF4D4F";  // Red text
+          borderColor = "#FF4D4F";
           label = "pending";
         }
 
         const displayText = label;
 
         return (
-          <Tag
-            className="status-tag"
-            style={{
-              backgroundColor: bgColor,
-              color: textColor,
-              borderColor: borderColor,
-              fontWeight: "600",
-              textTransform: "lowercase",
-            }}
-          >
-            {displayText}
-          </Tag>
+          <Tooltip title={displayText}>
+            <Tag
+              className="status-tag"
+              style={{
+                backgroundColor: bgColor,
+                color: textColor,
+                borderColor: borderColor,
+                fontWeight: "600",
+                textTransform: "lowercase",
+                fontSize: 10,
+              }}
+            >
+              {displayText}
+            </Tag>
+          </Tooltip>
         );
       },
     },
     {
-      title: "Co comment",
+      title: "CO Comment",
       dataIndex: "comment",
-      width: 200,
+      width: 110,
       render: (text, record) => (
-        <Input.TextArea
-          rows={1}
-          size="small"
-          value={text}
-          onChange={(e) => onCommentChange(record.docIdx, e.target.value)}
-          disabled={!canActOnDoc(record)}
-        />
+        <Tooltip title={text || "No comment"}>
+          <Input.TextArea
+            rows={1}
+            size="small"
+            value={text}
+            onChange={(e) => onCommentChange(record.docIdx, e.target.value)}
+            disabled={!canActOnDoc(record)}
+            style={{ fontSize: 11 }}
+          />
+        </Tooltip>
       ),
     },
     {
-      title: "Expiry Date",
+      title: "Expiry",
       dataIndex: "expiryDate",
+      width: 120,
       render: (_, record) => {
         const category = (record.category || "").toLowerCase().trim();
 
@@ -226,8 +252,9 @@ const DocumentTable = ({
             onChange={(date) => onExpiryDateChange(record.docIdx, date)}
             allowClear
             disabled={!canActOnDoc(record)}
-            style={{ width: 160 }}
-            placeholder="Select expiry date"
+            style={{ width: 110, fontSize: 11 }}
+            placeholder="Select expiry"
+            size="small"
           />
         );
       },
@@ -235,6 +262,7 @@ const DocumentTable = ({
     {
       title: "Expiry Status",
       dataIndex: "expiryStatus",
+      width: 80,
       render: (_, record) => {
         const category = (record.category || "").toLowerCase().trim();
 
@@ -255,6 +283,9 @@ const DocumentTable = ({
               backgroundColor: status === "current" ? "#52c41a" : undefined,
               borderColor: status === "current" ? "#52c41a" : undefined,
               cursor: "default",
+              fontSize: 10,
+              height: 22,
+              padding: "0 8px",
             }}
           >
             {status === "current" ? "Current" : "Expired"}
@@ -265,8 +296,8 @@ const DocumentTable = ({
     {
       title: "RM Status",
       dataIndex: "rmStatus",
-      width: 160,
-      render: (status, record) => {
+      width: 110,
+      render: (status) => {
         if (!status) {
           return <Tag color="default">—</Tag>;
         }
@@ -296,10 +327,10 @@ const DocumentTable = ({
         }
 
         const displayText = formatStatusForSnakeCase(status);
-        const deferralNum = record.deferralNumber || record.deferralNo;
+        // Remove deferral number from display - shown in Deferral No column
 
         return (
-          <div className="flex items-center gap-2">
+          <Tooltip title={displayText}>
             <Tag
               className="status-tag"
               style={{
@@ -307,18 +338,13 @@ const DocumentTable = ({
                 color: textColor,
                 borderColor: borderColor,
                 fontWeight: "500",
+                padding: "0 6px",
+                fontSize: 10,
               }}
             >
               {displayText}
             </Tag>
-
-            {(normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("defferal_requested")) &&
-              deferralNum && (
-                <span className="text-xs text-gray-500">
-                  #{deferralNum}
-                </span>
-              )}
-          </div>
+          </Tooltip>
         );
       },
     },
@@ -326,7 +352,7 @@ const DocumentTable = ({
     {
       title: "View",
       key: "view",
-      width: 80,
+      width: 65,
       render: (_, record) =>
         record.fileUrl || record.uploadData?.fileUrl ? (
           <Button
@@ -351,25 +377,28 @@ const DocumentTable = ({
               backgroundColor: PRIMARY_BLUE,
               borderColor: PRIMARY_BLUE,
               borderRadius: 6,
+              fontSize: 10,
+              height: 22,
+              padding: "0 8px",
             }}
           >
             View
           </Button>
         ) : (
-          <Tag color="default">No File</Tag>
+          <Tag color="default" style={{ fontSize: 10 }}>No File</Tag>
         ),
     },
     {
       title: "Delete",
       key: "delete",
-      width: 80,
+      width: 45,
       render: (_, record) => (
         <Popconfirm
           title="Delete document?"
           description="This action cannot be undone."
-          okText="Yes, Delete"
+          okText="Yes"
           cancelText="Cancel"
-          okButtonProps={{ danger: true }}  
+          okButtonProps={{ danger: true }}
           onConfirm={() => onDelete(record.docIdx)}
           disabled={!canActOnDoc(record)}
         >
@@ -378,6 +407,7 @@ const DocumentTable = ({
             danger
             size="small"
             disabled={!canActOnDoc(record)}
+            style={{ fontSize: 14, padding: 0, width: 24, height: 24 }}
           >
             <DeleteOutlined />
           </Button>
@@ -387,15 +417,59 @@ const DocumentTable = ({
   ];
 
   return (
-    <Table
-      className="doc-table"
-      columns={columns}
-      dataSource={docs}
-      pagination={false}
-      rowKey="docIdx"
-      size="small"
-      scroll={{ x: "max-content" }}
-    />
+    <>
+      <style>{`
+        .doc-table.ant-table .ant-table-thead > tr > th {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+        }
+        .doc-table.ant-table .ant-table-tbody > tr > td {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+        }
+        .doc-table .ant-tag {
+          font-size: 10px !important;
+          padding: 0 4px !important;
+          height: 20px !important;
+          line-height: 18px !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          max-width: 100px !important;
+        }
+        .doc-table .ant-input,
+        .doc-table .ant-input-textarea {
+          font-size: 11px !important;
+          padding: 2px 6px !important;
+        }
+        .doc-table .ant-select .ant-select-selector {
+          font-size: 11px !important;
+          padding: 0 6px !important;
+          height: 22px !important;
+        }
+        .doc-table .ant-btn-sm {
+          font-size: 10px !important;
+          padding: 0 6px !important;
+          height: 22px !important;
+        }
+        .doc-table .ant-btn-sm .anticon {
+          font-size: 12px !important;
+        }
+        .doc-table .ant-btn-dangerous .anticon {
+          font-size: 14px !important;
+        }
+      `}</style>
+      <Table
+        className="doc-table"
+        columns={columns}
+        dataSource={docs}
+        pagination={false}
+        rowKey="docIdx"
+        size="small"
+        scroll={{ x: "max-content" }}
+      />
+    </>
   );
 };
 

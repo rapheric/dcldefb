@@ -1,6 +1,6 @@
 import React from "react";
-import { Button, Typography } from "antd";
-import { CloseOutlined, FileTextOutlined } from "@ant-design/icons";
+import { Button, Typography, Tag } from "antd";
+import { CloseOutlined, FileTextOutlined, RightOutlined, LeftOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 
@@ -49,20 +49,42 @@ const HeaderSection = ({
           </div>
         </div>
 
-        <Button
-          className="close-button"
-          icon={<CloseOutlined />}
-          onClick={onClose}
-          style={{
-            color: "white !important",
-            background: "transparent !important",
-            border: "none !important",
-            fontSize: "20px !important",
-            padding: "0 !important",
-            width: "32px !important",
-            height: "32px !important",
-          }}
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Button
+            icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
+            onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
+            style={{
+              color: "white",
+              background: "rgba(255,255,255,0.15)",
+              border: "1px solid rgba(255,255,255,0.3)",
+              fontSize: "12px",
+              height: "32px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            View Documents
+            {uploadedDocsCount > 0 && (
+              <Tag color="green" style={{ marginLeft: 6, fontSize: "10px" }}>
+                {uploadedDocsCount}
+              </Tag>
+            )}
+          </Button>
+          <Button
+            className="close-button"
+            icon={<CloseOutlined />}
+            onClick={onClose}
+            style={{
+              color: "white !important",
+              background: "transparent !important",
+              border: "none !important",
+              fontSize: "20px !important",
+              padding: "0 !important",
+              width: "32px !important",
+              height: "32px !important",
+            }}
+          />
+        </div>
       </div>
     </div>
   );

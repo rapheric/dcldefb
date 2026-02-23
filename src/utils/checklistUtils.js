@@ -24,7 +24,33 @@ export const formatDate = (date) => {
  */
 export const formatDateTime = (date) => {
     if (!date) return "";
-    return dayjs(date).format("D MMM YYYY HH:mm");
+    // Create a Date object from the input string
+    // If it's an ISO string (ends with Z), it's UTC - browser will auto-convert to local
+    // If it doesn't have timezone info, treat it as local
+    const dateObj = new Date(date);
+
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) return "";
+
+    // Use Intl.DateTimeFormat for proper local time formatting
+    // This ensures the time is displayed in the user's local timezone (Kenya EAT = UTC+3)
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+
+    const parts = formatter.formatToParts(dateObj);
+    const day = parts.find(p => p.type === 'day')?.value || '';
+    const month = parts.find(p => p.type === 'month')?.value || '';
+    const year = parts.find(p => p.type === 'year')?.value || '';
+    const hour = parts.find(p => p.type === 'hour')?.value || '';
+    const minute = parts.find(p => p.type === 'minute')?.value || '';
+
+    return `${day} ${month} ${year} ${hour}:${minute}`;
 };
 
 /**

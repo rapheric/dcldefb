@@ -46,7 +46,7 @@ const DocumentTable = ({
       case "pending":
       case "pendingrm":
       case "pendingco":
-        color = "gold";
+        color = "red";  // Changed from gold to red for consistency
         label = "Pending";
         break;
       case "waived":
@@ -103,26 +103,35 @@ const DocumentTable = ({
     {
       title: "Category",
       dataIndex: "category",
-      width: 150,
+      width: 90,
       render: (text) => (
-        <span style={{ fontSize: "13px", color: "#333" }}>{text || "-"}</span>
+        <Tooltip title={text || "N/A"}>
+          <span style={{ fontSize: "11px", color: "#333" }}>
+            {text || "N/A"}
+          </span>
+        </Tooltip>
       ),
     },
     {
       title: "Document Name",
       dataIndex: "name",
-      width: 250,
-      render: (text, record) => (
-        <span style={{ fontSize: "13px", color: "#333" }}>
-          {text || record.documentName || `Document ${record.docIdx + 1}`}
-        </span>
-      ),
+      width: 130,
+      render: (text, record) => {
+        const docName = text || record.documentName || `Document ${record.docIdx + 1}`;
+        return (
+          <Tooltip title={docName}>
+            <span style={{ fontSize: "11px", color: "#333" }}>
+              {docName}
+            </span>
+          </Tooltip>
+        );
+      },
     },
 
     {
-      title: "Co status",
+      title: "CO Status",
       dataIndex: "coStatus",
-      width: 100,
+      width: 80,
       render: (status, record) => {
         // Get the actual status - use coStatus first, then status
         const actualStatus = status || record.status || "pending";
@@ -196,41 +205,46 @@ const DocumentTable = ({
         }
 
         return (
-          <Tag
-            style={{
-              backgroundColor: bgColor,
-              color: textColor,
-              borderColor: borderColor,
-              fontWeight: 500,
-              margin: 0,
-              minWidth: 60,
-              textAlign: "center",
-              textTransform: "lowercase",
-            }}
-          >
-            {label}
-          </Tag>
+          <Tooltip title={label}>
+            <Tag
+              style={{
+                backgroundColor: bgColor,
+                color: textColor,
+                borderColor: borderColor,
+                fontWeight: 500,
+                margin: 0,
+                minWidth: 60,
+                textAlign: "center",
+                textTransform: "lowercase",
+                padding: "0 4px",
+              }}
+            >
+              {label}
+            </Tag>
+          </Tooltip>
         );
       },
     },
     {
       title: "Deferral No",
       dataIndex: "deferralNo",
-      width: 100,
+      width: 80,
       render: (deferralNo) => (
-        <span style={{ fontSize: "13px", color: "#666" }}>
-          {deferralNo || "-"}
-        </span>
+        <Tooltip title={deferralNo || "No deferral number"}>
+          <span style={{ fontSize: "11px", color: "#666" }}>
+            {deferralNo || "-"}
+          </span>
+        </Tooltip>
       ),
     },
     {
       title: "Checker Status",
       dataIndex: "checkerStatus",
-      width: 120,
+      width: 100,
       render: (status) => {
         // For checker status, show Approved, Rejected, or Pending
         const lowerStatus = status?.toLowerCase() || "pending";
-        let color = "gold"; // default to pending color
+        let color = "red"; // default to pending color - RED for consistency
         let label = "Pending";
 
         if (lowerStatus === "approved") {
@@ -242,25 +256,28 @@ const DocumentTable = ({
         }
 
         return (
-          <Tag
-            color={color}
-            style={{
-              fontWeight: 500,
-              margin: 0,
-              minWidth: 60,
-              textAlign: "center",
-            }}
-          >
-            {label}
-          </Tag>
+          <Tooltip title={label}>
+            <Tag
+              color={color}
+              style={{
+                fontWeight: 500,
+                margin: 0,
+                minWidth: 60,
+                textAlign: "center",
+                padding: "0 4px",
+              }}
+            >
+              {label}
+            </Tag>
+          </Tooltip>
         );
       },
     },
     {
       title: "RM Status",
       dataIndex: "rmStatus",
-      width: 160,
-      render: (status, record) => {
+      width: 120,
+      render: (status) => {
         if (!status) {
           return <Tag color="default">—</Tag>;
         }
@@ -290,10 +307,10 @@ const DocumentTable = ({
         }
 
         const displayText = formatStatusForSnakeCase(status);
-        const deferralNum = record.deferralNumber || record.deferralNo;
+        // Remove deferral number from display - shown in Deferral No column
 
         return (
-          <div className="flex items-center gap-2">
+          <Tooltip title={displayText}>
             <Tag
               className="status-tag"
               style={{
@@ -301,25 +318,19 @@ const DocumentTable = ({
                 color: textColor,
                 borderColor: borderColor,
                 fontWeight: "500",
+                padding: "0 4px",
               }}
             >
               {displayText}
             </Tag>
-
-            {(normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("defferal_requested")) &&
-              deferralNum && (
-                <span className="text-xs text-gray-500">
-                  #{deferralNum}
-                </span>
-              )}
-          </div>
+          </Tooltip>
         );
       },
     },
     {
-      title: "Co comment",
+      title: "CO Comment",
       dataIndex: "comment",
-      width: 150,
+      width: 110,
       render: (text, record) => {
         const comment = text || record.coComment;
         const hasComment = comment && comment.trim() !== "";
@@ -329,10 +340,10 @@ const DocumentTable = ({
             <span
               style={{
                 display: "block",
-                fontSize: "13px",
+                fontSize: "11px",
                 color: hasComment ? "#333" : "#666",
                 fontStyle: hasComment ? "normal" : "italic",
-                maxWidth: 200,
+                maxWidth: 150,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -347,7 +358,7 @@ const DocumentTable = ({
     {
       title: "Actions",
       key: "actions",
-      width: 180,
+      width: 150,
       render: (_, record, index) => {
         const isApproved = record.checkerStatus === "approved";
         const isRejected = record.checkerStatus === "rejected";
@@ -356,7 +367,7 @@ const DocumentTable = ({
           return (
             <span
               style={{
-                fontSize: "12px",
+                fontSize: "11px",
                 color: "#666",
                 fontStyle: "italic",
               }}
@@ -371,14 +382,14 @@ const DocumentTable = ({
         }
 
         return (
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <Button
               size="small"
               type={isApproved ? "primary" : "default"}
               icon={<CheckOutlined />}
               onClick={() => handleDocApprove(index)}
               style={{
-                minWidth: 90,
+                minWidth: 80,
                 backgroundColor: isApproved ? "#52c41a" : "#f5f5f5",
                 borderColor: isApproved ? "#52c41a" : "#d9d9d9",
                 color: isApproved ? "#fff" : "#333",
@@ -393,7 +404,7 @@ const DocumentTable = ({
               icon={<CloseOutlined />}
               onClick={() => handleDocReject(index)}
               style={{
-                minWidth: 90,
+                minWidth: 80,
                 backgroundColor: isRejected ? "#ff4d4f" : "#f5f5f5",
                 borderColor: isRejected ? "#ff4d4f" : "#d9d9d9",
                 color: isRejected ? "#fff" : "#333",
@@ -412,7 +423,7 @@ const DocumentTable = ({
                   }}
                   style={{
                     border: "1px solid #d9d9d9",
-                    padding: "4px 8px",
+                    padding: "0 6px",
                     minWidth: "auto",
                   }}
                 />
@@ -425,7 +436,7 @@ const DocumentTable = ({
     {
       title: "View",
       key: "view",
-      width: 80,
+      width: 60,
       render: (_, record) =>
         record.fileUrl || record.uploadData?.fileUrl ? (
           <Button
@@ -455,19 +466,53 @@ const DocumentTable = ({
             View
           </Button>
         ) : (
-          <Tag color="default">No File</Tag>
+          <Tooltip title="No file uploaded">
+            <Tag color="default">No File</Tag>
+          </Tooltip>
         ),
     },
   ];
 
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ marginBottom: 16 }}>
+      <style>{`
+        .checker-doc-table.ant-table .ant-table-thead > tr > th {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+        }
+        .checker-doc-table.ant-table .ant-table-tbody > tr > td {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+        }
+        .checker-doc-table .ant-tag {
+          font-size: 10px !important;
+          padding: 0 4px !important;
+          height: 20px !important;
+          line-height: 18px !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          max-width: 100px !important;
+        }
+        .checker-doc-table .ant-btn-sm {
+          font-size: 10px !important;
+          padding: 0 6px !important;
+          height: 22px !important;
+        }
+        .checker-doc-table .ant-btn-sm .anticon {
+          font-size: 12px !important;
+        }
+        .checker-doc-table .ant-btn-dangerous .anticon {
+          font-size: 12px !important;
+        }
+      `}</style>
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 16,
+          marginBottom: 10,
         }}
       >
         <h4
@@ -475,22 +520,23 @@ const DocumentTable = ({
             color: "#333",
             fontWeight: 600,
             margin: 0,
-            fontSize: "16px",
+            fontSize: "13px",
           }}
         >
           Documents for Review
         </h4>
         <span
           style={{
-            fontSize: "14px",
+            fontSize: "11px",
             color: "#666",
           }}
         >
-          Total: {docs.length} documents
+          Total: {docs.length}
         </span>
       </div>
 
       <Table
+        className="checker-doc-table"
         columns={columns}
         dataSource={docs.map((doc, idx) => ({
           ...doc,

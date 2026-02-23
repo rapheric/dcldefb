@@ -45,35 +45,35 @@ export const STATUS_DISPLAY = {
 
 export const TABLE_CONFIG = {
   COLUMNS: [
-    { title: "Category", dataIndex: "category", width: 120, key: "category" },
-    { title: "Document Name", dataIndex: "name", width: 200, key: "name" },
-    { title: "Co Status", dataIndex: "status", width: 120, key: "status" },
+    { title: "Category", dataIndex: "category", width: 100, key: "category" },
+    { title: "Document Name", dataIndex: "name", width: 180, key: "name" },
+    { title: "Co Status", dataIndex: "status", width: 100, key: "status" },
     {
       title: "Deferral No",
       dataIndex: "deferralNo",
-      width: 120,
+      width: 90,
       key: "deferralNo",
     },
     {
       title: "Checker Status",
       dataIndex: "finalCheckerStatus",
-      width: 140,
+      width: 120,
       key: "checkerStatus",
     },
-    { title: "Co Comment", dataIndex: "comment", width: 150, key: "comment" },
+    { title: "Co Comment", dataIndex: "comment", width: 130, key: "comment" },
     {
       title: "Expiry Date",
       dataIndex: "expiryDate",
-      width: 100,
+      width: 90,
       key: "expiryDate",
     },
     {
       title: "Expiry Status",
       dataIndex: "expiryStatus",
-      width: 120,
+      width: 100,
       key: "expiryStatus",
     },
-    { title: "View", key: "view", width: 80, key: "view" },
+    { title: "View", key: "view", width: 70, key: "view" },
   ],
 };
 

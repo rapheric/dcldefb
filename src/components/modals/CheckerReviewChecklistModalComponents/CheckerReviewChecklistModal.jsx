@@ -476,36 +476,37 @@ const CheckerReviewChecklistModal = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] overflow-auto bg-black/40 flex justify-center items-start pt-10">
-      <div className="review-checklist-modal w-[95%] max-w-7xl bg-white rounded-xl shadow-2xl overflow-hidden my-6 relative" style={{ zIndex: 1001 }}>
-        {/* Header Section with Gradient */}
-        <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white">
-          <HeaderSection
-            checklist={checklist}
-            onClose={onClose}
-            showDocumentSidebar={showDocumentSidebar}
-            setShowDocumentSidebar={setShowDocumentSidebar}
-            uploadedDocsCount={uploadedDocsCount}
-          />
-        </div>
+    <>
+      {/* Document Sidebar - Rendered outside modal at body level */}
+      <DocumentSidebar
+        documents={docs}
+        supportingDocs={supportingDocs}
+        open={showDocumentSidebar}
+        onClose={() => setShowDocumentSidebar(false)}
+      />
 
-        {/* Document Sidebar */}
-        <DocumentSidebar
-          documents={docs}
-          supportingDocs={supportingDocs}
-          open={showDocumentSidebar}
-          onClose={() => setShowDocumentSidebar(false)}
-        />
+      <div className="fixed inset-0 z-[60] overflow-auto bg-black/40 flex items-start pt-10" style={{ paddingLeft: "300px", justifyContent: "center" }}>
+        <div className="review-checklist-modal w-[95%] max-w-7xl bg-white rounded-xl shadow-2xl overflow-hidden my-6 relative" style={{ maxWidth: "calc(100vw - 340px)" }}>
+          {/* Header Section with Gradient */}
+          <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white">
+            <HeaderSection
+              checklist={checklist}
+              onClose={onClose}
+              showDocumentSidebar={showDocumentSidebar}
+              setShowDocumentSidebar={setShowDocumentSidebar}
+              uploadedDocsCount={uploadedDocsCount}
+            />
+          </div>
 
-        {/* Main Content Area */}
-        <div
-          className="p-6 space-y-6"
-          style={{
-            opacity: effectiveReadOnly ? 0.5 : 1,
-            pointerEvents: effectiveReadOnly ? "none" : "auto",
-            transition: "opacity 0.3s ease",
-          }}
-        >
+          {/* Main Content Area */}
+          <div
+            className="p-6 space-y-6"
+            style={{
+              opacity: effectiveReadOnly ? 0.5 : 1,
+              pointerEvents: effectiveReadOnly ? "none" : "auto",
+              transition: "opacity 0.3s ease",
+            }}
+          >
           {effectiveReadOnly && (
             <div
               style={{
@@ -593,6 +594,7 @@ const CheckerReviewChecklistModal = ({
         )}
       </div>
     </div>
+    </>
   );
 };
 

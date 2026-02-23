@@ -297,6 +297,8 @@ const CompletedChecklistModal = ({
       open={open}
       onCancel={onClose}
       width={1100}
+      centered={true}
+      style={{ marginLeft: '160px' }}
       styles={{
         header: {
           background: PRIMARY_BLUE,

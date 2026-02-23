@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Space, Upload } from "antd";
+import { Button, Space, Upload, message } from "antd";
 import {
   SaveOutlined,
   UploadOutlined,
@@ -9,6 +9,8 @@ import {
 } from "@ant-design/icons";
 import PDFGenerator from "./PDFGenerator";
 import { ACCENT_LIME, PRIMARY_BLUE } from "../../../utils/constants";
+import { getExpiryStatus } from "../../../utils/documentStats";
+import dayjs from "dayjs";
 
 const ActionButtons = ({
   readOnly,
@@ -28,10 +30,19 @@ const ActionButtons = ({
   onClose,
   comments,
 }) => {
+  // Check if any compliance document has expired
+  const hasExpiredDocuments = React.useMemo(() => {
+    return docs.some((doc) => {
+      if (!doc.expiryDate) return false;
+      return dayjs(doc.expiryDate).isBefore(dayjs());
+    });
+  }, [docs]);
+
   // Submit to CoChecker: All documents must have final status (tbo, sighted, deferred, submitted, etc.)
   const canSubmitToCoChecker =
     checklist?.status?.toLowerCase() === "cocreatorreview" &&
     docs.length > 0 &&
+    !hasExpiredDocuments && // Block submission if any document is expired
     docs.every((doc) => {
       const docStatus = (doc.action || doc.status || "").toLowerCase();
       return [
@@ -70,6 +81,17 @@ const ActionButtons = ({
 
   // Fixed: Wrapper functions that handle close after submission
   const handleSubmitToCheckers = async () => {
+    // Check for expired documents before submission
+    if (hasExpiredDocuments) {
+      const expiredDocs = docs.filter((doc) =>
+        doc.expiryDate && dayjs(doc.expiryDate).isBefore(dayjs())
+      );
+      message.error(
+        `Cannot submit to checker: ${expiredDocs.length} expired document(s) found. Please update expired documents before submission.`
+      );
+      return false;
+    }
+
     if (onSubmitToCheckers) {
       const result = await onSubmitToCheckers();
       // If submission was successful, close the modal

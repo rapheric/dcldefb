@@ -179,6 +179,8 @@ const CreatorCompletedChecklistModal = ({
         open={open}
         onCancel={onClose}
         width={1100}
+        centered={true}
+        style={{ marginLeft: '160px' }}
         footer={renderFooter()}
         styles={modalStyles}
       >

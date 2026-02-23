@@ -100,6 +100,8 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
             }}
             footer={null}
             width={600}
+            centered={true}
+            style={{ marginLeft: '160px' }}
             styles={{
                 header: { backgroundColor: PRIMARY_BLUE },
                 title: { color: "white" },

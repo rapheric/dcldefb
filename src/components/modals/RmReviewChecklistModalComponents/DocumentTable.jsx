@@ -9,6 +9,7 @@ import {
   Input,
   Tag,
   message,
+  Tooltip,
 } from "antd";
 import {
   UploadOutlined,
@@ -70,46 +71,54 @@ const DocumentTable = ({
   };
 
   const renderStatusTag = (key) => {
-    const map = {
-      sighted: { color: PRIMARY_BLUE, text: "Sighted", icon: <EyeOutlined /> },
-      pending: {
-        color: "#fadb14",
-        text: "Pending",
-        icon: <ClockCircleOutlined />,
-      },
-      submitted: {
-        color: "#52c41a",
-        text: "Submitted",
-        icon: <CheckCircleOutlined />,
-      },
-      deferred: {
-        color: "#ff4d4f",
-        text: "Deferred",
-        icon: <CloseCircleOutlined />,
-      },
-      waived: {
-        color: "#ff4d4f",
-        text: "Waived",
-        icon: <CloseCircleOutlined />,
-      },
-    };
+    // Use consistent colors matching other modals
+    // GREEN: submitted, approved, sighted
+    // RED: pendingrm, pendingco, pending
+    // AMBER: deferred, waived, tbo
+    const lowerKey = key?.toLowerCase();
 
-    const s = map[key?.toLowerCase()] || {
-      color: "gray",
-      text: key || "Unknown",
-      icon: <SyncOutlined spin />,
-    };
+    let bgColor = "#fafafa";
+    let textColor = "#000";
+    let borderColor = "#d9d9d9";
+    let text = key || "Unknown";
+    let icon = <SyncOutlined spin />;
+
+    if (lowerKey === "submitted" || lowerKey === "approved" || lowerKey === "sighted") {
+      bgColor = "#f6ffed";
+      textColor = "#52c41a";
+      borderColor = "#52c41a";
+      text = lowerKey;
+      icon = lowerKey === "submitted" ? <CheckCircleOutlined /> :
+              lowerKey === "approved" ? <CheckCircleOutlined /> :
+              <EyeOutlined />;
+    } else if (lowerKey === "pending" || lowerKey === "pendingrm" || lowerKey === "pendingco") {
+      bgColor = "#ffebe6";
+      textColor = "#FF4D4F";
+      borderColor = "#FF4D4F";
+      text = "pending";
+      icon = <ClockCircleOutlined />;
+    } else if (lowerKey === "deferred" || lowerKey === "waived" || lowerKey === "tbo") {
+      bgColor = "#fffbe6";
+      textColor = "#FAAD14";
+      borderColor = "#FAAD14";
+      text = lowerKey;
+      icon = <CloseCircleOutlined />;
+    }
 
     return (
       <Tag
+        icon={icon}
         className="status-tag"
         style={{
-          color: s.color,
-          backgroundColor: s.color + "22",
-          borderColor: s.color + "55",
+          backgroundColor: bgColor,
+          color: textColor,
+          borderColor: borderColor,
+          fontWeight: 500,
+          textTransform: "lowercase",
+          padding: "0 8px",
         }}
       >
-        {s.icon} {s.text}
+        {text}
       </Tag>
     );
   };
@@ -160,74 +169,96 @@ const DocumentTable = ({
     {
       title: "Category",
       dataIndex: "category",
-      width: 100,
+      width: 80,
       render: (text) => (
-        <Input size="small" value={text} disabled style={{ opacity: 0.6 }} />
+        <Tooltip title={text || "N/A"}>
+          <Input
+            size="small"
+            value={text || "N/A"}
+            disabled
+            style={{ opacity: 0.6 }}
+          />
+        </Tooltip>
       ),
     },
     {
       title: "Document Name",
       dataIndex: "name",
-      width: 150,
+      width: 120,
       render: (text) => (
-        <Input size="small" value={text} disabled style={{ opacity: 0.6 }} />
+        <Tooltip title={text || "N/A"}>
+          <Input
+            size="small"
+            value={text || "N/A"}
+            disabled
+            style={{ opacity: 0.6 }}
+          />
+        </Tooltip>
       ),
     },
     {
-      title: "Status from CO",
-      width: 140,
+      title: "CO Status",
+      width: 100,
       render: (_, record) => {
         const label =
           record.status === "deferred" && record.deferralNumber
             ? `Deferred (${record.deferralNumber})`
             : record.status;
 
-        return <div style={{ opacity: 0.6 }}>{renderStatusTag(label)}</div>;
+        return (
+          <Tooltip title={label}>
+            <div style={{ opacity: 0.6 }}>{renderStatusTag(label)}</div>
+          </Tooltip>
+        );
       },
     },
     {
-      title: "Comment from CO",
+      title: "CO Comment",
       dataIndex: "comment",
-      width: 150,
+      width: 110,
       render: (text) => (
-        <Input.TextArea
-          rows={1}
-          size="small"
-          value={text}
-          disabled
-          style={{ opacity: 0.6 }}
-        />
+        <Tooltip title={text || "No comment"}>
+          <Input.TextArea
+            rows={1}
+            size="small"
+            value={text}
+            disabled
+            style={{ opacity: 0.6 }}
+          />
+        </Tooltip>
       ),
     },
     {
-      title: "Expiry Date",
+      title: "Expiry",
       dataIndex: "expiryDate",
-      width: 120,
+      width: 90,
       render: (text, record) =>
         record.expiryDate ? dayjs(record.expiryDate).format("YYYY-MM-DD") : "-",
     },
     {
       title: "Expiry Status",
-      width: 120,
+      width: 80,
       render: (_, record) => {
         const status = getExpiryStatus(record.expiryDate);
 
         if (!status) return "-";
 
         return (
-          <Tag
-            color={status === "current" ? "green" : "red"}
-            style={{ fontWeight: 600 }}
-          >
-            {status === "current" ? "Current" : "Expired"}
-          </Tag>
+          <Tooltip title={status === "current" ? "Current" : "Expired"}>
+            <Tag
+              color={status === "current" ? "green" : "red"}
+              style={{ fontWeight: 600 }}
+            >
+              {status === "current" ? "Current" : "Expired"}
+            </Tag>
+          </Tooltip>
         );
       },
     },
     {
       title: "Deferral No",
       dataIndex: "deferralNo",
-      width: 120,
+      width: 90,
       render: (deferralNo, record) => {
         const rmStatus = (record.rmStatus || "").toLowerCase();
         const status = (record.status || "").toLowerCase();
@@ -241,9 +272,11 @@ const DocumentTable = ({
           (rmStatus.includes("deferral") || status === "deferred")
         ) {
           return (
-            <Tag color="orange" style={{ fontWeight: "bold" }}>
-              {deferralNum}
-            </Tag>
+            <Tooltip title={`Deferral No: ${deferralNum}`}>
+              <Tag color="orange" style={{ fontWeight: "bold" }}>
+                {deferralNum}
+              </Tag>
+            </Tooltip>
           );
         }
         return "-";
@@ -251,7 +284,7 @@ const DocumentTable = ({
     },
     {
       title: "Actions",
-      width: 200,
+      width: 170,
       render: (_, record) => {
         const isRestrictedCOStatus = [
           "submitted",
@@ -263,7 +296,7 @@ const DocumentTable = ({
         ].includes((record.status || "").toLowerCase());
 
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {/* RM Status Selection */}
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <Select
@@ -293,7 +326,7 @@ const DocumentTable = ({
                       handleDeferralNumberChange(record.docIdx, e.target.value)
                     }
                     disabled={!canActOnDoc(record)}
-                    style={{ width: 100 }}
+                    style={{ width: 90 }}
                   />
                 )}
             </div>
@@ -371,18 +404,13 @@ const DocumentTable = ({
 
     {
       title: "RM Status",
-      width: 120,
+      width: 130,
       render: (_, record) => {
         const rmStatus = record.rmStatus || "Unknown";
-        const deferralNo = record.deferralNumber || record.deferralNo;
 
         let displayText = formatStatusForSnakeCase(rmStatus);
-        if (
-          rmStatus.toLowerCase().includes("deferral_requested") &&
-          deferralNo
-        ) {
-          displayText = `deferral_requested (#${deferralNo})`;
-        }
+        // Remove the deferral number from display - just show the status
+        // The deferral number is already shown in the Deferral No column
 
         // Define colors for each status
         // submitted_for_review: white background, green text
@@ -409,17 +437,20 @@ const DocumentTable = ({
         }
 
         return (
-          <Tag
-            className="status-tag"
-            style={{
-              backgroundColor: bgColor,
-              color: textColor,
-              borderColor: borderColor,
-              fontWeight: 500,
-            }}
-          >
-            {displayText}
-          </Tag>
+          <Tooltip title={displayText}>
+            <Tag
+              className="status-tag"
+              style={{
+                backgroundColor: bgColor,
+                color: textColor,
+                borderColor: borderColor,
+                fontWeight: 500,
+                padding: "0 8px",
+              }}
+            >
+              {displayText}
+            </Tag>
+          </Tooltip>
         );
       },
     },
@@ -427,10 +458,52 @@ const DocumentTable = ({
 
   return (
     <>
+      <style>{`
+        .doc-table.ant-table .ant-table-thead > tr > th {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+        }
+        .doc-table.ant-table .ant-table-tbody > tr > td {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+        }
+        .doc-table .ant-tag {
+          font-size: 10px !important;
+          padding: 0 4px !important;
+          height: 20px !important;
+          line-height: 18px !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          max-width: 100px !important;
+        }
+        .doc-table .ant-input,
+        .doc-table .ant-input-textarea {
+          font-size: 11px !important;
+          padding: 2px 6px !important;
+        }
+        .doc-table .ant-select .ant-select-selector {
+          font-size: 11px !important;
+          padding: 0 6px !important;
+          height: 22px !important;
+        }
+        .doc-table .ant-btn-sm {
+          font-size: 10px !important;
+          padding: 0 6px !important;
+          height: 22px !important;
+        }
+        .doc-table .ant-btn-sm .anticon {
+          font-size: 12px !important;
+        }
+        .doc-table .ant-btn-dangerous .anticon {
+          font-size: 12px !important;
+        }
+      `}</style>
       <Table
         className="doc-table"
         rowKey="docIdx"
-        size="middle"
+        size="small"
         pagination={false}
         dataSource={docs}
         columns={columns}

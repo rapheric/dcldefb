@@ -60,6 +60,12 @@ export const formatStatusForSnakeCase = (status) => {
 
 export const STATUS_COLORS = {
   // RED - Pending statuses (action required)
+  pending: {
+    color: "#FF4D4F",      // Red
+    textColor: "#FFF",
+    bgColor: "#FFEBE6",
+    borderColor: "#FF4D4F",
+  },
   pendingrm: {
     color: "#FF4D4F",      // Red
     textColor: "#FFF",
@@ -191,6 +197,56 @@ export const STATUS_COLORS = {
     borderColor: "#52C41A",
   },
 
+  // Checklist Stage Statuses - Distinct colors for each stage
+  cocreatorreview: {
+    color: "#1890FF",      // Bright Blue - Co-Creator Review stage
+    textColor: "#0958D9",
+    bgColor: "#E6F7FF",
+    borderColor: "#1890FF",
+  },
+  co_creator_review: {
+    color: "#1890FF",      // Bright Blue - Co-Creator Review stage
+    textColor: "#0958D9",
+    bgColor: "#E6F7FF",
+    borderColor: "#1890FF",
+  },
+  rmreview: {
+    color: "#722ED1",      // Purple - RM Review stage
+    textColor: "#531DAB",
+    bgColor: "#F9F0FF",
+    borderColor: "#722ED1",
+  },
+  rm_review: {
+    color: "#722ED1",      // Purple - RM Review stage
+    textColor: "#531DAB",
+    bgColor: "#F9F0FF",
+    borderColor: "#722ED1",
+  },
+  cocheckerreview: {
+    color: "#13C2C2",      // Cyan/Teal - Co-Checker Review stage
+    textColor: "#08979C",
+    bgColor: "#E6FFFB",
+    borderColor: "#13C2C2",
+  },
+  co_checker_review: {
+    color: "#13C2C2",      // Cyan/Teal - Co-Checker Review stage
+    textColor: "#08979C",
+    bgColor: "#E6FFFB",
+    borderColor: "#13C2C2",
+  },
+  rejected: {
+    color: "#FF4D4F",      // Red - Rejected
+    textColor: "#CF1322",
+    bgColor: "#FFEBE6",
+    borderColor: "#FF4D4F",
+  },
+  revived: {
+    color: "#FA8C16",      // Orange - Revived
+    textColor: "#D46B08",
+    bgColor: "#FFF7E6",
+    borderColor: "#FA8C16",
+  },
+
   // Default fallback
   default: {
     color: "#D9D9D9",      // Gray
@@ -225,6 +281,13 @@ export const getStatusColor = (status) => {
   if (normalizedStatus.includes("submitted")) return STATUS_COLORS.submitted;
   if (normalizedStatus.includes("approved")) return STATUS_COLORS.approved;
   if (normalizedStatus.includes("completed")) return STATUS_COLORS.completed;
+
+  // Checklist stage statuses - check for exact matches first
+  if (normalizedStatus === "cocreatorreview" || normalizedStatus === "co_creator_review") return STATUS_COLORS.cocreatorreview;
+  if (normalizedStatus === "rmreview" || normalizedStatus === "rm_review") return STATUS_COLORS.rmreview;
+  if (normalizedStatus === "cocheckerreview" || normalizedStatus === "co_checker_review") return STATUS_COLORS.cocheckerreview;
+  if (normalizedStatus === "revived") return STATUS_COLORS.revived;
+  if (normalizedStatus === "rejected") return STATUS_COLORS.rejected;
 
   return STATUS_COLORS.default;
 };

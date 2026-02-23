@@ -101,6 +101,12 @@ const MyQueue = ({ userId }) => {
             c.createdBy?.name?.toLowerCase().includes(q)
           );
         })
+        // Sort by most recent first (using updatedAt or createdAt)
+        .sort((a, b) => {
+          const dateA = new Date(a.updatedAt || a.createdAt || 0);
+          const dateB = new Date(b.updatedAt || b.createdAt || 0);
+          return dateB - dateA; // Descending order (most recent first)
+        })
     );
   }, [checklists, userId, searchText]);
 

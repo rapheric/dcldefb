@@ -28,52 +28,72 @@ import CreatorCompletedChecklistModal from "../../components/modals/CreatorCompl
 const CHECKLIST_STATUS_META = {
   co_creator_review: {
     label: "Co-Creator Review",
-    color: "blue",
+    color: "#1890FF", // Bright Blue - distinct for Co-Creator stage
+    bgColor: "#E6F7FF",
+    borderColor: "#1890FF",
     icon: <SyncOutlined />,
   },
   rm_review: {
     label: "RM Review",
-    color: "gold",
+    color: "#722ED1", // Purple - distinct for RM Review stage
+    bgColor: "#F9F0FF",
+    borderColor: "#722ED1",
     icon: <ClockCircleOutlined />,
   },
   revived: {
     label: "Revived",
-    color: "orange",
+    color: "#FA8C16", // Orange - for revived items
+    bgColor: "#FFF7E6",
+    borderColor: "#FA8C16",
     icon: <ClockCircleOutlined />,
   },
   co_checker_review: {
     label: "Co-Checker Review",
-    color: "purple",
+    color: "#13C2C2", // Cyan/Teal - distinct for Checker Review stage
+    bgColor: "#E6FFFB",
+    borderColor: "#13C2C2",
     icon: <SyncOutlined />,
   },
   approved: {
     label: "Approved",
-    color: "green",
+    color: "#52C41A", // Green - success state
+    bgColor: "#F6FFED",
+    borderColor: "#52C41A",
     icon: <CheckCircleOutlined />,
   },
   rejected: {
     label: "Rejected",
-    color: "red",
+    color: "#FF4D4F", // Red - rejection state
+    bgColor: "#FFEBE6",
+    borderColor: "#FF4D4F",
     icon: <CloseCircleOutlined />,
   },
   active: {
     label: "Active",
-    color: "cyan",
+    color: "#1677FF", // Primary blue - active state
+    bgColor: "#E6F7FF",
+    borderColor: "#1677FF",
     icon: <SyncOutlined />,
   },
   completed: {
     label: "Completed",
-    color: "success",
+    color: "#52C41A", // Green - completion state
+    bgColor: "#F6FFED",
+    borderColor: "#52C41A",
     icon: <CheckCircleOutlined />,
   },
   pending: {
     label: "Pending",
-    color: "default",
+    color: "#FF4D4F", // Red - pending state (consistent with other pending statuses)
+    bgColor: "#FFEBE6",
+    borderColor: "#FF4D4F",
     icon: <ClockCircleOutlined />,
   },
   closed: {
     label: "Revived",
-    color: "orange",
+    color: "#FA8C16", // Orange - same as revived
+    bgColor: "#FFF7E6",
+    borderColor: "#FA8C16",
     icon: <ClockCircleOutlined />,
   },
 };

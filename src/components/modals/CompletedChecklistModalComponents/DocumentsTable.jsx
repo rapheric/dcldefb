@@ -1,6 +1,6 @@
 // src/components/completedChecklistModal/components/DocumentsTable.jsx
 import React from "react";
-import { Table, Tag, Button } from "antd";
+import { Table, Tag, Button, Tooltip } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 // import {
@@ -21,24 +21,36 @@ const DocumentsTable = ({ docs, checklist }) => {
     {
       title: "Category",
       dataIndex: "category",
-      width: 120,
+      width: 100,
       render: (text) => (
-        <span
-          style={{ fontSize: 12, color: SECONDARY_PURPLE, fontWeight: 500 }}
-        >
-          {text}
-        </span>
+        <Tooltip title={text || "N/A"}>
+          <span
+            style={{ fontSize: 11, color: SECONDARY_PURPLE, fontWeight: 500 }}
+          >
+            {text || "N/A"}
+          </span>
+        </Tooltip>
       ),
     },
     {
       title: "Document Name",
       dataIndex: "name",
-      width: 200,
+      width: 180,
+      render: (text, record) => {
+        const docName = text || record.documentName || `Document ${record.docIdx + 1}`;
+        return (
+          <Tooltip title={docName}>
+            <span style={{ fontSize: 11, color: "#333" }}>
+              {docName}
+            </span>
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Co Status",
       dataIndex: "status",
-      width: 120,
+      width: 100,
       render: (status, record) => {
         const statusLabel =
           status === "deferred" && record.deferralNo
@@ -48,32 +60,37 @@ const DocumentsTable = ({ docs, checklist }) => {
         const colorConfig = getStatusColor(status);
 
         return (
-          <Tag 
-            className="status-tag" 
-            {...getStatusTagProps(status)}
-            style={{
-              backgroundColor: colorConfig.bgColor,
-              color: colorConfig.textColor,
-              borderColor: colorConfig.borderColor,
-              fontWeight: "500",
-            }}
-          >
-            {statusLabel}
-          </Tag>
+          <Tooltip title={statusLabel}>
+            <Tag
+              className="status-tag"
+              {...getStatusTagProps(status)}
+              style={{
+                backgroundColor: colorConfig.bgColor,
+                color: colorConfig.textColor,
+                borderColor: colorConfig.borderColor,
+                fontWeight: "500",
+              }}
+            >
+              {statusLabel}
+            </Tag>
+          </Tooltip>
         );
       },
     },
     {
       title: "Deferral No",
       dataIndex: "deferralNo",
-      width: 100,
-      render: (deferralNo) =>
-        deferralNo ? <Tag color="cyan">{deferralNo}</Tag> : "-",
+      width: 90,
+      render: (deferralNo) => (
+        <Tooltip title={deferralNo || "No deferral number"}>
+          {deferralNo ? <Tag color="cyan">{deferralNo}</Tag> : "-"}
+        </Tooltip>
+      ),
     },
     {
       title: "Checker Status",
       dataIndex: "finalCheckerStatus",
-      width: 140,
+      width: 120,
       render: (finalCheckerStatus, record) => {
         const checklistStatus = checklist?.status;
         let displayStatus = finalCheckerStatus;
@@ -90,31 +107,38 @@ const DocumentsTable = ({ docs, checklist }) => {
         );
 
         return (
-          <Tag
-            color={statusDisplay.color}
-            style={{
-              fontWeight: "bold",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              color: statusDisplay.color === "green" ? "#52c41a" : statusDisplay.color === "red" ? "#f5222d" : "inherit",
-            }}
-          >
-            {statusDisplay.text}
-          </Tag>
+          <Tooltip title={statusDisplay.text}>
+            <Tag
+              color={statusDisplay.color}
+              style={{
+                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                color: statusDisplay.color === "green" ? "#52c41a" : statusDisplay.color === "red" ? "#f5222d" : "inherit",
+              }}
+            >
+              {statusDisplay.text}
+            </Tag>
+          </Tooltip>
         );
       },
     },
     {
       title: "Co Comment",
       dataIndex: "comment",
-      width: 150,
+      width: 130,
       ellipsis: true,
+      render: (text) => (
+        <Tooltip title={text || "No comment"}>
+          <span>{text || "-"}</span>
+        </Tooltip>
+      ),
     },
     {
       title: "Expiry Date",
       dataIndex: "expiryDate",
-      width: 100,
+      width: 90,
       render: (_, record) => {
         const category = (record.category || "").toLowerCase().trim();
         if (category !== "compliance documents") return "-";
@@ -126,7 +150,7 @@ const DocumentsTable = ({ docs, checklist }) => {
     {
       title: "Expiry Status",
       dataIndex: "expiryStatus",
-      width: 120,
+      width: 100,
       render: (_, record) => {
         const category = (record.category || "").toLowerCase().trim();
         if (category !== "compliance documents") return "-";
@@ -135,56 +159,91 @@ const DocumentsTable = ({ docs, checklist }) => {
         if (!status) return "-";
 
         return (
-          <Button
-            size="small"
-            type="primary"
-            danger={status === "expired"}
-            style={{
-              backgroundColor: status === "current" ? "#52c41a" : undefined,
-              borderColor: status === "current" ? "#52c41a" : undefined,
-              cursor: "default",
-              fontWeight: "bold",
-            }}
-          >
-            {status === "current" ? "Current" : "Expired"}
-          </Button>
+          <Tooltip title={status === "current" ? "Current" : "Expired"}>
+            <Button
+              size="small"
+              type="primary"
+              danger={status === "expired"}
+              style={{
+                backgroundColor: status === "current" ? "#52c41a" : undefined,
+                borderColor: status === "current" ? "#52c41a" : undefined,
+                cursor: "default",
+                fontWeight: "bold",
+              }}
+            >
+              {status === "current" ? "Current" : "Expired"}
+            </Button>
+          </Tooltip>
         );
       },
     },
     {
       title: "View",
       key: "view",
-      width: 80,
+      width: 70,
       render: (_, record) =>
         record.fileUrl && (
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() =>
-              window.open(
-                getFullUrlUtil(record.fileUrl || record.uploadData?.fileUrl),
-                "_blank",
-              )
-            }
-            style={{ borderRadius: 6 }}
-          >
-            View
-          </Button>
+          <Tooltip title="View document">
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() =>
+                window.open(
+                  getFullUrlUtil(record.fileUrl || record.uploadData?.fileUrl),
+                  "_blank",
+                )
+              }
+              style={{ borderRadius: 6 }}
+            >
+              View
+            </Button>
+          </Tooltip>
         ),
     },
   ];
 
   return (
-    <Table
-      className="doc-table"
-      columns={columns}
-      dataSource={docs}
-      pagination={false}
-      rowKey="docIdx"
-      size="small"
-      scroll={{ x: "max-content" }}
-      locale={{ emptyText: "No documents" }}
-    />
+    <>
+      <style>{`
+        .doc-table.ant-table .ant-table-thead > tr > th {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+        }
+        .doc-table.ant-table .ant-table-tbody > tr > td {
+          padding: 6px 8px !important;
+          font-size: 11px !important;
+        }
+        .doc-table .ant-tag {
+          font-size: 10px !important;
+          padding: 0 4px !important;
+          height: 20px !important;
+          line-height: 18px !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          max-width: 100px !important;
+        }
+        .doc-table .ant-btn-sm {
+          font-size: 10px !important;
+          padding: 0 6px !important;
+          height: 22px !important;
+        }
+        .doc-table .ant-btn-sm .anticon {
+          font-size: 12px !important;
+        }
+      `}</style>
+      <Table
+        className="doc-table"
+        columns={columns}
+        dataSource={docs}
+        pagination={false}
+        rowKey="docIdx"
+        size="small"
+        scroll={{ x: "max-content" }}
+        locale={{ emptyText: "No documents" }}
+      />
+    </>
   );
 };
 
