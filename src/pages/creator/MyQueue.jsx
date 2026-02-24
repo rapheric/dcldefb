@@ -1,5 +1,5 @@
 // export default Myqueue;
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Button,
   Table,
@@ -38,10 +38,36 @@ const WARNING_ORANGE = "#faad14";
 const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
 
-const Myqueue = () => {
+const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
   const [selectedChecklist, setSelectedChecklist] = useState(null);
   const [activeTab, setActiveTab] = useState("co_creator_review");
   const [searchText, setSearchText] = useState("");
+
+  // Handle draft restoration - open modal with draft data
+  useEffect(() => {
+    if (draftToRestore && draftToRestore.data) {
+      // Reconstruct checklist object from draft data
+      const draftChecklist = {
+        id: draftToRestore.data.checklistId || draftToRestore.id,
+        _id: draftToRestore.data.checklistId || draftToRestore.id,
+        dclNo: draftToRestore.data.dclNo,
+        title: draftToRestore.data.title,
+        customerName: draftToRestore.data.customerName,
+        customerNumber: draftToRestore.data.customerNumber,
+        loanType: draftToRestore.data.loanType,
+        status: draftToRestore.data.status,
+        // Documents are in flat format, ReviewChecklistModal will handle them
+        documents: draftToRestore.data.documents || [],
+      };
+
+      setSelectedChecklist(draftChecklist);
+
+      // Clear the draft restore after opening
+      if (setDraftToRestore) {
+        setDraftToRestore(null);
+      }
+    }
+  }, [draftToRestore, setDraftToRestore]);
 
   const { user } = useSelector((state) => state.auth);
 

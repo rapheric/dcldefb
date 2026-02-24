@@ -8,6 +8,7 @@ import {
   Clock,
   FileText,
   ListChecks,
+  FileEdit,
 } from "lucide-react";
 
 // Import your RM components
@@ -16,6 +17,7 @@ import Completed from "../../pages/rm/Completed";
 import ReportsPage from "../../pages/rm/Reports";
 import Navbar from "../Navbar";
 import SharedSidebar from "../common/SharedSidebar";
+import DraftsPage from "../shared/DraftsPage";
 
 // Import Deferral Components
 import DeferralForm from "../../pages/deferrals/DeferralForm";
@@ -66,6 +68,11 @@ const RmLayout = ({ userId, rmId }) => {
       icon: <Inbox size={18} style={{ color: "#e5e7eb" }} />,
     },
     {
+      key: "drafts",
+      label: "Drafts",
+      icon: <FileEdit size={18} style={{ color: "#e5e7eb" }} />,
+    },
+    {
       key: "completed",
       label: "Completed",
       icon: <CheckCircle size={18} style={{ color: "#e5e7eb" }} />,
@@ -87,7 +94,7 @@ const RmLayout = ({ userId, rmId }) => {
 
     setSelectedKey(e.key);
 
-    // Handle deferral route
+    // Handle special routes
     if (e.key === "deferral") {
       navigate("/rm/deferrals/pending");
     } else {
@@ -134,7 +141,6 @@ const RmLayout = ({ userId, rmId }) => {
         collapsed={sidebarCollapsed}
         toggleCollapse={toggleSidebar}
         menuItems={menuItems}
-        title="RM Dashboard"
       />
       
       {/* Calculate sidebar width based on screen size */}
@@ -178,6 +184,10 @@ const RmLayout = ({ userId, rmId }) => {
             <Route
               path="/myqueue"
               element={<MyQueue userId={userId || "rm_current"} />}
+            />
+            <Route
+              path="/drafts"
+              element={<DraftsPage type="rm" />}
             />
             <Route
               path="/completed"

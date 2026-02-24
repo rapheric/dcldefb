@@ -6,6 +6,7 @@ import {
   Clock,
   CheckCircle,
   BarChart2,
+  FileEdit,
 } from "lucide-react";
 
 const CreatorSidebar = ({
@@ -20,6 +21,11 @@ const CreatorSidebar = ({
       key: "creatchecklist",
       icon: <CirclePlus size={18} />,
       label: "Create New DCL",
+    },
+    {
+      key: "drafts",
+      icon: <FileEdit size={18} />,
+      label: "Drafts",
     },
     {
       key: "myqueue",
@@ -51,7 +57,6 @@ const CreatorSidebar = ({
       toggleCollapse={toggleCollapse}
       onMenuItemClick={onMenuItemClick}
       menuItems={menuItems}
-      title="Creator Dashboard"
     />
   );
 };

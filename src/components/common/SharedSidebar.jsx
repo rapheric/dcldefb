@@ -14,7 +14,6 @@ const SharedSidebar = ({
     collapsed,
     toggleCollapse,
     menuItems,
-    title = "",
 }) => {
     // Handle click: prefer specific handler, then default to setting key
     const handleClick = (e) => {
@@ -42,40 +41,42 @@ const SharedSidebar = ({
                 color: "white",
             }}
         >
-            {/* Logo Section */}
+            {/* Logo Section - NCBA Logo aligned with navbar */}
             <div
                 style={{
-                    height: 90,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    flexDirection: collapsed ? "column" : "row",
+                    height: 60,
                     borderBottom: `1px solid ${BORDER_COLOR}`,
-                    padding: 10,
-                    gap: collapsed ? 5 : 10,
+                    padding: "0 10px",
+                    background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%)",
                 }}
             >
                 <img
                     src={ncbabanklogo}
                     alt="NCBA Logo"
                     style={{
-                        width: collapsed ? 40 : 60,
+                        width: collapsed ? 40 : 70,
+                        height: collapsed ? 40 : 70,
                         transition: "all 0.2s",
-                        filter: "brightness(0) invert(1)",
+                        filter: "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(255,255,255,0.3))",
                         objectFit: "contain",
                     }}
                 />
-                {!collapsed && title && (
-                    <span
-                        style={{ fontSize: 18, fontWeight: "bold", whiteSpace: "nowrap" }}
-                    >
-                        {title}
-                    </span>
-                )}
             </div>
 
+            {/* Divider line below logo */}
+            <div
+                style={{
+                    height: "1px",
+                    background: "linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent)",
+                    margin: "0 15px",
+                }}
+            />
+
             {/* Menu Section */}
-            <div style={{ flex: 1, overflowY: "auto", marginTop: 10 }}>
+            <div style={{ flex: 1, overflowY: "auto", marginTop: 15 }}>
                 <Menu
                     theme="dark"
                     mode="inline"

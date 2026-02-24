@@ -1,0 +1,132 @@
+.drafts-page {
+  padding: 24px;
+}
+
+.drafts-header {
+  margin-bottom: 24px;
+}
+
+.drafts-header .ant-typography {
+  margin-bottom: 8px;
+}
+
+.drafts-header .ant-typography h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #2B1C67;
+  margin-bottom: 0;
+}
+
+.drafts-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.drafts-list {
+  width: 100%;
+}
+
+.draft-item {
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.draft-item:hover {
+  background-color: #fafafa;
+}
+
+.draft-item:last-child {
+  border-bottom: none;
+}
+
+.draft-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+}
+
+.draft-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.draft-title .ant-typography {
+  margin-bottom: 0;
+}
+
+.draft-type-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.draft-description {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.draft-description .ant-tag {
+  margin: 0;
+}
+
+.draft-meta {
+  margin-left: auto;
+  padding-left: 16px;
+}
+
+.draft-time {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.draft-time .anticon {
+  margin-right: 4px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .drafts-page {
+    padding: 16px;
+  }
+
+  .draft-item {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .draft-item .ant-list-item-meta {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .draft-item .ant-list-item-action {
+    margin-left: 0 !important;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .draft-meta {
+    padding-left: 0;
+    margin-top: 8px;
+  }
+}

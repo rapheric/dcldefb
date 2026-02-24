@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useRegisterAdminMutation } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
-import { FiCheckCircle, FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiCheckCircle, FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiUserPlus } from "react-icons/fi";
+import ncbabanklogo from "../assets/ncbabanklogo.png";
 
 const RegisterPage = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -21,30 +22,38 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center px-4 py-6 pb-6 overflow-y-auto">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center px-4 py-8 overflow-y-auto">
       {/* Background decorative elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
-      
-      <div className="w-full max-w-2xl relative z-10 my-auto">
+
+      {/* NCBA Logo Section at the top */}
+      <div className="w-full max-w-md relative z-10 mb-4 flex flex-col items-center">
+        <img
+          src={ncbabanklogo}
+          alt="NCBA Bank"
+          className="h-16 w-auto object-contain"
+          style={{ filter: "brightness(0) invert(1)" }}
+        />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Premium Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">
           {/* Header */}
-          <div className="bg-linear-to-r from-indigo-600 to-blue-600 px-8 py-8">
-            <div className="flex items-center justify-center mb-2">
-              <FiLock className="text-white text-3xl" />
+          <div className="bg-linear-to-r from-indigo-600 to-blue-600 px-6 py-5">
+            <div className="flex items-center justify-center mb-1">
+              <FiUserPlus className="text-white text-2xl" />
             </div>
-            <h1 className="text-center text-xl font-bold text-white mb-1">Create Account</h1>
-            <p className="text-center text-indigo-100 text-sm font-medium">Document Checklist & Deferral Management</p>
+            <h1 className="text-center text-lg font-bold text-white">Create Account</h1>
+            <p className="text-center text-indigo-100 text-xs mt-1">Set up your secure account in minutes</p>
           </div>
 
           {/* Content */}
-          <div className="px-8 py-8">
-            {/* Subtitle */}
-            <p className="text-center text-gray-600 text-sm mb-4">Set up your secure account in minutes</p>
+          <div className="px-6 py-5">
 
             {/* Registration Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {/* FULL NAME */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-800">Full Name</label>

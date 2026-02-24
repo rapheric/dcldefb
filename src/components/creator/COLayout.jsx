@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { message } from "antd";
 import { getSidebarWidth } from "../../utils/sidebarUtils";
 
 // Pages
@@ -15,6 +16,7 @@ import CreatorSidebar from "./CreatorSidebar";
 import Navbar from "../Navbar"
 import Queue from "../../pages/creator/Queue";
 import CompletedQueue from "../../pages/creator/CompletedQueue";
+import DraftsPage from "../shared/DraftsPage";
 // import CheckerSidebar from "./CheckerSidebar";
 // import CheckerNavbar from "./CheckerAdmin";
 
@@ -26,6 +28,24 @@ const MainLayout = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 375);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
   const [modalOpen, setModalOpen] = useState(false);
+  const [draftToRestore, setDraftToRestore] = useState(null);
+  const [reviewChecklistToRestore, setReviewChecklistToRestore] = useState(null);
+
+  // Handle restoring a draft - check if it's a new checklist or editing existing one
+  const handleRestoreDraft = (draft) => {
+    // If draft has a checklistId, it's for editing an existing checklist
+    if (draft.data?.checklistId || draft.data?.dclNo) {
+      // This is an edit draft - should open ReviewChecklistModal
+      // Navigate to My Queue first, then the modal will open with the draft data
+      setSelectedKey("myqueue");
+      setReviewChecklistToRestore(draft);
+      message.info("Opening draft for editing...");
+    } else {
+      // This is a new checklist draft - should open Create DCL form
+      setDraftToRestore(draft.id);
+      setSelectedKey("creatchecklist");
+    }
+  };
 
   // Handle responsive sidebar behavior
   useEffect(() => {
@@ -45,9 +65,11 @@ const MainLayout = () => {
   const renderContent = () => {
     switch (selectedKey) {
       case "creatchecklist":
-        return <CoChecklistPage userId={userId} />;
+        return <CoChecklistPage userId={userId} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />;
+      case "drafts":
+        return <DraftsPage type="cocreator" onSelectDraft={handleRestoreDraft} />;
       case "myqueue":
-        return <MyQueue />;
+        return <MyQueue draftToRestore={reviewChecklistToRestore} setDraftToRestore={setReviewChecklistToRestore} />;
       case "completed":
         return <Completed />;
       case "deferrals":

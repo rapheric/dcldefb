@@ -13,7 +13,7 @@
 
 // // /* -------------------------------------------------------------------
 // //    ⭐ MAIN PAGE: CoChecklistPage
-// // ------------------------------------------------------------------- */import React, { useState, useMemo } from "react";
+// // ------------------------------------------------------------------- */import React, { useState, useMemo, useEffect } from "react";
 // import { Button, Divider, Table, Tag } from "antd";
 // import ChecklistsPage from "./ChecklistsPageCreator";
 // import ReviewChecklistModal from "../../components/modals/ReviewChecklistModal";
@@ -593,7 +593,7 @@
 
 // export default CoChecklistPage;
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Button, Divider, Table, Tag } from "antd";
 import ChecklistsPage from "./ChecklistsPageCreator";
 // import ReviewChecklistModal from "../../components/modals/ReviewChecklistModalComponents";
@@ -611,9 +611,17 @@ const SECONDARY_PURPLE = "#7e6496";
 /* -------------------------------------------------------------------
    ⭐ MAIN PAGE: CoChecklistPage
 ------------------------------------------------------------------- */
-const CoChecklistPage = ({ userId }) => {
+const CoChecklistPage = ({ userId, draftToRestore = null, setDraftToRestore = null }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedChecklist, setSelectedChecklist] = useState(null);
+
+  // When draftToRestore changes, open the drawer
+  // Use a separate effect to handle this
+  useEffect(() => {
+    if (draftToRestore) {
+      setDrawerOpen(true);
+    }
+  }, [draftToRestore]);
 
   const { data: checklists = [], refetch } =
     useGetAllCoCreatorChecklistsQuery();
@@ -837,8 +845,10 @@ const CoChecklistPage = ({ userId }) => {
       {drawerOpen && (
         <ChecklistsPage
           open={drawerOpen}
+          draftId={draftToRestore}
           onClose={() => {
             setDrawerOpen(false);
+            setDraftToRestore(null);
             refetch();
           }}
           coCreatorId={userId}

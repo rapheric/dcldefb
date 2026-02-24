@@ -24,23 +24,39 @@ const createEmptyDoc = () => ({
 });
 
 const DocumentAccordion = ({ documents, setDocuments }) => {
+  // Ensure documents is always an array and has proper structure
+  const safeDocuments = Array.isArray(documents) ? documents : [];
+
   // Add new document inside a category
   const handleAddDocument = (catIdx) => {
-    const updated = [...documents];
+    const updated = [...safeDocuments];
+    if (!updated[catIdx].docList) {
+      updated[catIdx].docList = [];
+    }
     updated[catIdx].docList.push(createEmptyDoc());
     setDocuments(updated);
   };
 
   // Remove document
   const handleRemoveDocument = (catIdx, docIdx) => {
-    const updated = [...documents];
-    updated[catIdx].docList.splice(docIdx, 1);
+    const updated = [...safeDocuments];
+    if (updated[catIdx].docList) {
+      updated[catIdx].docList.splice(docIdx, 1);
+    }
     setDocuments(updated);
   };
 
   // Handle edit/change inside a document
   const handleDocumentChange = (catIdx, docIdx, field, value) => {
-    const updated = [...documents];
+    const updated = [...safeDocuments];
+
+    // Ensure category has docList
+    if (!updated[catIdx]) {
+      updated[catIdx] = { category: "", docList: [] };
+    }
+    if (!updated[catIdx].docList) {
+      updated[catIdx].docList = [];
+    }
 
     // Ensure document exists
     if (!updated[catIdx].docList[docIdx]) {
@@ -137,27 +153,30 @@ const DocumentAccordion = ({ documents, setDocuments }) => {
 
   return (
     <Collapse accordion>
-      {documents.map((cat, catIdx) => (
-        <Panel header={cat.category} key={catIdx}>
-          <Button
-            type="primary"
-            style={{ marginBottom: 15 }}
-            onClick={() => handleAddDocument(catIdx)}
-          >
-            + Add Document
-          </Button>
+      {safeDocuments.map((cat, catIdx) => {
+        const safeDocList = Array.isArray(cat.docList) ? cat.docList : [];
+        return (
+          <Panel header={cat.category || `Category ${catIdx + 1}`} key={catIdx}>
+            <Button
+              type="primary"
+              style={{ marginBottom: 15 }}
+              onClick={() => handleAddDocument(catIdx)}
+            >
+              + Add Document
+            </Button>
 
-          <Table
-            pagination={false}
-            columns={getColumns(catIdx)}
-            dataSource={cat.docList.map((doc, docIdx) => ({
-              ...doc,
-              key: `${catIdx}-${docIdx}`,
-              docIdx,
-            }))}
-          />
-        </Panel>
-      ))}
+            <Table
+              pagination={false}
+              columns={getColumns(catIdx)}
+              dataSource={safeDocList.map((doc, docIdx) => ({
+                ...doc,
+                key: `${catIdx}-${docIdx}`,
+                docIdx,
+              }))}
+            />
+          </Panel>
+        );
+      })}
     </Collapse>
   );
 };

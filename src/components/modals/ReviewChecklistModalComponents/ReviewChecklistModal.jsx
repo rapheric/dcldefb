@@ -1,7 +1,7 @@
 // export default ReviewChecklistModal;
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Tag, Input } from "antd";
-import { FilePdfOutlined, LeftOutlined, CloseOutlined } from "@ant-design/icons";
+import { FilePdfOutlined, LeftOutlined, CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import ActionButtons from "./ActionButtons";
 import DocumentSidebar from "./DocumentSidebar";
 import ChecklistHeader from "./ChecklistHeader";
@@ -20,6 +20,11 @@ import DocumentTable from "./DocumentTable";
 import { customStyles } from "../../styles/Theme";
 import { useDocumentStats } from "../../../hooks/useDocumentStats";
 import ProgressStats from "./ProgressStats";
+import AddDocumentModal from "../../common/AddDocumentModal";
+import { getUniqueCategories } from "../../../utils/checklistUtils";
+import { loanTypeDocuments } from "../../../pages/docTypes";
+import { useAddDocumentMutation } from "../../../api/checklistApi";
+import { message } from "antd";
 
 const ReviewChecklistModal = ({
   checklist,
@@ -34,9 +39,11 @@ const ReviewChecklistModal = ({
   const [creatorComment, setCreatorComment] = useState("");
   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
   const [localChecklist, setLocalChecklist] = useState(checklist);
+  const [isAddDocModalOpen, setIsAddDocModalOpen] = useState(false);
 
   // Hooks
   const documentStats = useDocumentStats(docs);
+  const [addDocumentMutation, { isLoading: isAddingDocument }] = useAddDocumentMutation();
 
   const { data: comments, isLoading: commentsLoading } =
     useGetChecklistCommentsQuery(checklist?.id || checklist?._id, {
@@ -110,15 +117,96 @@ const ReviewChecklistModal = ({
     }
   );
 
-  // Wrapper for uploading supporting docs that updates local state
+  // State to trigger refetch of supporting docs
+  const [supportingDocsRefreshKey, setSupportingDocsRefreshKey] = useState(0);
+
+  // Get available categories based on loan type or existing documents
+  const getAvailableCategories = () => {
+    const loanType = checklist?.loanType || localChecklist?.loanType;
+    if (loanType && loanTypeDocuments[loanType]) {
+      // Get categories from the predefined loan type documents
+      return loanTypeDocuments[loanType].map(cat => cat.title);
+    }
+    // Fallback to existing document categories
+    return getUniqueCategories(docs);
+  };
+
+  // Handle adding a new document - saves to database immediately
+  const handleAddDocument = async (newDoc) => {
+    console.log("Adding new document:", newDoc);
+    const checklistId = checklist?.id || checklist?._id;
+
+    if (!checklistId) {
+      message.error("Checklist ID missing - cannot add document");
+      return;
+    }
+
+    try {
+      // Prepare document data for API
+      const documentData = {
+        name: newDoc.name,
+        category: newDoc.category,
+        status: newDoc.status || "pending",
+        comment: newDoc.comment || "",
+      };
+
+      console.log("📤 Saving new document to database:", documentData);
+
+      // Call API to add document to database
+      const result = await addDocumentMutation({
+        id: checklistId,
+        data: documentData,
+      }).unwrap();
+
+      console.log("✅ Document saved to database:", result);
+
+      // Add the new document to local state with the returned ID
+      const savedDoc = {
+        ...newDoc,
+        docIdx: docs.length,
+        _id: result?.document?._id || result?.document?.id || result?._id || result?.id,
+        id: result?.document?.id || result?.document?._id || result?.id || result?._id,
+        status: result?.document?.status || newDoc.status || "pending",
+      };
+
+      setDocs(prevDocs => [...prevDocs, savedDoc]);
+
+      message.success("Document added successfully!");
+
+      // Trigger checklist update to refresh data from server
+      if (onChecklistUpdate && result?.checklist) {
+        handleChecklistUpdate(result.checklist);
+      }
+    } catch (error) {
+      console.error("❌ Error adding document:", error);
+      message.error(
+        error?.data?.message || error?.data?.error || "Failed to add document"
+      );
+
+      // Even if API call fails, add to local state so user can still submit with it
+      // This allows the document to be included when submitting to RM
+      const fallbackDoc = {
+        ...newDoc,
+        docIdx: docs.length,
+        isNew: true, // Mark as new so backend knows to create it
+      };
+      setDocs(prevDocs => [...prevDocs, fallbackDoc]);
+    }
+  };
+
+  // Wrapper for uploading supporting docs that updates local state and triggers refetch
   const handleUploadSupportingDoc = async (file) => {
     try {
       const newDoc = await uploadSupportingDoc(file);
       if (newDoc) {
+        console.log("✅ Adding new supporting doc to state:", newDoc);
         setSupportingDocs((prev) => [...prev, newDoc]);
+        // Trigger refetch to ensure all modals get updated data
+        setSupportingDocsRefreshKey(prev => prev + 1);
       }
     } catch (error) {
-      console.error("Error uploading supporting doc:", error);
+      console.error("❌ Error uploading supporting doc:", error);
+      throw error; // Re-throw to allow error handling in UI
     }
   };
 
@@ -204,14 +292,16 @@ const ReviewChecklistModal = ({
   // Fetch supporting docs from backend when modal opens or checklist changes
   useEffect(() => {
     const checklistId = localChecklist?.id || checklist?.id || localChecklist?._id || checklist?._id;
-    
+
     if (!checklistId || !open) return;
 
     const fetchSupportingDocs = async () => {
       try {
         const token = localStorage.getItem("token");
+        console.log("📄 Fetching supporting docs for checklist:", checklistId);
+
         const response = await fetch(
-          `http://localhost:5000/api/uploads/checklist/${checklistId}`,
+          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/uploads/checklist/${checklistId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -222,17 +312,39 @@ const ReviewChecklistModal = ({
         if (response.ok) {
           const result = await response.json();
           console.log("📄 Supporting docs API response:", result);
-          if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-            // Add category and isSupporting flag for proper sidebar grouping
-            const docsWithCategory = result.data.map(doc => ({
-              ...doc,
+
+          // Handle different response structures
+          const docsData = result.data || result.supportingDocs || result.documents || [];
+
+          if (Array.isArray(docsData) && docsData.length > 0) {
+            // Normalize and transform each document
+            const docsWithCategory = docsData.map(doc => ({
+              id: doc.id || doc._id,
+              _id: doc._id || doc.id,
+              name: doc.name || doc.fileName || 'Unknown',
+              fileName: doc.fileName || doc.name || 'Unknown',
+              fileUrl: doc.fileUrl,
+              fileSize: doc.fileSize,
+              fileType: doc.fileType,
               category: 'Supporting Documents',
-              isSupporting: true
+              isSupporting: true,
+              uploadedBy: doc.uploadedBy || doc.uploadedByName || 'Unknown',
+              uploadedById: doc.uploadedById,
+              uploadedByRole: doc.uploadedByRole,
+              uploadedAt: doc.uploadedAt || doc.createdAt,
+              uploadData: {
+                fileName: doc.fileName || doc.name || 'Unknown',
+                fileUrl: doc.fileUrl,
+                createdAt: doc.uploadedAt || doc.createdAt,
+                fileSize: doc.fileSize,
+                fileType: doc.fileType,
+                uploadedBy: doc.uploadedBy || doc.uploadedByName || 'Unknown',
+              }
             }));
             setSupportingDocs(docsWithCategory);
-            console.log("📄 Supporting docs fetched successfully (", docsWithCategory.length, " docs)");
+            console.log("✅ Supporting docs fetched successfully (", docsWithCategory.length, " docs)");
           } else {
-            console.log("✓ API returned ok but no supporting docs for checklist", checklistId);
+            console.log("ℹ️ No supporting docs for checklist", checklistId);
             setSupportingDocs([]);
           }
         } else {
@@ -246,7 +358,7 @@ const ReviewChecklistModal = ({
     };
 
     fetchSupportingDocs();
-  }, [checklist?.id, checklist?._id, localChecklist?.id, localChecklist?._id, open]);
+  }, [checklist?.id, checklist?._id, localChecklist?.id, localChecklist?._id, open, supportingDocsRefreshKey]);
 
   return (
     <>
@@ -391,6 +503,26 @@ const ReviewChecklistModal = ({
               checklistStatus={checklist?.status}
             />
 
+            {/* Add Document Button - Only show when actions are allowed */}
+            {!shouldGrayOut && (
+              <div style={{ marginTop: 16, marginBottom: 16 }}>
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={() => setIsAddDocModalOpen(true)}
+                  style={{
+                    width: "100%",
+                    borderColor: PRIMARY_BLUE,
+                    color: PRIMARY_BLUE,
+                    height: 40,
+                    fontWeight: 600,
+                  }}
+                >
+                  Add New Document
+                </Button>
+              </div>
+            )}
+
             {/* Creator Comment */}
             <div style={{ marginTop: 16 }}>
               <h4
@@ -430,6 +562,16 @@ const ReviewChecklistModal = ({
           </div>
         )}
       </Modal>
+
+      {/* Add Document Modal */}
+      <AddDocumentModal
+        open={isAddDocModalOpen}
+        onClose={() => setIsAddDocModalOpen(false)}
+        onAdd={handleAddDocument}
+        categories={getAvailableCategories()}
+        title="Add New Document to Checklist"
+        showFileUpload={false}
+      />
     </>
   );
 };

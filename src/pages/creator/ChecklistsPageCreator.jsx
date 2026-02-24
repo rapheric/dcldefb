@@ -132,16 +132,18 @@
 
 // export default ChecklistsPage;
 
-import React, { useState } from "react";
-import { Modal, Button, Space } from "antd";
+import React, { useState, useEffect } from "react";
+import { Modal, Button, Space, message } from "antd";
 import DocumentAccordion from "../../components/creator/DocumentAccordion";
 import { useGetUsersQuery } from "../../api/userApi";
 import { loanTypes, loanTypeDocuments } from "../docTypes";
 import { useCreateCoCreatorChecklistMutation } from "../../api/checklistApi";
 import ChecklistFormFields from "../../components/creator/ChecklistFormFields";
 import DocumentInputSectionCoCreator from "../../components/creator/DocumentInputSection";
+import { useAutoSaveDraft } from "../../hooks/useAutoSaveDraft";
+import { saveDraft, getDrafts, deleteDraft } from "../../utils/draftsUtils";
 
-const ChecklistsPage = ({ open, onClose }) => {
+const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
   const [loanType, setLoanType] = useState("");
   const [assignedToRM, setAssignedToRM] = useState("");
   const [customerId, setCustomerId] = useState("");
@@ -155,11 +157,137 @@ const ChecklistsPage = ({ open, onClose }) => {
   );
   const [newDocName, setNewDocName] = useState("");
   const [selectedCategoryName, setSelectedCategoryName] = useState(null);
+  const [currentDraftId, setCurrentDraftId] = useState(null);
 
   const { data: users = [] } = useGetUsersQuery();
   const rms = users.filter((u) => u.role?.toLowerCase() === "rm");
 
   const [createChecklist] = useCreateCoCreatorChecklistMutation();
+
+  // Form data for auto-save
+  const formData = {
+    loanType,
+    assignedToRM,
+    customerId,
+    customerName,
+    customerNumber,
+    customerEmail,
+    ibpsNo,
+    selectedMultipleLoanTypes,
+    documents,
+  };
+
+  // Auto-save hook - saves every 5 seconds when form has data
+  const { draftId: autoSavedDraftId, lastSaved } = useAutoSaveDraft({
+    type: "cocreator",
+    formData,
+    interval: 5000,
+    draftId: currentDraftId,
+    enabled: open && (loanType || assignedToRM || customerNumber), // Only enable when modal is open and has some data
+  });
+
+  // Update currentDraftId when auto-save provides one
+  useEffect(() => {
+    if (autoSavedDraftId && autoSavedDraftId !== currentDraftId) {
+      setCurrentDraftId(autoSavedDraftId);
+    }
+  }, [autoSavedDraftId]);
+
+  // Load draft data on mount if initialDraftId is provided
+  useEffect(() => {
+    if (initialDraftId) {
+      loadDraft(initialDraftId);
+    } else {
+      resetForm();
+    }
+  }, [initialDraftId, open]);
+
+  // Load draft from localStorage
+  const loadDraft = (id) => {
+    try {
+      const drafts = getDrafts("cocreator");
+      const draft = drafts.find(d => d.id === id);
+      if (draft && draft.data) {
+        const data = draft.data;
+        setLoanType(data.loanType || "");
+        setAssignedToRM(data.assignedToRM || "");
+        setCustomerId(data.customerId || "");
+        setCustomerName(data.customerName || "");
+        setCustomerNumber(data.customerNumber || "");
+        setCustomerEmail(data.customerEmail || "");
+        setIbpsNo(data.ibpsNo || "");
+        setSelectedMultipleLoanTypes(data.selectedMultipleLoanTypes || []);
+
+        // Handle different document structures
+        let docsToLoad = data.documents || [];
+
+        // If documents have a flat structure (from ReviewChecklistModal),
+        // convert them to nested structure with docList
+        if (docsToLoad.length > 0 && docsToLoad[0].category && !docsToLoad[0].docList) {
+          // Group by category
+          const groupedDocs = {};
+          docsToLoad.forEach(doc => {
+            const category = doc.category || "Uncategorized";
+            if (!groupedDocs[category]) {
+              groupedDocs[category] = [];
+            }
+            groupedDocs[category].push({
+              name: doc.name,
+              action: doc.action || doc.status || "pendingrm",
+              status: doc.status || doc.action || "pendingrm",
+              comment: doc.comment || "",
+              fileUrl: doc.fileUrl,
+            });
+          });
+
+          // Convert to nested structure
+          docsToLoad = Object.keys(groupedDocs).map(category => ({
+            category,
+            docList: groupedDocs[category]
+          }));
+        }
+
+        setDocuments(docsToLoad);
+        setCurrentDraftId(id);
+        message.success("Draft restored successfully!");
+      }
+    } catch (error) {
+      console.error("Error loading draft:", error);
+      message.error("Failed to load draft");
+    }
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setLoanType("");
+    setAssignedToRM("");
+    setCustomerId("");
+    setCustomerName("");
+    setCustomerNumber("");
+    setCustomerEmail("");
+    setIbpsNo("");
+    setSelectedMultipleLoanTypes([]);
+    setDocuments([]);
+    setNewDocName("");
+    setSelectedCategoryName(null);
+    setCurrentDraftId(null);
+  };
+
+  // Manual save draft handler
+  const handleSaveDraft = () => {
+    try {
+      const saved = saveDraft("cocreator", formData, currentDraftId);
+      if (saved) {
+        setCurrentDraftId(saved.id);
+        message.success("Draft saved successfully!");
+      } else {
+        message.error("Failed to save draft");
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      message.error("Failed to save draft");
+    }
+  };
 
   const handleLoanTypeChange = (value) => {
     setLoanType(value);
@@ -278,11 +406,16 @@ const ChecklistsPage = ({ open, onClose }) => {
 
     try {
       await createChecklist(payload).unwrap();
-      alert("Checklist created successfully!");
+      message.success("Checklist created successfully!");
+      // Delete draft after successful creation
+      if (currentDraftId) {
+        deleteDraft(currentDraftId);
+        setCurrentDraftId(null);
+      }
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Error creating checklist.");
+      message.error("Error creating checklist.");
     }
   };
 
@@ -296,9 +429,21 @@ const ChecklistsPage = ({ open, onClose }) => {
 
   return (
     <Modal
-      title="Create DCL Checklist"
+      title={
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Create DCL Checklist</span>
+          {lastSaved && (
+            <span style={{ fontSize: '12px', color: '#999', fontWeight: 'normal' }}>
+              Auto-saved: {new Date(lastSaved).toLocaleTimeString()}
+            </span>
+          )}
+        </div>
+      }
       open={open}
-      onCancel={onClose}
+      onCancel={() => {
+        resetForm();
+        onClose();
+      }}
       width={1100}
       footer={null}
     >
@@ -378,6 +523,17 @@ const ChecklistsPage = ({ open, onClose }) => {
           }}
         >
           Create DCL
+        </Button>
+
+        <Button
+          block
+          onClick={handleSaveDraft}
+          disabled={!loanType && !assignedToRM && !customerNumber}
+          style={{
+            marginTop: '8px',
+          }}
+        >
+          Save Draft
         </Button>
 
         {!isFormValid && (

@@ -585,6 +585,7 @@ import SaveDraftButton from "./SaveDraftButton";
 import { useRmSubmitChecklistToCoCreatorMutation } from "../../../api/checklistApi";
 import { useGetChecklistCommentsQuery } from "../../../api/checklistApi";
 import { uploadFileToBackend } from "../../../utils/uploadUtils";
+import { useChecklistOperations } from "../../../hooks/useChecklistOperations";
 
 const PRIMARY_BLUE = "#0033a0";
 
@@ -625,6 +626,16 @@ const RmReviewChecklistModal = ({
     }
   };
 
+  // Use the checklist operations hook to get uploadSupportingDoc
+  const { uploadSupportingDoc } = useChecklistOperations(
+    checklist,
+    docs,
+    supportingDocs,
+    rmGeneralComment,
+    auth?.user,
+    handleChecklistUpdate
+  );
+
   const getInitialRmStatus = (doc) => {
     if (doc.rmStatus !== undefined && doc.rmStatus !== null) {
       return doc.rmStatus;
@@ -653,16 +664,21 @@ const RmReviewChecklistModal = ({
     setDocs(flattenedDocs);
   }, [checklist]);
 
+  // State to trigger refetch of supporting docs
+  const [supportingDocsRefreshKey, setSupportingDocsRefreshKey] = useState(0);
+
   // Fetch supporting docs from backend when modal opens or checklist changes
   useEffect(() => {
     const checklistId = checklist?.id || checklist?._id;
-    
+
     if (!checklistId || !open) return;
 
     const fetchSupportingDocs = async () => {
       try {
+        console.log("📄 RM Modal - Fetching supporting docs for checklist:", checklistId);
+
         const response = await fetch(
-          `http://localhost:5000/api/uploads/checklist/${checklistId}`,
+          `${API_BASE_URL}/api/uploads/checklist/${checklistId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -672,35 +688,71 @@ const RmReviewChecklistModal = ({
 
         if (response.ok) {
           const result = await response.json();
-          console.log("📄 Supporting docs API response:", result);
-          if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-            // Transform to include role information and category for grouping
-            const transformedDocs = result.data.map(doc => ({
-              ...doc,
+          console.log("📄 RM Modal - Supporting docs API response:", result);
+
+          // Handle different response structures
+          const docsData = result.data || result.supportingDocs || result.documents || [];
+
+          if (Array.isArray(docsData) && docsData.length > 0) {
+            // Normalize and transform each document
+            const transformedDocs = docsData.map(doc => ({
               id: doc.id || doc._id,
+              _id: doc._id || doc.id,
+              name: doc.name || doc.fileName || 'Unknown',
+              fileName: doc.fileName || doc.name || 'Unknown',
+              fileUrl: doc.fileUrl,
+              fileSize: doc.fileSize,
+              fileType: doc.fileType,
               category: 'Supporting Documents',
               isSupporting: true,
-              uploadedByRole: doc.uploadedByRole || 'UNKNOWN'
+              uploadedBy: doc.uploadedBy || doc.uploadedByName || 'Unknown',
+              uploadedById: doc.uploadedById,
+              uploadedByRole: doc.uploadedByRole || 'UNKNOWN',
+              uploadedAt: doc.uploadedAt || doc.createdAt,
+              uploadData: {
+                fileName: doc.fileName || doc.name || 'Unknown',
+                fileUrl: doc.fileUrl,
+                createdAt: doc.uploadedAt || doc.createdAt,
+                fileSize: doc.fileSize,
+                fileType: doc.fileType,
+                uploadedBy: doc.uploadedBy || doc.uploadedByName || 'Unknown',
+              }
             }));
             setSupportingDocs(transformedDocs);
-            console.log("📄 Supporting docs fetched successfully (", transformedDocs.length, " docs)");
+            console.log("✅ RM Modal - Supporting docs fetched successfully (", transformedDocs.length, " docs)");
           } else {
-            console.log("✓ API returned ok but no supporting docs for checklist", checklistId);
+            console.log("ℹ️ RM Modal - No supporting docs for checklist", checklistId);
             setSupportingDocs([]);
           }
         } else {
-          console.warn(`⚠️ API returned ${response.status} for checklist ${checklistId}:`, await response.text());
+          console.warn(`⚠️ RM Modal - API returned ${response.status} for checklist ${checklistId}:`, await response.text());
           // Don't clear existing docs on error - keep what we have
         }
       } catch (error) {
-        console.error("❌ Error fetching supporting docs:", error.message);
+        console.error("❌ RM Modal - Error fetching supporting docs:", error.message);
         // Don't clear existing docs on error - supporting docs are optional
       }
     };
 
     // Always fetch from API
     fetchSupportingDocs();
-  }, [checklist?.id, checklist?._id, open, token]);
+  }, [checklist?.id, checklist?._id, open, token, supportingDocsRefreshKey, API_BASE_URL]);
+
+  // Wrapper for uploading supporting docs that updates local state and triggers refetch
+  const handleUploadSupportingDoc = async (file) => {
+    try {
+      const newDoc = await uploadSupportingDoc(file);
+      if (newDoc) {
+        console.log("✅ RM Modal - Adding new supporting doc to state:", newDoc);
+        setSupportingDocs((prev) => [...prev, newDoc]);
+        // Trigger refetch to ensure all modals get updated data
+        setSupportingDocsRefreshKey(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error("❌ RM Modal - Error uploading supporting doc:", error);
+      throw error;
+    }
+  };
 
   const isActionAllowed =
     !readOnly && checklist?.status?.toLowerCase() === "rmreview";
@@ -777,68 +829,6 @@ const RmReviewChecklistModal = ({
       return !uploadedByRole || uploadedByRole?.toLowerCase() !== 'rm';
     });
   }, [supportingDocs]);
-
-  const handleUploadSupportingDoc = async (file) => {
-    try {
-      setUploadingSupportingDoc(true);
-
-      const checklistId = checklist?.id || checklist?._id;
-      if (!checklistId) {
-        throw new Error("Checklist ID missing");
-      }
-
-      const formData = new FormData();
-      formData.append("files", file);
-
-      // Use RM-specific endpoint for supporting docs upload
-      const response = await fetch(
-        `${API_BASE_URL}/api/rmChecklist/${checklistId}/supporting-docs`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        },
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Upload failed: ${response.status} ${errorText}`);
-      }
-
-      const result = await response.json();
-
-      // Handle RM endpoint response format (returns 'files' array)
-      const uploadedFiles = result.files || result.supportingDocs || [];
-      if (uploadedFiles.length === 0) {
-        throw new Error(result.message || "Upload failed");
-      }
-
-      const uploadedDoc = uploadedFiles[0];
-      const newSupportingDoc = {
-        id: uploadedDoc.id || uploadedDoc._id,
-        _id: uploadedDoc.id || uploadedDoc._id,
-        fileName: uploadedDoc.fileName,
-        name: uploadedDoc.fileName,
-        fileUrl: uploadedDoc.fileUrl,
-        fileSize: uploadedDoc.fileSize,
-        fileType: uploadedDoc.fileType,
-        uploadedBy: uploadedDoc.uploadedBy || { name: 'RM User', role: 'rm' },
-        uploadedById: uploadedDoc.uploadedById,
-        uploadedByRole: 'rm', // Set by RM endpoint
-        uploadedAt: uploadedDoc.uploadedAt,
-      };
-
-      setSupportingDocs((prev) => [...prev, newSupportingDoc]);
-      message.success(`"${file.name}" uploaded successfully!`);
-    } catch (error) {
-      console.error("Supporting doc upload failed", error);
-      message.error(error.message || "Upload failed");
-    } finally {
-      setUploadingSupportingDoc(false);
-    }
-  };
 
   const handleDeleteSupportingDoc = async (docId, docName) => {
     const confirm = window.confirm(`Delete "${docName}"?`);

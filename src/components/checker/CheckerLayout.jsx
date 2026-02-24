@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Inbox, CheckCircle, BarChart2 } from "lucide-react";
+import { Inbox, CheckCircle, BarChart2, FileEdit } from "lucide-react";
 import { getSidebarWidth } from "../../utils/sidebarUtils";
 
 import Navbar from "../Navbar";
@@ -12,6 +12,7 @@ import AllChecklists from "../../pages/checker/allChecklists";
 import CompletedChecklists from "../../pages/checker/Completed";
 import Reportss from "../../pages/creator/Reports";
 import Deferrals from "../../pages/checker/Deferral";
+import DraftsPage from "../../components/shared/DraftsPage";
 
 const CheckerLayout = () => {
   const { user } = useSelector((state) => state.auth);
@@ -52,6 +53,11 @@ const CheckerLayout = () => {
       key: "deferrals",
       icon: <BarChart2 size={18} style={{ color: "#e5e7eb" }} />,
       label: "Deferrals",
+    },
+    {
+      key: "drafts",
+      icon: <FileEdit size={18} style={{ color: "#e5e7eb" }} />,
+      label: "Drafts",
     },
     {
       key: "reports",
@@ -145,6 +151,7 @@ const CheckerLayout = () => {
               element={<CompletedChecklists userId={userId} />}
             />
             <Route path="/deferrals" element={<Deferrals userId={userId} />} />
+            <Route path="/drafts" element={<DraftsPage type="checker" />} />
             <Route path="/reports" element={<Reportss />} />
           </Routes>
         </div>

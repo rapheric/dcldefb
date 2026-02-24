@@ -39,7 +39,7 @@ const getStatusColor = (status) => {
  */
 const formatStatusText = (status) => {
   if (!status) return 'N/A';
-  return status.toUpperCase().replace(/_/G, ' ');
+  return status.toUpperCase().replace(/_/g, ' ');
 };
 
 /**
@@ -100,7 +100,7 @@ export const generateChecklistPDF = async ({
     doc.text(`DCL: ${checklist?.dclNo || 'N/A'}`, rightX, 15, { align: 'right' });
     doc.text(`IBPS: ${checklist?.ibpsNo || 'N/A'}`, rightX, 21, { align: 'right' });
     doc.text(`Generated: ${dayjs().format('DD MMM YYYY, HH:mm')}`, rightX, 27, { align: 'right' });
-    doc.text(`Status: ${(checklist?.status || 'UNKNOWN').toUpperCase().replace(/_/G, ' ')}`, rightX, 33, { align: 'right' });
+    doc.text(`Status: ${(checklist?.status || 'UNKNOWN').toUpperCase().replace(/_/g, ' ')}`, rightX, 33, { align: 'right' });
 
     yPos = 55;
 

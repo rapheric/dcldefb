@@ -4,9 +4,9 @@ import { message } from "antd";
 import {
   useSubmitChecklistToRMMutation,
   useUpdateChecklistStatusMutation,
-  useSaveChecklistDraftMutation,
 } from "../../src/api/checklistApi";
 import { API_BASE_URL } from "../utils/constants";
+import { saveDraft as saveDraftToStorage } from "../utils/draftsUtils";
 
 export const useChecklistOperations = (
   checklist,
@@ -23,8 +23,7 @@ export const useChecklistOperations = (
     useSubmitChecklistToRMMutation();
   const [updateChecklistStatus, { isLoading: isCheckerSubmitting }] =
     useUpdateChecklistStatusMutation();
-  const [saveDraft, { isLoading: isSavingDraft }] =
-    useSaveChecklistDraftMutation();
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [uploadingSupportingDoc, setUploadingSupportingDoc] = useState(false);
 
   const submitToRM = async () => {
@@ -204,34 +203,44 @@ export const useChecklistOperations = (
     try {
       const checklistId = checklist?.id || checklist?._id;
       if (!checklistId) {
-        throw new Error("Checklist ID missing");
+        message.error("Checklist ID missing");
+        return;
       }
 
+      setIsSavingDraft(true);
       message.loading({
         content: "Saving draft...",
         key: "saveDraft",
       });
 
-      const payload = {
+      // Prepare draft data for localStorage
+      const draftData = {
         checklistId: checklistId,
-        draftData: {
-          documents: docs.map((doc) => ({
-            _id: doc._id || doc.id,
-            name: doc.name,
-            category: doc.category,
-            status: doc.status || doc.action,
-            action: doc.action,
-            comment: doc.comment,
-            fileUrl: doc.fileUrl,
-            expiryDate: doc.expiryDate,
-            deferralNo: doc.deferralNo,
-          })),
-          creatorComment,
-          supportingDocs,
-        },
+        dclNo: checklist?.dclNo,
+        title: checklist?.title,
+        customerName: checklist?.customerName,
+        customerNumber: checklist?.customerNumber,
+        loanType: checklist?.loanType,
+        status: checklist?.status,
+        documents: docs.map((doc) => ({
+          _id: doc._id || doc.id,
+          name: doc.name,
+          category: doc.category,
+          status: doc.status || doc.action,
+          action: doc.action,
+          creatorStatus: doc.creatorStatus,
+          checkerStatus: doc.checkerStatus,
+          comment: doc.comment,
+          fileUrl: doc.fileUrl,
+          expiryDate: doc.expiryDate,
+          deferralNo: doc.deferralNo,
+        })),
+        creatorComment,
+        supportingDocs,
       };
 
-      await saveDraft(payload).unwrap();
+      // Save to localStorage instead of API
+      saveDraftToStorage("cocreator", draftData, checklistId);
 
       message.success({
         content: "Draft saved successfully!",
@@ -241,10 +250,12 @@ export const useChecklistOperations = (
     } catch (error) {
       console.error("Save draft error:", error);
       message.error({
-        content: error?.data?.message || "Failed to save draft",
+        content: error?.message || "Failed to save draft",
         key: "saveDraft",
       });
       throw error;
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 
@@ -258,10 +269,17 @@ export const useChecklistOperations = (
       }
 
       const formData = new FormData();
-      formData.append("files", file);
+      formData.append("file", file); // Changed from "files" to "file" for consistency
+
+      console.log("📤 Uploading supporting document:", {
+        checklistId,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
+      });
 
       const response = await fetch(
-        `${API_BASE_URL}/api/cocreatorChecklist/${checklistId}/upload`,
+        `${API_BASE_URL}/api/uploads/checklist/${checklistId}`,
         {
           method: "POST",
           headers: {
@@ -273,27 +291,46 @@ export const useChecklistOperations = (
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error("❌ Upload failed:", response.status, errorText);
         throw new Error(`Upload failed: ${response.status} ${errorText}`);
       }
 
       const result = await response.json();
+      console.log("✅ Upload response:", result);
 
-      if (!result.supportingDocs || result.supportingDocs.length === 0) {
-        throw new Error(result.message || "Upload failed");
+      // Handle different response structures
+      const uploadedDoc = result.data || result.uploadedDoc || result;
+
+      if (!uploadedDoc || (!uploadedDoc.id && !uploadedDoc._id)) {
+        throw new Error("Invalid upload response - missing document ID");
       }
 
-      const uploadedDoc = result.supportingDocs[0];
+      // Normalize the document structure
       const newSupportingDoc = {
-        id: uploadedDoc.id,
-        fileName: uploadedDoc.fileName,
+        id: uploadedDoc.id || uploadedDoc._id,
+        _id: uploadedDoc._id || uploadedDoc.id,
+        name: uploadedDoc.fileName || uploadedDoc.name || file.name,
+        fileName: uploadedDoc.fileName || uploadedDoc.name || file.name,
         fileUrl: uploadedDoc.fileUrl,
-        fileSize: uploadedDoc.fileSize,
-        fileType: uploadedDoc.fileType,
-        uploadedBy: uploadedDoc.uploadedBy,
-        uploadedById: uploadedDoc.uploadedById,
-        uploadedByRole: uploadedDoc.uploadedByRole,
-        uploadedAt: uploadedDoc.uploadedAt,
+        fileSize: uploadedDoc.fileSize || file.size,
+        fileType: uploadedDoc.fileType || file.type,
+        category: 'Supporting Documents',
+        isSupporting: true,
+        uploadedBy: uploadedDoc.uploadedBy || auth?.user?.name || 'Current User',
+        uploadedById: uploadedDoc.uploadedById || auth?.user?.id,
+        uploadedByRole: uploadedDoc.uploadedByRole || auth?.user?.role || 'cocreator',
+        uploadedAt: uploadedDoc.uploadedAt || new Date().toISOString(),
+        uploadData: {
+          fileName: uploadedDoc.fileName || uploadedDoc.name || file.name,
+          fileUrl: uploadedDoc.fileUrl,
+          createdAt: uploadedDoc.uploadedAt || new Date().toISOString(),
+          fileSize: uploadedDoc.fileSize || file.size,
+          fileType: uploadedDoc.fileType || file.type,
+          uploadedBy: uploadedDoc.uploadedBy || auth?.user?.name || 'Current User',
+        }
       };
+
+      console.log("✅ Supporting doc normalized:", newSupportingDoc);
 
       return newSupportingDoc;
     } catch (error) {

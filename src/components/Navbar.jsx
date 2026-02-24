@@ -4,8 +4,9 @@ import {
   BellOutlined,
   UserOutlined,
   LogoutOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
-import { Dropdown, message, Modal } from "antd";
+import { Dropdown, message, Modal, Menu } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../api/authSlice";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +20,49 @@ const Navbar = ({ toggleSidebar }) => {
   const [showVerificationModal, setShowVerificationModal] = React.useState(false);
   const [verificationCode, setVerificationCode] = React.useState("");
   const [isVerifying, setIsVerifying] = React.useState(false);
+
+  // Dashboard navigation items based on user role
+  const getDashboardItems = () => {
+    const role = user?.role?.toLowerCase();
+    const items = [];
+
+    // Define dashboard items with bold styling (ALL CAPS)
+    const dashboardOptions = {
+      creator: { key: "/cocreator", label: "CREATOR DASHBOARD", icon: <HomeOutlined /> },
+      rm: { key: "/rm", label: "RM DASHBOARD", icon: <HomeOutlined /> },
+      checker: { key: "/cochecker", label: "CHECKER DASHBOARD", icon: <HomeOutlined /> },
+      admin: { key: "/admin", label: "ADMIN DASHBOARD", icon: <HomeOutlined /> },
+      approver: { key: "/approver", label: "APPROVER DASHBOARD", icon: <HomeOutlined /> },
+    };
+
+    switch (role) {
+      case "cocreator":
+      case "co_creator":
+      case "creator":
+        items.push(dashboardOptions.creator);
+        break;
+      case "rm":
+        items.push(dashboardOptions.rm);
+        break;
+      case "cochecker":
+      case "checker":
+        items.push(dashboardOptions.checker);
+        break;
+      case "admin":
+        items.push(dashboardOptions.admin);
+        break;
+      case "approver":
+        items.push(dashboardOptions.approver);
+        break;
+      default:
+        break;
+    }
+    return items;
+  };
+
+  const handleMenuClick = ({ key }) => {
+    navigate(key);
+  };
 
   const handleLogout = async () => {
     try {
@@ -103,6 +147,7 @@ const Navbar = ({ toggleSidebar }) => {
   // Responsive values
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 375;
   const navPadding = isMobile ? '0 8px' : '0 24px';
+  const dashboardItems = getDashboardItems();
 
   return (
     <div
@@ -119,10 +164,33 @@ const Navbar = ({ toggleSidebar }) => {
         flexShrink: 0,
       }}
     >
-      <div onClick={toggleSidebar} style={{ cursor: "pointer" }}>
-        <MenuOutlined style={{ fontSize: isMobile ? 20 : 24 }} />
+      {/* Left section: Menu toggle and Dashboard links */}
+      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 20 }}>
+        <div onClick={toggleSidebar} style={{ cursor: "pointer" }}>
+          <MenuOutlined style={{ fontSize: isMobile ? 20 : 24 }} />
+        </div>
+
+        {/* Dashboard Navigation Menu */}
+        {dashboardItems.length > 0 && !isMobile && (
+          <Menu
+            mode="horizontal"
+            items={dashboardItems}
+            onClick={handleMenuClick}
+            selectedKeys={[window.location.pathname]}
+            style={{
+              border: "none",
+              minWidth: 240,
+              fontSize: 16,
+              fontWeight: 800,
+              color: "#2B1C67",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          />
+        )}
       </div>
 
+      {/* Right section: Notifications and User */}
       <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 20 }}>
         <BellOutlined style={{ fontSize: isMobile ? 18 : 20, cursor: "pointer" }} />
 

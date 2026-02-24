@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
-import { CheckCircle, Clock, User, Shield, FileText } from "lucide-react";
+import { CheckCircle, Clock, User, Shield, FileText, FileEdit } from "lucide-react";
 import { UserOutlined } from "@ant-design/icons";
 import { getSidebarWidth } from "../../utils/sidebarUtils";
 
@@ -11,6 +11,7 @@ import AuditLogsPage from "../../pages/admin/AuditLogsPage";
 import Navbar from "../Navbar.jsx";
 import SharedSidebar from "../common/SharedSidebar";
 import DeactivatedUsers from "../../pages/admin/DeactivatedUsers.jsx";
+import DraftsPage from "../../components/shared/DraftsPage";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -65,6 +66,11 @@ const AdminLayout = () => {
       label: "Audit Logs",
       icon: <Clock size={18} style={{ color: "#e5e7eb" }} />,
     },
+    {
+      key: "drafts",
+      label: "Drafts",
+      icon: <FileEdit size={18} style={{ color: "#e5e7eb" }} />,
+    },
   ];
 
   const handleClick = (e) => {
@@ -110,7 +116,6 @@ const AdminLayout = () => {
         collapsed={sidebarCollapsed}
         toggleCollapse={toggleSidebar}
         menuItems={menuItems}
-        title="Admin Dashboard"
       />
 
       <div
@@ -147,6 +152,7 @@ const AdminLayout = () => {
             <Route path="/live-users" element={<LiveUsers />} />
             <Route path="/audit-logs" element={<AuditLogsPage />} />
             <Route path="/deactivated-users" element={<DeactivatedUsers />} />
+            <Route path="/drafts" element={<DraftsPage type="admin" />} />
           </Routes>
         </div>
 
