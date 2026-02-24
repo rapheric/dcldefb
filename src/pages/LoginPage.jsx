@@ -205,41 +205,42 @@ const LoginPage = () => {
       <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
 
-      {/* NCBA Logo Section at the top */}
-      <div className="w-full max-w-md relative z-10 mb-4 flex flex-col items-center">
-        <img
-          src={ncbabanklogo}
-          alt="NCBA Bank"
-          className="h-16 w-auto object-contain"
-          style={{ filter: "brightness(0) invert(1)" }}
-        />
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative z-10 mb-8">
         {/* Premium Card */}
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">
           {/* Header */}
-          <div className="bg-linear-to-r from-blue-600 to-indigo-600 px-6 py-5">
-            <div className="flex items-center justify-center mb-1">
-              <FiLock className="text-white text-2xl" />
+          <div className="bg-linear-to-r from-blue-600 to-indigo-600 px-4 py-2">
+            <div className="flex items-center justify-center gap-3">
+              {/* NCBA Logo beside the icon */}
+              <div className="relative">
+                <img
+                  src={ncbabanklogo}
+                  alt="NCBA Bank"
+                  className="relative h-16 w-auto object-contain"
+                  style={{
+                    filter: "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+                  }}
+                />
+              </div>
+              <FiLock className="text-white text-xl" />
             </div>
-            <h1 className="text-center text-lg font-bold text-white">Secure Access Portal</h1>
-            <p className="text-center text-blue-100 text-xs mt-1">Sign in to your account to continue</p>
+            <h1 className="text-center text-sm font-bold text-white mt-1">Secure Access Portal</h1>
+            <p className="text-center text-blue-100 text-xs mt-0.5">Sign in to your account to continue</p>
           </div>
 
           {/* Content */}
-          <div className="px-6 py-5">
+          <div className="px-4 py-3">
             {/* Login Form */}
-            <form onSubmit={handleLoginSubmit} className="space-y-3">
+            <form onSubmit={handleLoginSubmit} className="space-y-2">
               {/* EMAIL */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800">Email Address</label>
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-gray-800">Email Address</label>
                 <div className="relative">
-                  <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                   <input
                     type="email"
                     placeholder="your@email.com"
-                    className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition"
+                    className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 focus:outline-none transition"
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     required
                   />
@@ -247,14 +248,14 @@ const LoginPage = () => {
               </div>
 
               {/* PASSWORD */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800">Password</label>
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-gray-800">Password</label>
                 <div className="relative">
-                  <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="w-full pl-12 pr-12 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition"
+                    className="w-full pl-9 pr-9 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 focus:outline-none transition"
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     required
                   />
@@ -262,17 +263,17 @@ const LoginPage = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                   >
-                    {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
+                    {showPassword ? <FiEyeOff className="text-sm" /> : <FiEye className="text-sm" />}
                   </button>
                 </div>
               </div>
 
               {/* Remember & Forgot */}
-              <div className="flex items-center justify-between text-sm pt-1">
+              <div className="flex items-center justify-between text-xs pt-1">
                 <label className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-gray-800 transition">
-                  <input type="checkbox" className="rounded w-4 h-4 cursor-pointer" />
+                  <input type="checkbox" className="rounded w-3 h-3 cursor-pointer" />
                   <span>Remember me</span>
                 </label>
                 <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold transition">
@@ -284,7 +285,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoginLoading}
-                className={`w-full py-3 mt-6 text-white font-bold rounded-lg transition duration-300 flex items-center justify-center gap-2 ${
+                className={`w-full py-2 mt-3 text-white font-bold rounded-lg transition duration-300 flex items-center justify-center gap-2 text-xs ${
                   isLoginLoading
                     ? "bg-blue-400 cursor-not-allowed"
                     : "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
@@ -292,12 +293,12 @@ const LoginPage = () => {
               >
                 {isLoginLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     Signing in...
                   </>
                 ) : (
                   <>
-                    <FiLock className="text-lg" />
+                    <FiLock className="text-sm" />
                     Sign in
                   </>
                 )}
@@ -305,40 +306,40 @@ const LoginPage = () => {
             </form>
 
             {/* SSO Login Options */}
-            <div className="mt-6">
+            <div className="mt-3">
               <SSOLogin onSuccess={handleSSOSuccess} />
             </div>
 
             {/* Divider */}
-            <div className="relative my-6">
+            <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-400">New user?</span>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-white text-gray-400">New user?</span>
               </div>
             </div>
 
             {/* Register Link */}
             <button
               onClick={() => navigate("/register")}
-              className="w-full py-3 text-blue-600 font-semibold border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition duration-300"
+              className="w-full py-2 text-blue-600 font-semibold border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition duration-300 text-xs"
             >
               Create an Account
             </button>
 
             {/* Security Note */}
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <div className="mt-3 p-2 bg-blue-50 rounded-lg border border-blue-100">
               <p className="text-xs text-gray-600 text-center flex items-center justify-center gap-2">
                 <FiLock className="text-blue-600" />
                 <span>Secured with 256-bit encryption</span>
               </p>
             </div>
+
+            {/* Footer inside card */}
+            <p className="text-center text-gray-400 text-xs mt-6 mb-0">© 2026 Document Checklist & Deferral Management System. All rights reserved.</p>
           </div>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-gray-400 text-xs mt-6 mb-4">© 2024 Document Checklist & Deferral Management System. All rights reserved.</p>
       </div>
     </div>
   );

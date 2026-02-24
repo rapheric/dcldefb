@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { message } from "antd";
 import { MailOutlined, ClockCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import { FiLock } from "react-icons/fi";
+import ncbabanklogo from "../assets/ncbabanklogo.png";
 import "./EmailMFAVerification.css";
 
 /**
@@ -130,37 +131,44 @@ const EmailMFAVerification = ({
         </div>
       )}
 
-      <div className="w-full max-w-md relative z-10 my-auto">
+      <div className="w-full max-w-md relative z-10 my-auto mb-8">
         {/* Premium Card */}
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-10">
-            <div className="flex items-center justify-center mb-4">
-              <div className="bg-blue-500 bg-opacity-30 rounded-full p-3">
-                <MailOutlined className="text-4xl text-white" />
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2">
+            <div className="flex items-center justify-center gap-3">
+              {/* NCBA Logo beside the icon */}
+              <div className="relative">
+                <img
+                  src={ncbabanklogo}
+                  alt="NCBA Bank"
+                  className="relative h-16 w-auto object-contain"
+                  style={{
+                    filter: "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+                  }}
+                />
               </div>
+              <MailOutlined className="text-white text-xl" />
             </div>
-            <h1 className="text-center text-2xl font-bold text-white mb-2">
+            <h1 className="text-center text-sm font-bold text-white mt-1">
               Verify Your Email
             </h1>
-            <p className="text-center text-blue-100 text-sm">
+            <p className="text-center text-blue-100 text-xs">
               Check your inbox for the verification code
             </p>
           </div>
 
           {/* Content */}
-          <div className="px-8 py-10">
+          <div className="px-4 py-3">
             {/* Email Display */}
-            <div className="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <p className="text-sm text-gray-600 mb-1">Code sent to:</p>
-              <p className="text-lg font-semibold text-gray-800">{formatEmail(userEmail)}</p>
+            <div className="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-100">
+              <p className="text-xs text-gray-600 mb-0.5">Code sent to:</p>
+              <p className="text-sm font-semibold text-gray-800">{formatEmail(userEmail)}</p>
             </div>
 
-
-
             {/* Code Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-800 mb-3">
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-800 mb-2">
                 Enter 6-Digit Code
               </label>
               <input
@@ -173,30 +181,30 @@ const EmailMFAVerification = ({
                   setCode(value);
                   setError("");
                 }}
-                className={`w-full px-4 py-4 border-2 rounded-lg text-center text-3xl font-bold tracking-[0.25em] outline-none transition ${
+                className={`w-full px-3 py-2 border-2 rounded-lg text-center text-2xl font-bold tracking-[0.25em] outline-none transition ${
                   error
-                    ? "border-red-500 focus:border-red-600 focus:ring-2 focus:ring-red-100 text-red-600"
-                    : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-gray-800"
+                    ? "border-red-500 focus:border-red-600 focus:ring-1 focus:ring-red-100 text-red-600"
+                    : "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 text-gray-800"
                 }`}
                 disabled={isLoading}
                 autoFocus
               />
               {error && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                  <span className="text-lg mt-0.5">⚠️</span>
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                  <span className="text-sm mt-0.5">⚠️</span>
                   <div>
-                    <p className="text-red-700 text-sm font-medium">{error}</p>
+                    <p className="text-red-700 text-xs font-medium">{error}</p>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Timer */}
-            <div className="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center gap-3">
-              <ClockCircleOutlined className="text-lg text-blue-600" />
+            <div className="mb-4 p-2 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center gap-2">
+              <ClockCircleOutlined className="text-sm text-blue-600" />
               <div>
-                <p className="text-sm text-gray-600">Code expires in</p>
-                <p className="text-xl font-bold text-gray-800 font-mono">{formatTime(timeRemaining)}</p>
+                <p className="text-xs text-gray-600">Code expires in</p>
+                <p className="text-base font-bold text-gray-800 font-mono">{formatTime(timeRemaining)}</p>
               </div>
             </div>
 
@@ -204,7 +212,7 @@ const EmailMFAVerification = ({
             <button
               onClick={handleSubmit}
               disabled={isLoading || code.length !== 6}
-              className={`w-full py-3 text-white font-bold rounded-lg transition duration-300 flex items-center justify-center gap-2 mb-4 ${
+              className={`w-full py-2 text-white font-bold rounded-lg transition duration-300 flex items-center justify-center gap-2 mb-3 text-xs ${
                 isLoading || code.length !== 6
                   ? "bg-blue-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
@@ -212,30 +220,30 @@ const EmailMFAVerification = ({
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                   Verifying...
                 </>
               ) : (
                 <>
-                  <FiLock className="text-lg" />
+                  <FiLock className="text-sm" />
                   Verify Code
                 </>
               )}
             </button>
 
             {/* Resend Section */}
-            <div className="mb-8 text-center">
-              <p className="text-sm text-gray-600 mb-3">Didn't receive the code?</p>
+            <div className="mb-4 text-center">
+              <p className="text-xs text-gray-600 mb-2">Didn't receive the code?</p>
               <button
                 onClick={handleResendCode}
                 disabled={isResending || resendCountdown > 0}
-                className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg font-semibold border-2 transition ${
+                className={`flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg font-semibold border-2 transition text-xs ${
                   resendCountdown > 0
                     ? "text-gray-400 border-gray-200 cursor-not-allowed bg-gray-50"
                     : "text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
                 }`}
               >
-                <RedoOutlined className="text-lg" />
+                <RedoOutlined className="text-sm" />
                 {resendCountdown > 0
                   ? `Resend in ${resendCountdown}s`
                   : "Resend Code"}
@@ -243,12 +251,12 @@ const EmailMFAVerification = ({
             </div>
 
             {/* Divider */}
-            <div className="relative my-8">
+            <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-400">or</span>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-white text-gray-400">or</span>
               </div>
             </div>
 
@@ -256,25 +264,23 @@ const EmailMFAVerification = ({
             <button
               onClick={onBack}
               disabled={isLoading}
-              className="w-full py-3 text-gray-700 font-semibold rounded-lg border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition duration-300"
+              className="w-full py-2 text-gray-700 font-semibold rounded-lg border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition duration-300 text-xs"
             >
               Back to Login
             </button>
 
             {/* Security Note */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <div className="mt-3 p-2 bg-blue-50 rounded-lg border border-blue-100">
               <p className="text-xs text-gray-600 text-center flex items-center justify-center gap-2">
                 <FiLock className="text-blue-600" />
                 <span>Your code expires after one use</span>
               </p>
             </div>
+
+            {/* Footer inside card */}
+            <p className="text-center text-gray-400 text-xs mt-6 mb-0">Check your spam folder if you don't see the email</p>
           </div>
         </div>
-
-        {/* Help Text */}
-        <p className="text-center text-gray-400 text-xs mt-6">
-          Check your spam folder if you don't see the email
-        </p>
       </div>
     </div>
   );

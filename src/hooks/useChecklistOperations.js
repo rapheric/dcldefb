@@ -34,27 +34,31 @@ export const useChecklistOperations = (
       }
 
       // Build document structure matching backend DocumentCategoryDto
-      const nestedDocuments = docs.reduce((acc, doc) => {
-        let categoryGroup = acc.find((c) => c.category === doc.category);
-        if (!categoryGroup) {
-          categoryGroup = { category: doc.category, docList: [] };
-          acc.push(categoryGroup);
-        }
-        categoryGroup.docList.push({
-          id: doc._id || doc.id,
-          _id: doc._id || doc.id,
-          name: doc.name,
-          status: doc.status || doc.action, // Use action as fallback
-          creatorStatus: doc.creatorStatus, // PRESERVE creator status
-          checkerStatus: doc.checkerStatus, // PRESERVE checker status
-          comment: doc.comment,
-          fileUrl: doc.fileUrl,
-          deferralNumber: doc.deferralNo,
-          deferralReason: doc.deferralReason,
-        });
+      // Filter out supporting documents - they're stored in Uploads table, not Checklist.Documents
+      const supportingDocsCount = docs.filter(d => d.category === "Supporting Documents").length;
+      const nestedDocuments = docs
+        .filter(doc => doc.category !== "Supporting Documents")
+        .reduce((acc, doc) => {
+          let categoryGroup = acc.find((c) => c.category === doc.category);
+          if (!categoryGroup) {
+            categoryGroup = { category: doc.category, docList: [] };
+            acc.push(categoryGroup);
+          }
+          categoryGroup.docList.push({
+            id: doc._id || doc.id,
+            _id: doc._id || doc.id,
+            name: doc.name,
+            status: doc.status || doc.action, // Use action as fallback
+            creatorStatus: doc.creatorStatus, // PRESERVE creator status
+            checkerStatus: doc.checkerStatus, // PRESERVE checker status
+            comment: doc.comment,
+            fileUrl: doc.fileUrl,
+            deferralNumber: doc.deferralNo,
+            deferralReason: doc.deferralReason,
+          });
 
-        return acc;
-      }, []);
+          return acc;
+        }, []);
 
       // Send document updates to backend BEFORE submitting to RM
       const payload = {
@@ -64,6 +68,9 @@ export const useChecklistOperations = (
 
       console.log("📤 RM SUBMISSION:");
       console.log("   Checklist ID:", checklistId);
+      console.log("   Total docs in state:", docs.length);
+      console.log("   Supporting docs (filtered out):", supportingDocsCount);
+      console.log("   Main docs being submitted:", nestedDocuments.reduce((sum, cat) => sum + cat.docList.length, 0));
       console.log("   Creator Comment:", creatorComment ? `"${creatorComment.substring(0, 50)}..."` : "(empty)");
       console.log("   Payload:", JSON.stringify(payload, null, 2));
 
@@ -116,8 +123,13 @@ export const useChecklistOperations = (
       // NOT as nested categories with docList!
       // Backend expects: { id, category, name, status, creatorStatus, ... }
       // NOT: { category, docList: [...] }
+      // Filter out supporting documents - they're stored in Uploads table, not Checklist.Documents
+      const supportingDocsCount = docs.filter(d => d.category === "Supporting Documents").length;
       const flatDocuments = [];
       docs.forEach((doc) => {
+        // Skip supporting documents - they're in Uploads table
+        if (doc.category === "Supporting Documents") return;
+
         flatDocuments.push({
           id: doc._id || doc.id,
           _id: doc._id || doc.id,
@@ -142,8 +154,9 @@ export const useChecklistOperations = (
 
       console.log("📤 BEFORE SUBMISSION:");
       console.log("   Payload:", JSON.stringify(payload, null, 2));
-      console.log("   Documents count:", docs.length);
-      console.log("   Flat documents count:", flatDocuments.length);
+      console.log("   Total docs in state:", docs.length);
+      console.log("   Supporting docs (filtered out):", supportingDocsCount);
+      console.log("   Main docs being submitted:", flatDocuments.length);
       console.log("   Creator Comment:", creatorComment ? `"${creatorComment.substring(0, 50)}..."` : "(empty)");
 
       const result = await updateChecklistStatus(payload).unwrap();
@@ -264,22 +277,35 @@ export const useChecklistOperations = (
       setUploadingSupportingDoc(true);
 
       const checklistId = checklist?.id || checklist?._id;
+
+      console.log("📤 UploadSupportingDoc - Checklist object:", {
+        checklistId: checklistId,
+        checklistIdDirect: checklist?.id,
+        checklistIdUnderscore: checklist?._id,
+        fullChecklist: checklist
+      });
+
       if (!checklistId) {
         throw new Error("Checklist ID missing");
       }
 
       const formData = new FormData();
-      formData.append("file", file); // Changed from "files" to "file" for consistency
+      // Backend expects: file, checklistId, documentId, documentName, category
+      formData.append("file", file);
+      formData.append("checklistId", checklistId);
+      formData.append("category", "Supporting Documents");
+      formData.append("documentName", file.name);
 
       console.log("📤 Uploading supporting document:", {
         checklistId,
+        checklistIdType: typeof checklistId,
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type
       });
 
       const response = await fetch(
-        `${API_BASE_URL}/api/uploads/checklist/${checklistId}`,
+        `${API_BASE_URL}/api/uploads`,
         {
           method: "POST",
           headers: {
@@ -309,8 +335,8 @@ export const useChecklistOperations = (
       const newSupportingDoc = {
         id: uploadedDoc.id || uploadedDoc._id,
         _id: uploadedDoc._id || uploadedDoc.id,
-        name: uploadedDoc.fileName || uploadedDoc.name || file.name,
-        fileName: uploadedDoc.fileName || uploadedDoc.name || file.name,
+        name: uploadedDoc.fileName || uploadedDoc.documentName || uploadedDoc.name || file.name,
+        fileName: uploadedDoc.fileName || uploadedDoc.documentName || uploadedDoc.name || file.name,
         fileUrl: uploadedDoc.fileUrl,
         fileSize: uploadedDoc.fileSize || file.size,
         fileType: uploadedDoc.fileType || file.type,
@@ -319,11 +345,12 @@ export const useChecklistOperations = (
         uploadedBy: uploadedDoc.uploadedBy || auth?.user?.name || 'Current User',
         uploadedById: uploadedDoc.uploadedById || auth?.user?.id,
         uploadedByRole: uploadedDoc.uploadedByRole || auth?.user?.role || 'cocreator',
-        uploadedAt: uploadedDoc.uploadedAt || new Date().toISOString(),
+        uploadedAt: uploadedDoc.createdAt || uploadedDoc.uploadedAt || new Date().toISOString(),
         uploadData: {
-          fileName: uploadedDoc.fileName || uploadedDoc.name || file.name,
+          _id: uploadedDoc.id || uploadedDoc._id,
+          fileName: uploadedDoc.fileName || uploadedDoc.documentName || file.name,
           fileUrl: uploadedDoc.fileUrl,
-          createdAt: uploadedDoc.uploadedAt || new Date().toISOString(),
+          createdAt: uploadedDoc.createdAt || uploadedDoc.uploadedAt || new Date().toISOString(),
           fileSize: uploadedDoc.fileSize || file.size,
           fileType: uploadedDoc.fileType || file.type,
           uploadedBy: uploadedDoc.uploadedBy || auth?.user?.name || 'Current User',

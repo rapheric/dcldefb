@@ -30,6 +30,7 @@ const RmLayout = ({ userId, rmId }) => {
   const [selectedKey, setSelectedKey] = useState("myqueue");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 375);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
+  const [draftToRestore, setDraftToRestore] = useState(null);
 
   // Handle responsive sidebar behavior
   useEffect(() => {
@@ -60,6 +61,19 @@ const RmLayout = ({ userId, rmId }) => {
   }, [location.pathname]);
 
   const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
+
+  // Handle restoring a draft - navigate to MyQueue and pass draft data
+  const handleRestoreDraft = (draft) => {
+    console.log("🔄 RmLayout - handleRestoreDraft called with:", draft);
+    if (draft.data?.checklistId || draft.data?.dclNo) {
+      // Set draft first, then navigate to ensure MyQueue receives the draft
+      setDraftToRestore(draft);
+      setSelectedKey("myqueue");
+
+      // Navigate to myqueue to trigger the page load
+      navigate("/rm/myqueue");
+    }
+  };
 
   const menuItems = [
     {
@@ -179,15 +193,15 @@ const RmLayout = ({ userId, rmId }) => {
             {/* Main RM Routes */}
             <Route
               path="/"
-              element={<MyQueue userId={userId || "rm_current"} />}
+              element={<MyQueue userId={userId || "rm_current"} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />}
             />
             <Route
               path="/myqueue"
-              element={<MyQueue userId={userId || "rm_current"} />}
+              element={<MyQueue userId={userId || "rm_current"} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />}
             />
             <Route
               path="/drafts"
-              element={<DraftsPage type="rm" />}
+              element={<DraftsPage type="rm" onSelectDraft={handleRestoreDraft} />}
             />
             <Route
               path="/completed"

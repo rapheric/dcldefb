@@ -1,5 +1,5 @@
 // export default AllChecklists;
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Table, Button, Divider } from "antd";
 import ChecklistsPage from "./ChecklistsPage.jsx";
 import CheckerReviewChecklistModal from "../../components/modals/CheckerReviewChecklistModalComponents/CheckerReviewChecklistModal";
@@ -9,10 +9,36 @@ const PRIMARY_BLUE = "#164679";
 const SECONDARY_PURPLE = "#7e6496";
 const LIGHT_YELLOW = "#fcd716";
 
-const AllChecklists = ({ userId }) => {
+const AllChecklists = ({ userId, draftToRestore = null, setDraftToRestore = null }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedChecklist, setSelectedChecklist] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Handle draft restoration - open modal with draft data
+  useEffect(() => {
+    if (draftToRestore && draftToRestore.data) {
+      // Reconstruct checklist object from draft data
+      const draftChecklist = {
+        id: draftToRestore.data.checklistId || draftToRestore.id,
+        _id: draftToRestore.data.checklistId || draftToRestore.id,
+        dclNo: draftToRestore.data.dclNo,
+        title: draftToRestore.data.title,
+        customerName: draftToRestore.data.customerName,
+        customerNumber: draftToRestore.data.customerNumber,
+        loanType: draftToRestore.data.loanType,
+        status: draftToRestore.data.status,
+        // Documents are in flat format, modal will handle them
+        documents: draftToRestore.data.documents || [],
+      };
+
+      setSelectedChecklist(draftChecklist);
+
+      // Clear the draft restore after opening
+      if (setDraftToRestore) {
+        setDraftToRestore(null);
+      }
+    }
+  }, [draftToRestore, setDraftToRestore]);
 
   // ✅ FIX: Use the dedicated endpoint that filters by checker ID on the backend
   const { data: myChecklists = [], refetch } =

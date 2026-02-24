@@ -11,6 +11,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../api/authSlice";
 import { useNavigate } from "react-router-dom";
 
+const PRIMARY_BLUE = "#164679";
+
 const Navbar = ({ toggleSidebar }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -182,7 +184,7 @@ const Navbar = ({ toggleSidebar }) => {
               minWidth: 240,
               fontSize: 16,
               fontWeight: 800,
-              color: "#2B1C67",
+              color: PRIMARY_BLUE,
               textTransform: "uppercase",
               letterSpacing: "0.5px",
             }}

@@ -27,42 +27,43 @@ const RegisterPage = () => {
       <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
 
-      {/* NCBA Logo Section at the top */}
-      <div className="w-full max-w-md relative z-10 mb-4 flex flex-col items-center">
-        <img
-          src={ncbabanklogo}
-          alt="NCBA Bank"
-          className="h-16 w-auto object-contain"
-          style={{ filter: "brightness(0) invert(1)" }}
-        />
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative z-10 mb-8">
         {/* Premium Card */}
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">
           {/* Header */}
-          <div className="bg-linear-to-r from-indigo-600 to-blue-600 px-6 py-5">
-            <div className="flex items-center justify-center mb-1">
-              <FiUserPlus className="text-white text-2xl" />
+          <div className="bg-linear-to-r from-indigo-600 to-blue-600 px-4 py-2">
+            <div className="flex items-center justify-center gap-3">
+              {/* NCBA Logo beside the icon */}
+              <div className="relative">
+                <img
+                  src={ncbabanklogo}
+                  alt="NCBA Bank"
+                  className="relative h-16 w-auto object-contain"
+                  style={{
+                    filter: "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+                  }}
+                />
+              </div>
+              <FiUserPlus className="text-white text-xl" />
             </div>
-            <h1 className="text-center text-lg font-bold text-white">Create Account</h1>
-            <p className="text-center text-indigo-100 text-xs mt-1">Set up your secure account in minutes</p>
+            <h1 className="text-center text-sm font-bold text-white mt-1">Create Account</h1>
+            <p className="text-center text-indigo-100 text-xs mt-0.5">Set up your secure account in minutes</p>
           </div>
 
           {/* Content */}
-          <div className="px-6 py-5">
+          <div className="px-4 py-3">
 
             {/* Registration Form */}
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleSubmit} className="space-y-2">
               {/* FULL NAME */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800">Full Name</label>
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-gray-800">Full Name</label>
                 <div className="relative">
-                  <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+                  <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                   <input
                     type="text"
                     placeholder="John Doe"
-                    className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition"
+                    className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-700 placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 focus:outline-none transition"
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     required
                   />
@@ -70,14 +71,14 @@ const RegisterPage = () => {
               </div>
 
               {/* EMAIL */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800">Email Address</label>
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-gray-800">Email Address</label>
                 <div className="relative">
-                  <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                   <input
                     type="email"
                     placeholder="your@email.com"
-                    className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition"
+                    className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-700 placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 focus:outline-none transition"
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     required
                   />
@@ -85,34 +86,34 @@ const RegisterPage = () => {
               </div>
 
               {/* PASSWORD */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800">Password</label>
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-gray-800">Password</label>
                 <div className="relative">
-                  <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="w-full pl-12 pr-12 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition"
+                    className="w-full pl-9 pr-9 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-700 placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 focus:outline-none transition"
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                   >
-                    {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
+                    {showPassword ? <FiEyeOff className="text-sm" /> : <FiEye className="text-sm" />}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-1">
                   Must contain at least 8 characters with uppercase and numbers
                 </p>
               </div>
 
               {/* Terms Checkbox */}
-              <label className="flex items-start gap-3 cursor-pointer pt-2">
-                <input type="checkbox" className="w-4 h-4 cursor-pointer mt-1 rounded" required />
-                <span className="text-sm text-gray-600">
+              <label className="flex items-start gap-2 cursor-pointer pt-1">
+                <input type="checkbox" className="w-3 h-3 cursor-pointer mt-0.5 rounded" required />
+                <span className="text-xs text-gray-600">
                   I agree to the{" "}
                   <a href="#" className="text-indigo-600 hover:text-indigo-700 font-semibold">
                     Terms & Conditions
@@ -128,7 +129,7 @@ const RegisterPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-3 mt-6 text-white font-bold rounded-lg transition duration-300 flex items-center justify-center gap-2 ${
+                className={`w-full py-2 mt-3 text-white font-bold rounded-lg transition duration-300 flex items-center justify-center gap-2 text-xs ${
                   isLoading
                     ? "bg-indigo-400 cursor-not-allowed"
                     : "bg-linear-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-lg hover:shadow-xl"
@@ -136,12 +137,12 @@ const RegisterPage = () => {
               >
                 {isLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     Creating Account...
                   </>
                 ) : (
                   <>
-                  <FiLock className="text-lg" />
+                  <FiLock className="text-sm" />
                     Create Account
                   </>
                 )}
@@ -149,43 +150,43 @@ const RegisterPage = () => {
             </form>
 
             {/* Divider */}
-            <div className="relative my-6">
+            <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-400">Already registered?</span>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-white text-gray-400">Already registered?</span>
               </div>
             </div>
 
             {/* Login Link */}
             <button
               onClick={() => navigate("/login")}
-              className="w-full py-3 text-indigo-600 font-semibold border-2 border-indigo-600 rounded-lg hover:bg-indigo-50 transition duration-300"
+              className="w-full py-2 text-indigo-600 font-semibold border-2 border-indigo-600 rounded-lg hover:bg-indigo-50 transition duration-300 text-xs"
             >
               Sign in to Your Account
             </button>
 
             {/* Security Features */}
-            <div className="mt-6 grid grid-cols-3 gap-3 text-center text-xs">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-lg mb-1">🔐</div>
-                <p className="text-gray-600 font-medium">Encrypted</p>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <div className="text-base mb-0.5">🔐</div>
+                <p className="text-gray-600 font-medium text-xs">Encrypted</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-lg mb-1">✓</div>
-                <p className="text-gray-600 font-medium">Verified</p>
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <div className="text-base mb-0.5">✓</div>
+                <p className="text-gray-600 font-medium text-xs">Verified</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-lg mb-1">🛡️</div>
-                <p className="text-gray-600 font-medium">Secure</p>
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <div className="text-base mb-0.5">🛡️</div>
+                <p className="text-gray-600 font-medium text-xs">Secure</p>
               </div>
             </div>
+
+            {/* Footer inside card */}
+            <p className="text-center text-gray-400 text-xs mt-6 mb-0">© 2026 Document Checklist & Deferral Management System. All rights reserved.</p>
           </div>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-gray-400 text-xs mt-6 mb-4">© 2024 Document Checklist & Deferral Management System. All rights reserved.</p>
       </div>
     </div>
   );

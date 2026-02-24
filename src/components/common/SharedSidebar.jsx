@@ -50,20 +50,35 @@ const SharedSidebar = ({
                     height: 60,
                     borderBottom: `1px solid ${BORDER_COLOR}`,
                     padding: "0 10px",
-                    background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%)",
+                    background: "linear-gradient(180deg, rgba(22, 70, 121, 0.3) 0%, rgba(22, 70, 121, 0.1) 50%, transparent 100%)",
                 }}
             >
-                <img
-                    src={ncbabanklogo}
-                    alt="NCBA Logo"
-                    style={{
-                        width: collapsed ? 40 : 70,
-                        height: collapsed ? 40 : 70,
-                        transition: "all 0.2s",
-                        filter: "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(255,255,255,0.3))",
-                        objectFit: "contain",
-                    }}
-                />
+                <div style={{ position: "relative" }}>
+                    {/* Gradient glow effect behind logo */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            inset: -8,
+                            background: "radial-gradient(circle, rgba(22, 70, 121, 0.4) 0%, transparent 70%)",
+                            borderRadius: "50%",
+                            filter: "blur(8px)",
+                            zIndex: 0,
+                        }}
+                    />
+                    <img
+                        src={ncbabanklogo}
+                        alt="NCBA Logo"
+                        style={{
+                            position: "relative",
+                            width: collapsed ? 40 : 70,
+                            height: collapsed ? 40 : 70,
+                            transition: "all 0.2s",
+                            filter: "brightness(0) invert(1) drop-shadow(0 2px 8px rgba(22, 70, 121, 0.5))",
+                            objectFit: "contain",
+                            zIndex: 1,
+                        }}
+                    />
+                </div>
             </div>
 
             {/* Divider line below logo */}

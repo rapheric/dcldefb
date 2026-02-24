@@ -26,6 +26,7 @@ import { getStatusColor, getStatusTagProps } from "../../utils/statusColors";
 
 import RmReviewChecklistModal from "../../components/modals/RmReviewChecklistModalComponents/RmReviewChecklistModal";
 import { useGetAllCoCreatorChecklistsQuery } from "../../api/checklistApi";
+import { useEffect } from "react";
 
 const { Text } = Typography;
 
@@ -49,10 +50,67 @@ const INFO_BLUE = "#1890ff";
 //   TBO: { color: "#666666", textColor: "white" },
 // };
 
-const MyQueue = ({ userId }) => {
+const MyQueue = ({ userId, draftToRestore = null, setDraftToRestore = null }) => {
   const [selectedChecklist, setSelectedChecklist] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
+
+  // Handle draft restoration - open modal with draft data
+  useEffect(() => {
+    if (draftToRestore && draftToRestore.data) {
+      console.log("🔄 RM MyQueue - Restoring draft:", draftToRestore);
+
+      // Reconstruct documents in nested format (categories with docList)
+      const draftDocuments = draftToRestore.data.documents || [];
+
+      // Group documents by category
+      const groupedDocs = {};
+      draftDocuments.forEach((doc) => {
+        const category = doc.category || "General Documents";
+        if (!groupedDocs[category]) {
+          groupedDocs[category] = [];
+        }
+        groupedDocs[category].push(doc);
+      });
+
+      // Convert to nested format
+      const nestedDocuments = Object.keys(groupedDocs).map((category) => ({
+        category,
+        docList: groupedDocs[category],
+      }));
+
+      console.log("📋 RM MyQueue - Reconstructed nested documents:", nestedDocuments);
+
+      // Reconstruct checklist object from draft data
+      const draftChecklist = {
+        id: draftToRestore.data.checklistId || draftToRestore.id,
+        _id: draftToRestore.data.checklistId || draftToRestore.id,
+        dclNo: draftToRestore.data.dclNo,
+        title: draftToRestore.data.title,
+        customerName: draftToRestore.data.customerName,
+        customerNumber: draftToRestore.data.customerNumber,
+        loanType: draftToRestore.data.loanType,
+        status: draftToRestore.data.status,
+        // Documents in nested format that RM modal expects
+        documents: nestedDocuments,
+        // Also include the draft metadata for debugging
+        _draftRestored: true,
+        _rmComment: draftToRestore.data.creatorComment || "",
+        _supportingDocs: draftToRestore.data.supportingDocs || [],
+      };
+
+      console.log("✅ RM MyQueue - Opening modal with restored checklist:", draftChecklist);
+      setSelectedChecklist(draftChecklist);
+      setModalOpen(true);
+
+      // Clear the draft restore after a delay to ensure modal has received the data
+      setTimeout(() => {
+        if (setDraftToRestore) {
+          setDraftToRestore(null);
+        }
+      }, 100);
+    }
+  }, [draftToRestore, setDraftToRestore]);
 
   // Fetch all checklists
   const {

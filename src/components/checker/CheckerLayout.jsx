@@ -22,6 +22,20 @@ const CheckerLayout = () => {
   const [selectedKey, setSelectedKey] = useState("myQueue");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 375);
   const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
+  const [draftToRestore, setDraftToRestore] = useState(null);
+
+  // Handle restoring a draft - navigate to MyQueue and pass draft data
+  const handleRestoreDraft = (draft) => {
+    console.log("🔄 CheckerLayout - handleRestoreDraft called with:", draft);
+    if (draft.data?.checklistId || draft.data?.dclNo) {
+      // Set draft first, then navigate to ensure AllChecklists receives the draft
+      setDraftToRestore(draft);
+      setSelectedKey("myQueue");
+
+      // Navigate to myQueue to trigger the page load
+      navigate("/cochecker/myQueue");
+    }
+  };
 
   // Handle responsive sidebar behavior
   useEffect(() => {
@@ -141,17 +155,17 @@ const CheckerLayout = () => {
           }}
         >
           <Routes>
-            <Route path="/" element={<AllChecklists userId={userId} />} />
+            <Route path="/" element={<AllChecklists userId={userId} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />} />
             <Route
               path="/myQueue"
-              element={<AllChecklists userId={userId} />}
+              element={<AllChecklists userId={userId} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />}
             />
             <Route
               path="/completed"
               element={<CompletedChecklists userId={userId} />}
             />
             <Route path="/deferrals" element={<Deferrals userId={userId} />} />
-            <Route path="/drafts" element={<DraftsPage type="checker" />} />
+            <Route path="/drafts" element={<DraftsPage type="checker" onSelectDraft={handleRestoreDraft} />} />
             <Route path="/reports" element={<Reportss />} />
           </Routes>
         </div>

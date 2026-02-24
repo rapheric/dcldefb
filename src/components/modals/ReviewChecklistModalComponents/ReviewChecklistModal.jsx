@@ -18,6 +18,7 @@ import { RightOutlined } from "@ant-design/icons";
 // import { LeftOutlined } from "@ant-design/icons";
 import DocumentTable from "./DocumentTable";
 import { customStyles } from "../../styles/Theme";
+import { useSelector } from "react-redux";
 import { useDocumentStats } from "../../../hooks/useDocumentStats";
 import ProgressStats from "./ProgressStats";
 import AddDocumentModal from "../../common/AddDocumentModal";
@@ -25,6 +26,8 @@ import { getUniqueCategories } from "../../../utils/checklistUtils";
 import { loanTypeDocuments } from "../../../pages/docTypes";
 import { useAddDocumentMutation } from "../../../api/checklistApi";
 import { message } from "antd";
+import { Upload } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 
 const ReviewChecklistModal = ({
   checklist,
@@ -33,13 +36,16 @@ const ReviewChecklistModal = ({
   readOnly = false,
   onChecklistUpdate = null, // Callback to update parent with fresh checklist data
 }) => {
+  const auth = useSelector((state) => state.auth);
+  const token = auth?.token || localStorage.getItem("token");
+
   // State
   const [docs, setDocs] = useState([]);
-  const [supportingDocs, setSupportingDocs] = useState([]);
   const [creatorComment, setCreatorComment] = useState("");
   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
   const [localChecklist, setLocalChecklist] = useState(checklist);
   const [isAddDocModalOpen, setIsAddDocModalOpen] = useState(false);
+  const [isUploadingSupportingDoc, setIsUploadingSupportingDoc] = useState(false);
 
   // Hooks
   const documentStats = useDocumentStats(docs);
@@ -97,14 +103,13 @@ const ReviewChecklistModal = ({
     isSubmittingToRM,
     isCheckerSubmitting,
     isSavingDraft,
-    uploadSupportingDoc,
     submitToRM,
     submitToCheckers,
     saveDraft,
   } = useChecklistOperations(
     checklist,
     docs,
-    supportingDocs,
+    [], // Empty array for supportingDocs since we're adding them to main docs now
     creatorComment,
     null,
     handleChecklistUpdate,
@@ -116,9 +121,6 @@ const ReviewChecklistModal = ({
       }
     }
   );
-
-  // State to trigger refetch of supporting docs
-  const [supportingDocsRefreshKey, setSupportingDocsRefreshKey] = useState(0);
 
   // Get available categories based on loan type or existing documents
   const getAvailableCategories = () => {
@@ -194,19 +196,90 @@ const ReviewChecklistModal = ({
     }
   };
 
-  // Wrapper for uploading supporting docs that updates local state and triggers refetch
+  // Wrapper for uploading supporting docs - uploads to backend and adds to main docs array
   const handleUploadSupportingDoc = async (file) => {
     try {
-      const newDoc = await uploadSupportingDoc(file);
-      if (newDoc) {
-        console.log("✅ Adding new supporting doc to state:", newDoc);
-        setSupportingDocs((prev) => [...prev, newDoc]);
-        // Trigger refetch to ensure all modals get updated data
-        setSupportingDocsRefreshKey(prev => prev + 1);
+      setIsUploadingSupportingDoc(true);
+      console.log("📤 Co-Creator Modal - Uploading supporting document:", file.name);
+
+      const checklistId = checklist?.id || checklist?._id;
+      if (!checklistId) {
+        throw new Error("Checklist ID missing");
       }
+
+      const API_BASE_URL = import.meta.env?.VITE_APP_API_URL || 'http://localhost:5000';
+
+      // Upload to backend using the document upload endpoint
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("checklistId", checklistId);
+      formData.append("documentName", file.name);
+      formData.append("category", "Supporting Documents");
+
+      const response = await fetch(`${API_BASE_URL}/api/uploads`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ Co-Creator Modal - Upload response:", result);
+
+      if (!result.success || !result.data) {
+        throw new Error("Invalid upload response");
+      }
+
+      const uploadedDoc = result.data;
+
+      // Create document object for the uploaded supporting doc
+      const newSupportingDoc = {
+        id: uploadedDoc.id || uploadedDoc._id,
+        _id: uploadedDoc._id || uploadedDoc.id,
+        name: uploadedDoc.name || uploadedDoc.fileName || file.name,
+        fileName: uploadedDoc.fileName || file.name,
+        category: "Supporting Documents",
+        status: "submitted",
+        action: "submitted",
+        creatorStatus: "submitted",
+        checkerStatus: null,
+        comment: "",
+        fileUrl: uploadedDoc.fileUrl,
+        fileSize: uploadedDoc.fileSize,
+        fileType: uploadedDoc.fileType,
+        uploadedBy: uploadedDoc.uploadedBy,
+        uploadedByRole: uploadedDoc.uploadedByRole || auth?.user?.role || "cocreator",
+        uploadedAt: uploadedDoc.createdAt || new Date().toISOString(),
+        isSupporting: true,
+        uploadData: {
+          fileName: uploadedDoc.fileName || file.name,
+          fileUrl: uploadedDoc.fileUrl,
+          createdAt: uploadedDoc.createdAt || new Date().toISOString(),
+          fileSize: uploadedDoc.fileSize,
+          fileType: uploadedDoc.fileType,
+          uploadedBy: uploadedDoc.uploadedBy || auth?.user?.name || "Co-Creator",
+        },
+      };
+
+      console.log("✅ Co-Creator Modal - Adding supporting doc to main docs array:", newSupportingDoc);
+
+      // Add to main docs array
+      setDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
+
+      message.success(`"${file.name}" uploaded successfully!`);
+
     } catch (error) {
-      console.error("❌ Error uploading supporting doc:", error);
-      throw error; // Re-throw to allow error handling in UI
+      console.error("❌ Co-Creator Modal - Error uploading supporting doc:", error);
+      message.error(error.message || "Failed to upload supporting document");
+      throw error;
+    } finally {
+      setIsUploadingSupportingDoc(false);
     }
   };
 
@@ -285,80 +358,49 @@ const ReviewChecklistModal = ({
       count: preparedDocs.length,
       firstDoc: preparedDocs[0]
     });
-    
-    setDocs(preparedDocs);
-  }, [localChecklist, checklist]);
 
-  // Fetch supporting docs from backend when modal opens or checklist changes
-  useEffect(() => {
-    const checklistId = localChecklist?.id || checklist?.id || localChecklist?._id || checklist?._id;
+    // ✅ CRITICAL FIX: Merge supporting documents into the docs array
+    // Backend returns supportingDocs separately from documents
+    const supportingDocs = sourceChecklist.supportingDocs || [];
+    console.log("📎 Supporting docs from backend:", supportingDocs.length);
 
-    if (!checklistId || !open) return;
-
-    const fetchSupportingDocs = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        console.log("📄 Fetching supporting docs for checklist:", checklistId);
-
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/uploads/checklist/${checklistId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          console.log("📄 Supporting docs API response:", result);
-
-          // Handle different response structures
-          const docsData = result.data || result.supportingDocs || result.documents || [];
-
-          if (Array.isArray(docsData) && docsData.length > 0) {
-            // Normalize and transform each document
-            const docsWithCategory = docsData.map(doc => ({
-              id: doc.id || doc._id,
-              _id: doc._id || doc.id,
-              name: doc.name || doc.fileName || 'Unknown',
-              fileName: doc.fileName || doc.name || 'Unknown',
-              fileUrl: doc.fileUrl,
-              fileSize: doc.fileSize,
-              fileType: doc.fileType,
-              category: 'Supporting Documents',
-              isSupporting: true,
-              uploadedBy: doc.uploadedBy || doc.uploadedByName || 'Unknown',
-              uploadedById: doc.uploadedById,
-              uploadedByRole: doc.uploadedByRole,
-              uploadedAt: doc.uploadedAt || doc.createdAt,
-              uploadData: {
-                fileName: doc.fileName || doc.name || 'Unknown',
-                fileUrl: doc.fileUrl,
-                createdAt: doc.uploadedAt || doc.createdAt,
-                fileSize: doc.fileSize,
-                fileType: doc.fileType,
-                uploadedBy: doc.uploadedBy || doc.uploadedByName || 'Unknown',
-              }
-            }));
-            setSupportingDocs(docsWithCategory);
-            console.log("✅ Supporting docs fetched successfully (", docsWithCategory.length, " docs)");
-          } else {
-            console.log("ℹ️ No supporting docs for checklist", checklistId);
-            setSupportingDocs([]);
-          }
-        } else {
-          console.warn(`⚠️ API returned ${response.status} for checklist ${checklistId}:`, await response.text());
-          // Don't clear existing docs on error - keep what we have
-        }
-      } catch (error) {
-        console.error("❌ Error fetching supporting docs:", error.message);
-        // Don't clear existing docs on error - supporting docs are optional
+    // Transform supporting docs to match the document structure
+    const transformedSupportingDocs = supportingDocs.map((sd, idx) => ({
+      id: sd.id || sd._id,
+      _id: sd._id || sd.id,
+      name: sd.name || sd.fileName,
+      fileName: sd.fileName || sd.name,
+      category: "Supporting Documents",
+      status: "submitted",
+      action: "submitted",
+      creatorStatus: "submitted",
+      checkerStatus: null,
+      comment: "",
+      fileUrl: sd.fileUrl || (sd.uploadData?.fileUrl),
+      fileSize: sd.fileSize,
+      fileType: sd.fileType,
+      uploadedBy: sd.uploadedBy?.name || sd.uploadedBy || "Unknown",
+      uploadedByRole: sd.uploadedByRole,
+      uploadedAt: sd.uploadedAt || sd.createdAt || sd.uploadData?.createdAt,
+      docIdx: preparedDocs.length + idx,
+      isSupporting: true,
+      uploadData: sd.uploadData || {
+        fileName: sd.fileName,
+        fileUrl: sd.fileUrl,
+        fileSize: sd.fileSize,
+        fileType: sd.fileType,
+        uploadedBy: sd.uploadedBy?.name || "Unknown",
+        uploadedByRole: sd.uploadedByRole,
+        createdAt: sd.uploadedAt || sd.createdAt
       }
-    };
+    }));
 
-    fetchSupportingDocs();
-  }, [checklist?.id, checklist?._id, localChecklist?.id, localChecklist?._id, open, supportingDocsRefreshKey]);
+    // Merge main docs with supporting docs
+    const allDocs = [...preparedDocs, ...transformedSupportingDocs];
+    console.log("📋 Total docs after merging supporting docs:", allDocs.length);
+
+    setDocs(allDocs);
+  }, [localChecklist, checklist]);
 
   return (
     <>
@@ -396,10 +438,10 @@ const ReviewChecklistModal = ({
                 }}
               >
                 View Documents
-                {docs.filter((d) => d.fileUrl).length + supportingDocs.length >
+                {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length >
                   0 && (
                   <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
-                    {docs.filter((d) => d.fileUrl).length + supportingDocs.length}
+                    {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length}
                   </Tag>
                 )}
               </Button>
@@ -439,12 +481,13 @@ const ReviewChecklistModal = ({
             isSavingDraft={isSavingDraft}
             checklist={checklist}
             docs={docs}
-            supportingDocs={supportingDocs}
+            supportingDocs={[]} // Empty array - supporting docs are now in main docs array
             creatorComment={creatorComment}
             onSaveDraft={saveDraft}
             onSubmitToRM={submitToRM}
             onSubmitToCheckers={submitToCheckers}
             onUploadSupportingDoc={handleUploadSupportingDoc}
+            uploadingSupportingDoc={isUploadingSupportingDoc}
             onClose={onClose}
             comments={comments}
           />
@@ -453,7 +496,7 @@ const ReviewChecklistModal = ({
         {/* Document Sidebar */}
         <DocumentSidebar
           documents={docs}
-          supportingDocs={supportingDocs}
+          supportingDocs={[]} // Empty array - supporting docs are now in main docs array
           open={showDocumentSidebar}
           onClose={() => setShowDocumentSidebar(false)}
           onDeleteSupportingDoc={handleDeleteSupportingDoc}

@@ -1,9 +1,7 @@
 import React from "react";
 import { Button } from "antd";
-// import { useSaveChecklistDraftMutation } from "../../api/checklistApi";
 import { message } from "antd";
-// import { PRIMARY_BLUE, ACCENT_LIME } from "../constants/colors";
-import { useSaveChecklistDraftMutation } from "../../../api/checklistApi";
+import { saveDraft as saveDraftToStorage } from "../../../utils/draftsUtils";
 import { ACCENT_LIME, PRIMARY_BLUE } from "../../../utils/colors";
 
 const SaveDraftButton = ({
@@ -13,31 +11,46 @@ const SaveDraftButton = ({
   supportingDocs,
   isActionAllowed,
 }) => {
-  const [saveDraft, { isLoading: isSavingDraft }] =
-    useSaveChecklistDraftMutation();
+  const [isSavingDraft, setIsSavingDraft] = React.useState(false);
 
   const handleSaveDraft = async () => {
     try {
+      setIsSavingDraft(true);
       message.loading({ content: "Saving draft...", key: "saveDraft" });
-      await saveDraft({
-        checklistId: checklist.id || checklist._id,
-        draftData: {
-          documents: docs.map((doc) => ({
-            _id: doc._id,
-            name: doc.name,
-            category: doc.category,
-            status: doc.status,
-            action: doc.action,
-            rmStatus: doc.rmStatus,
-            comment: doc.comment,
-            fileUrl: doc.fileUrl,
-            expiryDate: doc.expiryDate,
-            deferralNo: doc.deferralNo || doc.deferralNumber,
-          })),
-          creatorComment: rmGeneralComment,
-          supportingDocs: supportingDocs,
-        },
-      }).unwrap();
+
+      const checklistId = checklist?.id || checklist?._id;
+      if (!checklistId) {
+        throw new Error("Checklist ID missing");
+      }
+
+      // Prepare draft data for localStorage
+      const draftData = {
+        checklistId: checklistId,
+        dclNo: checklist?.dclNo,
+        title: checklist?.title,
+        customerName: checklist?.customerName,
+        customerNumber: checklist?.customerNumber,
+        loanType: checklist?.loanType,
+        status: checklist?.status,
+        documents: docs.map((doc) => ({
+          _id: doc._id || doc.id,
+          name: doc.name,
+          category: doc.category,
+          status: doc.status,
+          action: doc.action,
+          rmStatus: doc.rmStatus,
+          comment: doc.comment,
+          fileUrl: doc.fileUrl,
+          expiryDate: doc.expiryDate,
+          deferralNo: doc.deferralNo || doc.deferralNumber,
+        })),
+        creatorComment: rmGeneralComment,
+        supportingDocs: supportingDocs,
+      };
+
+      // Save to localStorage instead of API
+      saveDraftToStorage("rm", draftData, checklistId);
+
       message.success({
         content: "Draft saved successfully!",
         key: "saveDraft",
@@ -45,7 +58,12 @@ const SaveDraftButton = ({
       });
     } catch (error) {
       console.error("Save draft error:", error);
-      message.error({ content: "Failed to save draft", key: "saveDraft" });
+      message.error({
+        content: error?.message || "Failed to save draft",
+        key: "saveDraft"
+      });
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 

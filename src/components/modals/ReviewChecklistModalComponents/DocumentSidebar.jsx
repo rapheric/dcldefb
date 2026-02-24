@@ -38,36 +38,43 @@ const DocumentSidebar = ({
   };
 
   const allDocs = useMemo(() => {
-    const mainDocs = documents.filter(d => d.fileUrl || d.uploadData?.fileUrl).map(doc => ({
-      ...doc,
-      isSupporting: false,
-      uploadData: doc.uploadData || {
-        fileName: doc.name,
-        fileUrl: doc.fileUrl,
-        createdAt: doc.uploadedAt || doc.updatedAt || doc.createdAt,
-        fileSize: doc.fileSize,
-        fileType: doc.fileType,
-        uploadedBy: doc.uploadedBy || 'Current User',
-        status: 'active'
-      }
-    }));
+    // Process all documents from the main documents array
+    // Documents with "Supporting Documents" category are supporting docs
+    // Documents with fileUrl are uploaded documents
+    console.log("🔍 DocumentSidebar - Processing documents:", documents.length);
+    console.log("🔍 DocumentSidebar - Documents:", documents);
 
-    const supporting = supportingDocs.map(doc => ({
-      ...doc,
-      isSupporting: true,
-      uploadData: doc.uploadData || {
-        fileName: doc.name,
-        fileUrl: doc.fileUrl,
-        createdAt: doc.uploadedAt,
-        fileSize: doc.fileSize,
-        fileType: doc.fileType,
-        uploadedBy: doc.uploadedBy || 'Current User',
-        status: 'supporting'
-      }
-    }));
+    const processedDocs = documents
+      .filter(d => {
+        const shouldInclude = d.fileUrl || d.uploadData?.fileUrl || d.category === "Supporting Documents";
+        console.log(`   Document "${d.name || d.fileName}":`, {
+          hasFileUrl: !!d.fileUrl,
+          hasUploadDataFileUrl: !!d.uploadData?.fileUrl,
+          category: d.category,
+          included: shouldInclude
+        });
+        return shouldInclude;
+      })
+      .map(doc => {
+        const isSupporting = doc.category === "Supporting Documents" || doc.isSupporting;
+        return {
+          ...doc,
+          isSupporting,
+          uploadData: doc.uploadData || {
+            fileName: doc.name || doc.fileName,
+            fileUrl: doc.fileUrl,
+            createdAt: doc.uploadedAt || doc.updatedAt || doc.createdAt,
+            fileSize: doc.fileSize,
+            fileType: doc.fileType,
+            uploadedBy: doc.uploadedBy || 'Current User',
+            status: isSupporting ? 'supporting' : 'active'
+          }
+        };
+      });
 
-    return [...mainDocs, ...supporting];
-  }, [documents, supportingDocs]);
+    console.log("🔍 DocumentSidebar - Processed docs:", processedDocs.length);
+    return processedDocs;
+  }, [documents]);
 
   const groupedDocs = useMemo(() => {
     return allDocs.reduce((acc, doc) => {

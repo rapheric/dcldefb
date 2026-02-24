@@ -19,6 +19,7 @@ const ActionButtons = ({
   isSubmittingToRM,
   isCheckerSubmitting,
   isSavingDraft,
+  uploadingSupportingDoc = false,
   checklist,
   docs,
   supportingDocs,
@@ -142,12 +143,13 @@ const ActionButtons = ({
             onUploadSupportingDoc(file);
             return false;
           }}
-          disabled={isActionDisabled || shouldGrayOut}
+          disabled={isActionDisabled || shouldGrayOut || uploadingSupportingDoc}
           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
         >
           <Button
             icon={<UploadOutlined />}
             disabled={shouldGrayOut}
+            loading={uploadingSupportingDoc}
             style={{
               borderRadius: "6px",
               opacity: shouldGrayOut ? 0.5 : 1,
