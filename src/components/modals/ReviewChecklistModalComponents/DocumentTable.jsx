@@ -10,9 +10,9 @@ import {
   DatePicker,
   Tooltip,
 } from "antd";
-import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined } from "@ant-design/icons";
 import { getExpiryStatus, getStatusColor } from "../../../utils/documentUtils";
-import { PRIMARY_BLUE, SECONDARY_PURPLE } from "../../../utils/constants";
+import { SECONDARY_PURPLE } from "../../../utils/constants";
 import { getFullUrl } from "../../../utils/checklistUtils";
 import { formatStatusForSnakeCase } from "../../../utils/statusColors";
 
@@ -90,7 +90,7 @@ const DocumentTable = ({
     {
       title: "Action",
       dataIndex: "action",
-      width: 160,
+      width: 120,
       render: (text, record) => (
         <div style={{ display: "flex", gap: 4 }}>
           <Select
@@ -296,7 +296,7 @@ const DocumentTable = ({
     {
       title: "RM Status",
       dataIndex: "rmStatus",
-      width: 185,
+      width: 210,
       render: (status) => {
         if (!status) {
           return <Tag color="default" style={{ minWidth: 60 }}>—</Tag>;
@@ -338,10 +338,9 @@ const DocumentTable = ({
                 color: textColor,
                 borderColor: borderColor,
                 fontWeight: 500,
-                padding: "5px 12px",
+                padding: "5px 10px",
                 fontSize: 11,
                 whiteSpace: "nowrap",
-                minWidth: 140,
                 display: "inline-block",
                 textAlign: "center",
                 lineHeight: "20px",
@@ -362,7 +361,6 @@ const DocumentTable = ({
         record.fileUrl || record.uploadData?.fileUrl ? (
           <Button
             type="primary"
-            icon={<EyeOutlined />}
             onClick={() => {
               // ✅ Add null check
               if (typeof onViewFile === "function") {
@@ -379,8 +377,8 @@ const DocumentTable = ({
             }}
             size="small"
             style={{
-              backgroundColor: PRIMARY_BLUE,
-              borderColor: PRIMARY_BLUE,
+              backgroundColor: '#164679',
+              borderColor: '#164679',
               borderRadius: 6,
               fontSize: 10,
               height: 22,

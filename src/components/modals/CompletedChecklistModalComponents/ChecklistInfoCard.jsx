@@ -1,28 +1,16 @@
 // src/components/completedChecklistModal/components/ChecklistInfoCard.jsx
 import React from "react";
 import { Card, Descriptions, Tag } from "antd";
-import { PRIMARY_BLUE } from "../../../utils/checklistConstants";
 import { formatDateTime } from "../../../utils/checklistUtils";
-import { getStatusColor, getStatusTagProps } from "../../../utils/statusColors";
 // import { PRIMARY_BLUE } from "../utils/checklistConstants";
 
 const ChecklistInfoCard = ({ checklist }) => {
-  const statusColorConfig = getStatusColor(checklist.status);
-
   return (
     <Card
       className="checklist-info-card"
       size="small"
-      title={
-        <span style={{ color: PRIMARY_BLUE, fontSize: 14 }}>
-          Checklist Details
-        </span>
-      }
-      style={{
-        marginBottom: 18,
-        borderRadius: 10,
-        border: `1px solid #e0e0e0`,
-      }}
+      title="Checklist Details"
+      style={{ marginBottom: 18, marginTop: 0, borderRadius: 10, border: `1px solid #e0e0e0` }}
     >
       <Descriptions size="middle" column={{ xs: 1, sm: 2, lg: 3 }}>
         <Descriptions.Item label="DCL No">
@@ -47,16 +35,22 @@ const ChecklistInfoCard = ({ checklist }) => {
           {checklist.assignedToCoChecker?.name || "Pending"}
         </Descriptions.Item>
         <Descriptions.Item label="Status">
-          <Tag 
-            {...getStatusTagProps(checklist.status)}
+          <Tag
             style={{
-              backgroundColor: statusColorConfig.bgColor,
-              color: statusColorConfig.textColor,
-              borderColor: statusColorConfig.borderColor,
-              fontWeight: "500",
+              backgroundColor: checklist.status === "completed" || checklist.status === "approved" ? "#f6ffed" :
+                               checklist.status === "rejected" ? "#ffebe6" :
+                               checklist.status === "pending" ? "#fffbe6" : "#f0f0f0",
+              color: checklist.status === "completed" || checklist.status === "approved" ? "#52c41a" :
+                     checklist.status === "rejected" ? "#ff4d4f" :
+                     checklist.status === "pending" ? "#faad14" : "#666",
+              borderColor: checklist.status === "completed" || checklist.status === "approved" ? "#52c41a" :
+                          checklist.status === "rejected" ? "#ff4d4f" :
+                          checklist.status === "pending" ? "#faad14" : "#d9d9d9",
+              fontWeight: "600",
+              textTransform: "uppercase",
             }}
           >
-            {checklist.status}
+            {checklist.status || "N/A"}
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Completed At">

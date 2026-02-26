@@ -148,7 +148,8 @@
 
 // src/components/completedChecklistModal/CompletedChecklistModal.jsx
 import React, { useState } from "react";
-import { Button, Modal, Tag, message } from "antd";
+import { Button, Modal, message } from "antd";
+import { Tag } from "antd";
 import {
   FilePdfOutlined,
   RightOutlined,
@@ -161,7 +162,6 @@ import { PRIMARY_BLUE } from "../../../utils/checklistConstants";
 import usePDFGenerator from "../../../hooks/usePDFGenerator"; // Import the hook
 
 // Import components
-import ChecklistHeader from "./ChecklistHeader";
 import ChecklistInfoCard from "./ChecklistInfoCard";
 import DocumentSummary from "./DocumentSummary";
 import DocumentsTable from "./DocumentsTable";
@@ -294,18 +294,66 @@ const CompletedChecklistModal = ({
 
   return (
     <Modal
-      title={<ChecklistHeader title={checklist?.title || ""} />}
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ color: 'white', fontSize: '15px', fontWeight: 600 }}>
+            Completed Checklist - {checklist?.title || checklist?.dclNo || ""}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Button
+              icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
+              onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
+              size="small"
+              type="primary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 12px',
+                height: '32px',
+              }}
+            >
+              View Documents
+              {docsCount > 0 && (
+                <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
+                  {docsCount}
+                </Tag>
+              )}
+            </Button>
+            <Button
+              icon={<CloseOutlined />}
+              onClick={onClose}
+              size="small"
+              type="default"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(255, 255, 255, 0.2)',
+                borderColor: 'rgba(255, 255, 255, 0.4)',
+                color: '#fff',
+                width: '32px',
+                height: '32px',
+                padding: 0,
+              }}
+            />
+          </div>
+        </div>
+      }
       open={open}
       onCancel={onClose}
-      width={1100}
-      centered={true}
-      style={{ marginLeft: '160px' }}
-      closeIcon={<CloseOutlined style={{ color: '#fff', fontSize: 18 }} />}
+      width="calc(100vw - 455px)"
+      style={{ marginLeft: '355px' }}
+      closeIcon={null}
       styles={{
         header: {
           background: PRIMARY_BLUE,
           borderBottom: `1px solid ${PRIMARY_BLUE}`,
+          padding: '12px 24px',
         },
+        body: {
+          padding: "24px",
+        }
       }}
       footer={[
         <Button
@@ -327,24 +375,6 @@ const CompletedChecklistModal = ({
         </Button>,
       ]}
     >
-      {/* Document Sidebar Toggle */}
-      <div className="doc-sidebar-toggle" style={{ marginBottom: 16 }}>
-        <Button
-          icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
-          onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
-        >
-          View Documents
-          <Tag color="green" style={{ marginLeft: 6 }}>
-            Docs: {docsCount}
-          </Tag>
-          {supportingDocsCount > 0 && (
-            <Tag color="blue" style={{ marginLeft: 6 }}>
-              Supporting: {supportingDocsCount}
-            </Tag>
-          )}
-        </Button>
-      </div>
-
       {/* Document Sidebar */}
       <DocumentSidebarComponent
         documents={docs}

@@ -427,14 +427,15 @@ const ReviewChecklistModal = ({
                 icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
                 onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
                 size="small"
-                type="default"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  backgroundColor: '#164679',
+                  borderColor: '#164679',
                   color: '#fff',
+                  padding: '4px 12px',
+                  height: '32px',
                 }}
               >
                 View Documents
@@ -467,10 +468,9 @@ const ReviewChecklistModal = ({
         }
         open={open}
         onCancel={onClose}
-        width={1150}
-        centered={true}
-        style={{ marginLeft: '160px' }}
-        styles={{ body: { padding: "0 24px 24px" } }}
+        width="calc(100vw - 360px)"
+        style={{ marginLeft: '320px' }}
+        styles={{ body: { padding: "0 8px 24px" } }}
         footer={
           <ActionButtons
             readOnly={readOnly}
@@ -535,16 +535,18 @@ const ReviewChecklistModal = ({
             )}
 
             {/* Document Table */}
-            <DocumentTable
-              docs={docs}
-              onActionChange={handleActionChange}
-              onCommentChange={handleCommentChange}
-              onDeferralNoChange={handleDeferralNoChange}
-              onDelete={handleDelete}
-              onExpiryDateChange={handleExpiryDateChange}
-              isActionDisabled={isActionDisabled || shouldGrayOut}
-              checklistStatus={checklist?.status}
-            />
+            <div>
+              <DocumentTable
+                docs={docs}
+                onActionChange={handleActionChange}
+                onCommentChange={handleCommentChange}
+                onDeferralNoChange={handleDeferralNoChange}
+                onDelete={handleDelete}
+                onExpiryDateChange={handleExpiryDateChange}
+                isActionDisabled={isActionDisabled || shouldGrayOut}
+                checklistStatus={checklist?.status}
+              />
+            </div>
 
             {/* Add Document Button - Only show when actions are allowed */}
             {!shouldGrayOut && (

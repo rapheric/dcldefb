@@ -165,47 +165,70 @@ const CreatorCompletedChecklistModal = ({
     <>
       <Modal
         title={
-          <span
-            style={{
-              color: "white",
-              fontSize: "1.15rem",
-              fontWeight: 700,
-              letterSpacing: "0.5px",
-            }}
-          >
-            Completed Checklist - {checklist?.title || ""}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
+              {`Completed Checklist  ${checklist?.title || ""}`}
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Button
+                icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
+                onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
+                size="small"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  backgroundColor: '#164679',
+                  borderColor: '#164679',
+                  color: '#fff',
+                  padding: '4px 12px',
+                  height: '32px',
+                }}
+              >
+                View Documents
+                {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length >
+                  0 && (
+                  <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
+                    {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length}
+                  </Tag>
+                )}
+                {supportingDocs.length > 0 && (
+                  <Tag color="blue" style={{ marginLeft: 6, marginBottom: 0 }}>
+                    Supporting: {supportingDocs.length}
+                  </Tag>
+                )}
+              </Button>
+              <Button
+                icon={<CloseOutlined />}
+                onClick={onClose}
+                size="small"
+                type="default"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  color: '#fff',
+                  width: '32px',
+                  height: '32px',
+                  padding: 0,
+                }}
+              />
+            </div>
+          </div>
         }
         open={open}
         onCancel={onClose}
-        width={1100}
+        width="calc(100vw - 360px)"
         centered={true}
-        style={{ marginLeft: '160px' }}
-        closeIcon={<CloseOutlined style={{ color: '#fff', fontSize: 18 }} />}
+        style={{ marginLeft: '320px' }}
+        closeIcon={null}
         footer={renderFooter()}
         styles={modalStyles}
       >
         {checklist ? (
           <>
-            {/* Document Sidebar Toggle */}
-            <div className="doc-sidebar-toggle" style={{ marginBottom: 16 }}>
-              <Button
-                icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
-                onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
-                style={{ size: 'middle' }}
-              >
-                View Documents
-                <Tag color="green" style={{ marginLeft: 6 }}>
-                  Docs: {docs.filter((d) => d.fileUrl || d.uploadData?.fileUrl).length}
-                </Tag>
-                {supportingDocs.length > 0 && (
-                  <Tag color="blue" style={{ marginLeft: 6 }}>
-                    Supporting: {supportingDocs.length}
-                  </Tag>
-                )}
-              </Button>
-            </div>
-
             {/* Document Sidebar */}
             <DocumentSidebarComponent
               documents={Array.isArray(docs) ? docs : []}

@@ -188,13 +188,6 @@
 
 // src/utils/checklistConstants.js
 import dayjs from "dayjs";
-// REMOVE: import { Tag } from "antd"; // Remove this line
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  EyeOutlined,
-} from "@ant-design/icons";
 
 // Theme Colors
 export const PRIMARY_BLUE = "#164679";
@@ -240,7 +233,6 @@ export const getCheckerStatusDisplay = (checkerStatus, checklistStatus) => {
     return {
       color: "green",
       text: "Approved",
-      icon: "CheckCircleOutlined",
       tagColor: "#52c41a",
     };
   }
@@ -249,7 +241,6 @@ export const getCheckerStatusDisplay = (checkerStatus, checklistStatus) => {
     return {
       color: "red",
       text: "Rejected",
-      icon: "CloseCircleOutlined",
       tagColor: "#f5222d",
     };
   }
@@ -258,7 +249,6 @@ export const getCheckerStatusDisplay = (checkerStatus, checklistStatus) => {
     return {
       color: "orange",
       text: "Pending Review",
-      icon: "ClockCircleOutlined",
       tagColor: "#fa8c16",
     };
   }
@@ -269,42 +259,36 @@ export const getCheckerStatusDisplay = (checkerStatus, checklistStatus) => {
       return {
         color: "green",
         text: "Approved",
-        icon: "CheckCircleOutlined",
         tagColor: "#52c41a",
       };
     case "rejected":
       return {
         color: "red",
         text: "Rejected",
-        icon: "CloseCircleOutlined",
         tagColor: "#f5222d",
       };
     case "pending":
       return {
         color: "orange",
         text: "Pending Review",
-        icon: "ClockCircleOutlined",
         tagColor: "#fa8c16",
       };
     case "reviewed":
       return {
         color: "blue",
         text: "Reviewed",
-        icon: "EyeOutlined",
         tagColor: "#1890ff",
       };
     case "deferred":
       return {
         color: "warning",
         text: "Deferred",
-        icon: "ClockCircleOutlined",
         tagColor: "#FAAD14",
       };
     default:
       return {
         color: "default",
         text: checkerStatus,
-        icon: null,
         tagColor: "#d9d9d9",
       };
   }

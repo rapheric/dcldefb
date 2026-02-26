@@ -23,43 +23,36 @@ const Navbar = ({ toggleSidebar }) => {
   const [verificationCode, setVerificationCode] = React.useState("");
   const [isVerifying, setIsVerifying] = React.useState(false);
 
-  // Dashboard navigation items based on user role
-  const getDashboardItems = () => {
+  // Get dashboard title and path based on user role
+  const getDashboardInfo = () => {
     const role = user?.role?.toLowerCase();
-    const items = [];
 
-    // Define dashboard items with bold styling (ALL CAPS)
+    // Define dashboard info with bold styling (ALL CAPS)
     const dashboardOptions = {
-      creator: { key: "/cocreator", label: "CREATOR DASHBOARD", icon: <HomeOutlined /> },
-      rm: { key: "/rm", label: "RM DASHBOARD", icon: <HomeOutlined /> },
-      checker: { key: "/cochecker", label: "CHECKER DASHBOARD", icon: <HomeOutlined /> },
-      admin: { key: "/admin", label: "ADMIN DASHBOARD", icon: <HomeOutlined /> },
-      approver: { key: "/approver", label: "APPROVER DASHBOARD", icon: <HomeOutlined /> },
+      creator: { path: "/cocreator", label: "CREATOR DASHBOARD" },
+      rm: { path: "/rm", label: "RM DASHBOARD" },
+      checker: { path: "/cochecker", label: "CHECKER DASHBOARD" },
+      admin: { path: "/admin", label: "ADMIN DASHBOARD" },
+      approver: { path: "/approver", label: "APPROVER DASHBOARD" },
     };
 
     switch (role) {
       case "cocreator":
       case "co_creator":
       case "creator":
-        items.push(dashboardOptions.creator);
-        break;
+        return dashboardOptions.creator;
       case "rm":
-        items.push(dashboardOptions.rm);
-        break;
+        return dashboardOptions.rm;
       case "cochecker":
       case "checker":
-        items.push(dashboardOptions.checker);
-        break;
+        return dashboardOptions.checker;
       case "admin":
-        items.push(dashboardOptions.admin);
-        break;
+        return dashboardOptions.admin;
       case "approver":
-        items.push(dashboardOptions.approver);
-        break;
+        return dashboardOptions.approver;
       default:
-        break;
+        return null;
     }
-    return items;
   };
 
   const handleMenuClick = ({ key }) => {
@@ -149,7 +142,7 @@ const Navbar = ({ toggleSidebar }) => {
   // Responsive values
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 375;
   const navPadding = isMobile ? '0 8px' : '0 24px';
-  const dashboardItems = getDashboardItems();
+  const dashboardInfo = getDashboardInfo();
 
   return (
     <div
@@ -166,29 +159,28 @@ const Navbar = ({ toggleSidebar }) => {
         flexShrink: 0,
       }}
     >
-      {/* Left section: Menu toggle and Dashboard links */}
+      {/* Left section: Menu toggle and Dashboard title */}
       <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 20 }}>
         <div onClick={toggleSidebar} style={{ cursor: "pointer" }}>
           <MenuOutlined style={{ fontSize: isMobile ? 20 : 24 }} />
         </div>
 
-        {/* Dashboard Navigation Menu */}
-        {dashboardItems.length > 0 && !isMobile && (
-          <Menu
-            mode="horizontal"
-            items={dashboardItems}
-            onClick={handleMenuClick}
-            selectedKeys={[window.location.pathname]}
+        {/* Dashboard Title - Always visible */}
+        {dashboardInfo && !isMobile && (
+          <div
+            onClick={() => navigate(dashboardInfo.path)}
             style={{
-              border: "none",
-              minWidth: 240,
-              fontSize: 16,
+              cursor: "pointer",
+              fontSize: isMobile ? 14 : 16,
               fontWeight: 800,
               color: PRIMARY_BLUE,
               textTransform: "uppercase",
               letterSpacing: "0.5px",
+              whiteSpace: "nowrap",
             }}
-          />
+          >
+            {dashboardInfo.label}
+          </div>
         )}
       </div>
 

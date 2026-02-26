@@ -13,7 +13,6 @@ import {
 } from "antd";
 import {
   UploadOutlined,
-  EyeOutlined,
   DeleteOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -88,9 +87,7 @@ const DocumentTable = ({
       textColor = "#52c41a";
       borderColor = "#52c41a";
       text = lowerKey;
-      icon = lowerKey === "submitted" ? <CheckCircleOutlined /> :
-              lowerKey === "approved" ? <CheckCircleOutlined /> :
-              <EyeOutlined />;
+      icon = <CheckCircleOutlined />;
     } else if (lowerKey === "pending" || lowerKey === "pendingrm" || lowerKey === "pendingco") {
       bgColor = "#ffebe6";
       textColor = "#FF4D4F";
@@ -172,12 +169,19 @@ const DocumentTable = ({
       width: 80,
       render: (text) => (
         <Tooltip title={text || "N/A"}>
-          <Input
-            size="small"
-            value={text || "N/A"}
-            disabled
-            style={{ opacity: 0.6 }}
-          />
+          <span
+            style={{
+              fontSize: 11,
+              color: "#7e6496",
+              fontWeight: 500,
+              display: 'block',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {text || "N/A"}
+          </span>
         </Tooltip>
       ),
     },
@@ -358,7 +362,6 @@ const DocumentTable = ({
                 <>
                   <Button
                     size="small"
-                    icon={<EyeOutlined />}
                     onClick={() =>
                       window.open(
                         getFullUrl(
@@ -367,7 +370,12 @@ const DocumentTable = ({
                         "_blank",
                       )
                     }
-                    style={{ borderRadius: 6 }}
+                    style={{
+                      backgroundColor: '#164679',
+                      borderColor: '#164679',
+                      color: '#fff',
+                      borderRadius: 6,
+                    }}
                   >
                     View
                   </Button>

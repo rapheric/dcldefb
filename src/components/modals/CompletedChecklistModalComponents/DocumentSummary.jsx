@@ -45,7 +45,11 @@ const DocumentSummary = ({ documentCounts }) => {
           TBO: {documentCounts.tbo}
         </div>
       </div>
-      <Progress percent={progressPercent} status="active" />
+      <Progress
+        percent={progressPercent}
+        strokeColor="#52c41a"
+        showInfo={false}
+      />
       <div
         style={{
           textAlign: "center",

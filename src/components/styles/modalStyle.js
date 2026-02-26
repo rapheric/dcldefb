@@ -12,7 +12,7 @@ export const modalStyles = {
     borderTopRightRadius: 8,
   },
   body: {
-    padding: 24,
+    padding: "0 8px 24px",
   },
   footer: {
     padding: "16px 24px",

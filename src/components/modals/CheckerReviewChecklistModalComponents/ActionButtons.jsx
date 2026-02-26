@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Space, Tooltip, message, Upload } from "antd";
-import { CheckCircleOutlined, UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined } from "@ant-design/icons";
 import PDFGenerator from "./PDFGenerator";
 import { ACCENT_LIME, PRIMARY_BLUE } from "../../../utils/constants";
 
@@ -154,7 +154,6 @@ const ActionButtons = ({
               <Tooltip title={approveTooltipText}>
                 <Button
                   type="primary"
-                  icon={<CheckCircleOutlined />}
                   disabled={!canApproveChecklist() || effectiveReadOnly}
                   onClick={() => {
                     if (!canApproveChecklist()) {
@@ -166,11 +165,11 @@ const ActionButtons = ({
                   style={{
                     backgroundColor:
                       canApproveChecklist() && !effectiveReadOnly
-                        ? PRIMARY_BLUE
+                        ? "#52c41a"
                         : "#ccc",
                     borderColor:
                       canApproveChecklist() && !effectiveReadOnly
-                        ? PRIMARY_BLUE
+                        ? "#52c41a"
                         : "#ccc",
                     borderRadius: "6px",
                     fontWeight: 600,

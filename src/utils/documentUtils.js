@@ -53,27 +53,26 @@ export const calculateDocumentStats = (docs) => {
       d.coStatus?.toLowerCase() === "tbo",
   ).length;
 
-  // Calculate progress
+  // Calculate progress - deferred should be counted as completed
   const completedDocs = docs.filter((d) => {
     const status = (d.status || d.action || "").toLowerCase();
     return (
       status === "submitted" ||
       status === "sighted" ||
       status === "waived" ||
-      status === "tbo"
+      status === "tbo" ||
+      status === "deferred"
     );
   }).length;
 
   const incompleteDocs = docs.filter((d) => {
     const status = (d.status || d.action || "").toLowerCase();
-    return (
-      status === "pendingrm" || status === "pendingco" || status === "deferred"
-    );
+    return status === "pendingrm" || status === "pendingco";
   }).length;
 
   const totalRelevantDocs = completedDocs + incompleteDocs;
-  const progressPercent = totalRelevantDocs === 0 
-    ? 0 
+  const progressPercent = totalRelevantDocs === 0
+    ? 0
     : Math.round((completedDocs / totalRelevantDocs) * 100);
 
   return {

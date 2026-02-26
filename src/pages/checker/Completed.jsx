@@ -19,7 +19,6 @@ import {
   FileTextOutlined,
   UserOutlined,
   CustomerServiceOutlined,
-  CheckCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -101,7 +100,6 @@ const Completed = ({ userId }) => {
       fixed: "left",
       render: (text) => (
         <div style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
-          <FileTextOutlined style={{ marginRight: 6 }} />
           {text}
         </div>
       ),
@@ -120,7 +118,7 @@ const Completed = ({ userId }) => {
       width: 180,
       render: (text) => (
         <span style={{ fontWeight: 600, color: PRIMARY_BLUE }}>
-          <CustomerServiceOutlined /> {text}
+          {text}
         </span>
       ),
     },
@@ -132,13 +130,16 @@ const Completed = ({ userId }) => {
     },
     {
       title: "Checker",
-      dataIndex: "approvedBy",
-      width: 150,
-      render: (checker) => (
-        <span style={{ fontWeight: 500 }}>
-          <UserOutlined /> {checker?.name || "N/A"}
-        </span>
-      ),
+      dataIndex: "assignedToCoChecker",
+      width: 140,
+      render: (checker) => {
+        const checkerName = checker?.name || checker || "-";
+        return (
+          <span style={{ fontSize: 12, color: PRIMARY_BLUE, fontWeight: 500 }}>
+            {checkerName}
+          </span>
+        );
+      },
     },
     {
       title: "Docs",
@@ -174,21 +175,20 @@ const Completed = ({ userId }) => {
       width: 140,
       fixed: "right",
       render: (status) => {
-        const map = {
-          approved: { color: "success", text: "Approved" },
-          approved_with_revisions: {
-            color: "processing",
-            text: "Approved (Revised)",
-          },
-        };
-        const s = map[status];
+        const isApproved = status === "approved";
+        const isApprovedRevisions = status === "approved_with_revisions";
+        const displayText = isApproved ? "Approved" : isApprovedRevisions ? "Approved (Revised)" : status;
+
         return (
           <Tag
-            color={s?.color}
-            icon={<CheckCircleOutlined />}
-            style={{ fontWeight: "bold" }}
+            style={{
+              fontWeight: "bold",
+              backgroundColor: isApproved ? "#f6ffed" : isApprovedRevisions ? "#e6f7ff" : undefined,
+              borderColor: isApproved ? SUCCESS_GREEN : isApprovedRevisions ? "#1890ff" : undefined,
+              color: isApproved ? SUCCESS_GREEN : isApprovedRevisions ? "#1890ff" : undefined,
+            }}
           >
-            {s?.text || status}
+            {displayText}
           </Tag>
         );
       },

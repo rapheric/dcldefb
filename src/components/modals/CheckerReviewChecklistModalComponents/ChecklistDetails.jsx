@@ -1,12 +1,9 @@
 import React from "react";
-import { Card, Descriptions, Tag, Button } from "antd";
-import { PaperClipOutlined } from "@ant-design/icons";
+import { Card, Descriptions, Tag } from "antd";
 import { PRIMARY_BLUE } from "../../../utils/constants";
 
 const ChecklistDetails = ({
   checklist,
-  setShowDocumentSidebar,
-  uploadedDocsCount,
 }) => {
   return (
     <Card
@@ -15,47 +12,11 @@ const ChecklistDetails = ({
       title={
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
             color: PRIMARY_BLUE,
             fontSize: 14,
           }}
         >
-          <span>Checklist Details</span>
-          <Button
-            type="default"
-            icon={<PaperClipOutlined />}
-            onClick={() => setShowDocumentSidebar(true)}
-            style={{
-              fontSize: "12px",
-              fontWeight: 500,
-              borderColor: "#164679",
-              color: "#164679",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "2px 8px",
-              height: "auto",
-            }}
-          >
-            View Documents
-            {uploadedDocsCount > 0 && (
-              <span
-                style={{
-                  background: "#b5d334",
-                  color: "#1a202c",
-                  borderRadius: "10px",
-                  padding: "0 4px",
-                  fontSize: "10px",
-                  fontWeight: "bold",
-                  marginLeft: "2px",
-                }}
-              >
-                {uploadedDocsCount}
-              </span>
-            )}
-          </Button>
+          Checklist Details
         </div>
       }
       style={{

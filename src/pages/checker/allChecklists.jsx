@@ -73,11 +73,6 @@ const AllChecklists = ({ userId, draftToRestore = null, setDraftToRestore = null
       ),
     },
     {
-      title: "Title",
-      dataIndex: "title",
-      render: (text) => <span style={{ color: SECONDARY_PURPLE }}>{text}</span>,
-    },
-    {
       title: "Loan Type",
       dataIndex: "loanType",
     },

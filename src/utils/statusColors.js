@@ -106,19 +106,19 @@ export const STATUS_COLORS = {
   // AMBER - Deferred/Waived statuses (pending attention)
   deferred: {
     color: "#FAAD14",      // Amber
-    textColor: "#FFF",
+    textColor: "#FAAD14",
     bgColor: "#FFFBE6",
     borderColor: "#FAAD14",
   },
   tbo: {
     color: "#FAAD14",      // Amber (To Be Obtained)
-    textColor: "#FFF",
+    textColor: "#FAAD14",
     bgColor: "#FFFBE6",
     borderColor: "#FAAD14",
   },
   waived: {
     color: "#FAAD14",      // Amber
-    textColor: "#FFF",
+    textColor: "#FAAD14",
     bgColor: "#FFFBE6",
     borderColor: "#FAAD14",
   },
@@ -126,19 +126,19 @@ export const STATUS_COLORS = {
   // GREEN - Completed/Approved statuses (success)
   sighted: {
     color: "#52C41A",      // Green
-    textColor: "#FFF",
+    textColor: "#52C41A",
     bgColor: "#F6FFED",
     borderColor: "#52C41A",
   },
   submitted: {
     color: "#52C41A",      // Green
-    textColor: "#FFF",
+    textColor: "#52C41A",
     bgColor: "#F6FFED",
     borderColor: "#52C41A",
   },
   approved: {
     color: "#52C41A",      // Green
-    textColor: "#FFF",
+    textColor: "#52C41A",
     bgColor: "#F6FFED",
     borderColor: "#52C41A",
   },
@@ -186,13 +186,13 @@ export const STATUS_COLORS = {
   },
   completed: {
     color: "#52C41A",      // Green
-    textColor: "#FFF",
+    textColor: "#52C41A",
     bgColor: "#F6FFED",
     borderColor: "#52C41A",
   },
   sighted_and_approved: {
     color: "#52C41A",      // Green
-    textColor: "#FFF",
+    textColor: "#52C41A",
     bgColor: "#F6FFED",
     borderColor: "#52C41A",
   },

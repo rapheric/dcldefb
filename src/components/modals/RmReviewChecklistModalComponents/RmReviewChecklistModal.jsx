@@ -1045,37 +1045,69 @@ const RmReviewChecklistModal = ({
   return (
     <Modal
       title={
-        <div
-          style={{
-            backgroundColor: PRIMARY_BLUE,
-            color: "white",
-            padding: "18px 24px",
-            margin: "-24px -24px 0 -24px",
-            borderRadius: "8px 8px 0 0",
-            fontWeight: 600,
-            fontSize: "1.15rem",
-            letterSpacing: "0.5px",
-          }}
-        >
-          Review Checklist — {checklist?.customerNumber || ""}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
+            {`Review Checklist  ${checklist?.customerNumber || ""}`}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Button
+              icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
+              onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
+              size="small"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: '#164679',
+                borderColor: '#164679',
+                color: '#fff',
+                padding: '4px 12px',
+                height: '32px',
+              }}
+            >
+              View Documents
+              {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length >
+                0 && (
+                <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
+                  {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length}
+                </Tag>
+              )}
+            </Button>
+            <Button
+              icon={<CloseOutlined />}
+              onClick={onClose}
+              size="small"
+              type="default"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(255, 255, 255, 0.2)',
+                borderColor: 'rgba(255, 255, 255, 0.4)',
+                color: '#fff',
+                width: '32px',
+                height: '32px',
+                padding: 0,
+              }}
+            />
+          </div>
         </div>
       }
       open={open}
       onCancel={onClose}
-      width={1100}
+      width="calc(100vw - 360px)"
       centered={true}
-      style={{ marginLeft: '160px' }}
-      modalRender={(node) => (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center'
-        }}>
-          {node}
-        </div>
-      )}
-      closeIcon={
-        <CloseOutlined style={{ color: "white", fontSize: 18 }} />
-      }
+      style={{ marginLeft: '320px' }}
+      closeIcon={null}
+      styles={{
+        body: { padding: "0 8px 24px" },
+        header: {
+          background: '#164679',
+          padding: '18px 24px',
+          borderTopLeftRadius: 8,
+          borderTopRightRadius: 8,
+        }
+      }}
       footer={[
         <PDFGenerator
           key="download"
@@ -1142,20 +1174,6 @@ const RmReviewChecklistModal = ({
         ),
       ]}
     >
-      <div style={{ position: "absolute", top: 16, right: 60, zIndex: 10 }}>
-        <Button
-          icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
-          onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
-        >
-          View Documents
-          {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length > 0 && (
-            <Tag color="green" style={{ marginLeft: 6 }}>
-              {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length}
-            </Tag>
-          )}
-        </Button>
-      </div>
-
       {console.log("🔍 RM Modal - Rendering DocumentSidebar with docs:", docs.length, docs)}
       <DocumentSidebar
         documents={docs}
@@ -1175,17 +1193,19 @@ const RmReviewChecklistModal = ({
             Required Documents
           </h3>
 
-          <DocumentTable
-            docs={docs}
-            setDocs={setDocs}
-            checklist={checklist}
-            isActionAllowed={isActionAllowed}
-            handleFileUpload={handleFileUpload}
-            uploadingDocs={uploadingDocs}
-            getFullUrl={getFullUrl}
-            readOnly={!isActionAllowed}
-            checklistStatus={checklist?.status}
-          />
+          <div>
+            <DocumentTable
+              docs={docs}
+              setDocs={setDocs}
+              checklist={checklist}
+              isActionAllowed={isActionAllowed}
+              handleFileUpload={handleFileUpload}
+              uploadingDocs={uploadingDocs}
+              getFullUrl={getFullUrl}
+              readOnly={!isActionAllowed}
+              checklistStatus={checklist?.status}
+            />
+          </div>
 
           <CommentSection
             checklist={checklist}

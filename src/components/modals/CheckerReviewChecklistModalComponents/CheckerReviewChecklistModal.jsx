@@ -562,8 +562,6 @@ const CheckerReviewChecklistModal = ({
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
             <ChecklistDetails
               checklist={checklist}
-              setShowDocumentSidebar={setShowDocumentSidebar}
-              uploadedDocsCount={uploadedDocsCount}
             />
           </div>
 

@@ -225,6 +225,34 @@ const DocumentTable = ({
         );
       },
     },
+      {
+      title: "CO Comment",
+      dataIndex: "comment",
+      width: 110,
+      render: (text, record) => {
+        const comment = text || record.coComment;
+        const hasComment = comment && comment.trim() !== "";
+
+        return (
+          <Tooltip title={hasComment ? comment : "No comment"}>
+            <span
+              style={{
+                display: "block",
+                fontSize: "11px",
+                color: hasComment ? "#333" : "#666",
+                fontStyle: hasComment ? "normal" : "italic",
+                maxWidth: 150,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {hasComment ? comment : "-"}
+            </span>
+          </Tooltip>
+        );
+      },
+    },
     {
       title: "Deferral No",
       dataIndex: "deferralNo",
@@ -237,42 +265,7 @@ const DocumentTable = ({
         </Tooltip>
       ),
     },
-    {
-      title: "Checker Status",
-      dataIndex: "checkerStatus",
-      width: 100,
-      render: (status) => {
-        // For checker status, show Approved, Rejected, or Pending
-        const lowerStatus = status?.toLowerCase() || "pending";
-        let color = "red"; // default to pending color - RED for consistency
-        let label = "Pending";
-
-        if (lowerStatus === "approved") {
-          color = "green";
-          label = "Approved";
-        } else if (lowerStatus === "rejected") {
-          color = "red";
-          label = "Rejected";
-        }
-
-        return (
-          <Tooltip title={label}>
-            <Tag
-              color={color}
-              style={{
-                fontWeight: 500,
-                margin: 0,
-                minWidth: 60,
-                textAlign: "center",
-                padding: "0 4px",
-              }}
-            >
-              {label}
-            </Tag>
-          </Tooltip>
-        );
-      },
-    },
+   
     {
       title: "RM Status",
       dataIndex: "rmStatus",
@@ -333,30 +326,38 @@ const DocumentTable = ({
         );
       },
     },
-    {
-      title: "CO Comment",
-      dataIndex: "comment",
-      width: 110,
-      render: (text, record) => {
-        const comment = text || record.coComment;
-        const hasComment = comment && comment.trim() !== "";
+   {
+      title: "Checker Status",
+      dataIndex: "checkerStatus",
+      width: 100,
+      render: (status) => {
+        // For checker status, show Approved, Rejected, or Pending
+        const lowerStatus = status?.toLowerCase() || "pending";
+        let color = "red"; // default to pending color - RED for consistency
+        let label = "Pending";
+
+        if (lowerStatus === "approved") {
+          color = "green";
+          label = "Approved";
+        } else if (lowerStatus === "rejected") {
+          color = "red";
+          label = "Rejected";
+        }
 
         return (
-          <Tooltip title={hasComment ? comment : "No comment"}>
-            <span
+          <Tooltip title={label}>
+            <Tag
+              color={color}
               style={{
-                display: "block",
-                fontSize: "11px",
-                color: hasComment ? "#333" : "#666",
-                fontStyle: hasComment ? "normal" : "italic",
-                maxWidth: 150,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                fontWeight: 500,
+                margin: 0,
+                minWidth: 60,
+                textAlign: "center",
+                padding: "0 4px",
               }}
             >
-              {hasComment ? comment : "-"}
-            </span>
+              {label}
+            </Tag>
           </Tooltip>
         );
       },

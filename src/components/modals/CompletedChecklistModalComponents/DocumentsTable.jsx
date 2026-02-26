@@ -1,7 +1,6 @@
 // src/components/completedChecklistModal/components/DocumentsTable.jsx
 import React from "react";
 import { Table, Tag, Button, Tooltip } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 // import {
 //   getCheckerStatusDisplay,
@@ -14,7 +13,7 @@ import {
   getExpiryStatus,
   SECONDARY_PURPLE,
 } from "../../../utils/checklistConstants.js";
-import { getStatusTagProps, getStatusColor, formatStatusText } from "../../../utils/statusColors.js";
+import { formatStatusText } from "../../../utils/statusColors.js";
 
 const DocumentsTable = ({ docs, checklist }) => {
   const columns = [
@@ -57,18 +56,70 @@ const DocumentsTable = ({ docs, checklist }) => {
             ? `Deferred (${record.deferralNo})`
             : formatStatusText(status);
 
-        const colorConfig = getStatusColor(status);
+        const lowerStatus = (status || "").toLowerCase();
+
+        // Enhanced color mapping for better visibility
+        let bgColor = "#fafafa";
+        let textColor = "#000";
+        let borderColor = "#d9d9d9";
+
+        switch (lowerStatus) {
+          case "submitted":
+          case "approved":
+            bgColor = "#f6ffed";
+            textColor = "#52c41a";
+            borderColor = "#52c41a";
+            break;
+          case "sighted":
+            bgColor = "#f6ffed";
+            textColor = "#52c41a";
+            borderColor = "#52c41a";
+            break;
+          case "pending":
+          case "pendingrm":
+          case "pendingco":
+            bgColor = "#ffebe6";
+            textColor = "#FF4D4F";
+            borderColor = "#FF4D4F";
+            break;
+          case "deferred":
+            bgColor = "#fffbe6";
+            textColor = "#FAAD14";
+            borderColor = "#FAAD14";
+            break;
+          case "waived":
+            bgColor = "#fffbe6";
+            textColor = "#FAAD14";
+            borderColor = "#FAAD14";
+            break;
+          case "tbo":
+            bgColor = "#fffbe6";
+            textColor = "#FAAD14";
+            borderColor = "#FAAD14";
+            break;
+          case "rejected":
+            bgColor = "#FFF";
+            textColor = "#FF4D4F";
+            borderColor = "#FF4D4F";
+            break;
+          default:
+            bgColor = "#fafafa";
+            textColor = "#8c8c8c";
+            borderColor = "#d9d9d9";
+        }
 
         return (
           <Tooltip title={statusLabel}>
             <Tag
-              className="status-tag"
-              {...getStatusTagProps(status)}
               style={{
-                backgroundColor: colorConfig.bgColor,
-                color: colorConfig.textColor,
-                borderColor: colorConfig.borderColor,
-                fontWeight: "500",
+                backgroundColor: bgColor,
+                color: textColor,
+                borderColor: borderColor,
+                fontWeight: 600,
+                fontSize: "11px",
+                padding: "0 6px",
+                lineHeight: "20px",
+                borderRadius: "4px",
               }}
             >
               {statusLabel}
@@ -106,16 +157,47 @@ const DocumentsTable = ({ docs, checklist }) => {
           checklistStatus,
         );
 
+        // Enhanced color mapping for checker status
+        const lowerStatus = (displayStatus || "").toLowerCase();
+        let bgColor = "#fafafa";
+        let textColor = "#000";
+        let borderColor = "#d9d9d9";
+
+        switch (lowerStatus) {
+          case "approved":
+          case "completed":
+            bgColor = "#f6ffed";
+            textColor = "#52c41a";
+            borderColor = "#52c41a";
+            break;
+          case "rejected":
+            bgColor = "#ffebe6";
+            textColor = "#FF4D4F";
+            borderColor = "#FF4D4F";
+            break;
+          case "pending":
+            bgColor = "#fffbe6";
+            textColor = "#FAAD14";
+            borderColor = "#FAAD14";
+            break;
+          default:
+            bgColor = "#fafafa";
+            textColor = "#8c8c8c";
+            borderColor = "#d9d9d9";
+        }
+
         return (
           <Tooltip title={statusDisplay.text}>
             <Tag
-              color={statusDisplay.color}
               style={{
-                fontWeight: "bold",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                color: statusDisplay.color === "green" ? "#52c41a" : statusDisplay.color === "red" ? "#f5222d" : "inherit",
+                backgroundColor: bgColor,
+                color: textColor,
+                borderColor: borderColor,
+                fontWeight: 600,
+                fontSize: "11px",
+                padding: "0 6px",
+                lineHeight: "20px",
+                borderRadius: "4px",
               }}
             >
               {statusDisplay.text}
@@ -186,14 +268,18 @@ const DocumentsTable = ({ docs, checklist }) => {
           <Tooltip title="View document">
             <Button
               size="small"
-              icon={<EyeOutlined />}
               onClick={() =>
                 window.open(
                   getFullUrlUtil(record.fileUrl || record.uploadData?.fileUrl),
                   "_blank",
                 )
               }
-              style={{ borderRadius: 6 }}
+              style={{
+                backgroundColor: '#164679',
+                borderColor: '#164679',
+                color: '#fff',
+                borderRadius: 6,
+              }}
             >
               View
             </Button>

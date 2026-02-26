@@ -1,18 +1,11 @@
-import React from "react";
 import { Table, Tag, Button, Tooltip } from "antd";
-import {
-  EyeOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-} from "@ant-design/icons";
-import { COLORS, STATUS_DISPLAY, TABLE_CONFIG } from "./constants";
+import { COLORS, TABLE_CONFIG } from "./constants";
 import {
   getCheckerStatusDisplay,
   getExpiryStatus,
 } from "../../../utils/checklistConstants";
 import { formatDate } from "../../../utils/checklistUtils";
-import { getStatusTagProps, getStatusColor, formatStatusText } from "../../../utils/statusColors";
+import { formatStatusText } from "../../../utils/statusColors";
 import { tableStyles } from "../../styles/componentStyle";
 
 const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
@@ -57,21 +50,6 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
     );
   }
 
-  const getStatusIcon = (iconName) => {
-    switch (iconName) {
-      case "CheckCircleOutlined":
-        return <CheckCircleOutlined />;
-      case "CloseCircleOutlined":
-        return <CloseCircleOutlined />;
-      case "ClockCircleOutlined":
-        return <ClockCircleOutlined />;
-      case "EyeOutlined":
-        return <EyeOutlined />;
-      default:
-        return null;
-    }
-  };
-
   // FIX: Use TABLE_CONFIG.COLUMNS instead of TABLE_COLUMNS
   const columns = TABLE_CONFIG.COLUMNS.map((col) => {
     if (col.key === "category") {
@@ -84,6 +62,10 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
                 fontSize: 11,
                 color: COLORS.SECONDARY_PURPLE,
                 fontWeight: 500,
+                display: 'block',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
               {text || "N/A"}
@@ -102,18 +84,70 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
               ? `Deferred (${record.deferralNo})`
               : formatStatusText(status || "Pending");
 
-          const colorConfig = getStatusColor(status);
+          const lowerStatus = (status || "").toLowerCase();
+
+          // Enhanced color mapping for better visibility
+          let bgColor = "#fafafa";
+          let textColor = "#000";
+          let borderColor = "#d9d9d9";
+
+          switch (lowerStatus) {
+            case "submitted":
+            case "approved":
+              bgColor = "#f6ffed";
+              textColor = "#52c41a";
+              borderColor = "#52c41a";
+              break;
+            case "sighted":
+              bgColor = "#f6ffed";
+              textColor = "#52c41a";
+              borderColor = "#52c41a";
+              break;
+            case "pending":
+            case "pendingrm":
+            case "pendingco":
+              bgColor = "#ffebe6";
+              textColor = "#FF4D4F";
+              borderColor = "#FF4D4F";
+              break;
+            case "deferred":
+              bgColor = "#fffbe6";
+              textColor = "#FAAD14";
+              borderColor = "#FAAD14";
+              break;
+            case "waived":
+              bgColor = "#fffbe6";
+              textColor = "#FAAD14";
+              borderColor = "#FAAD14";
+              break;
+            case "tbo":
+              bgColor = "#fffbe6";
+              textColor = "#FAAD14";
+              borderColor = "#FAAD14";
+              break;
+            case "rejected":
+              bgColor = "#FFF";
+              textColor = "#FF4D4F";
+              borderColor = "#FF4D4F";
+              break;
+            default:
+              bgColor = "#fafafa";
+              textColor = "#8c8c8c";
+              borderColor = "#d9d9d9";
+          }
 
           return (
             <Tooltip title={statusLabel}>
               <Tag
-                className="status-tag"
-                {...getStatusTagProps(status)}
                 style={{
-                  backgroundColor: colorConfig.bgColor,
-                  color: colorConfig.textColor,
-                  borderColor: colorConfig.borderColor,
-                  fontWeight: "500",
+                  backgroundColor: bgColor,
+                  color: textColor,
+                  borderColor: borderColor,
+                  fontWeight: 600,
+                  fontSize: "11px",
+                  padding: "0 6px",
+                  lineHeight: "20px",
+                  borderRadius: "4px",
                 }}
               >
                 {statusLabel}
@@ -247,9 +281,13 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
             <Tooltip title="View document">
               <Button
                 size="small"
-                icon={<EyeOutlined />}
                 onClick={() => window.open(getFullUrlUtil(url), "_blank")}
-                style={{ borderRadius: 6 }}
+                style={{
+                  backgroundColor: '#164679',
+                  borderColor: '#164679',
+                  color: '#fff',
+                  borderRadius: 6,
+                }}
               >
                 View
               </Button>

@@ -11,8 +11,6 @@ const CommentSection = ({
 }) => {
   return (
     <>
-      <CommentHistory comments={comments} isLoading={commentsLoading} />
-
       <div className="comment-section">
         <label
           htmlFor="checkerComment"
@@ -30,6 +28,8 @@ const CommentSection = ({
           className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent resize-none"
         />
       </div>
+
+      <CommentHistory comments={comments} isLoading={commentsLoading} />
     </>
   );
 };
