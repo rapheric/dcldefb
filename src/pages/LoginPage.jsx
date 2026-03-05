@@ -1,6 +1,10 @@
 // export default LoginPage;
 import React, { useState } from "react";
-import { useLoginMutation, useVerifyEmailMFAMutation, useResendMFACodeMutation } from "../api/authApi";
+import {
+  useLoginMutation,
+  useVerifyEmailMFAMutation,
+  useResendMFACodeMutation,
+} from "../api/authApi";
 import { useDispatch } from "react-redux";
 import { setCredentials, setMFASessionToken } from "../api/authSlice";
 import { useNavigate } from "react-router-dom";
@@ -18,8 +22,10 @@ const LoginPage = () => {
   const [mfaSessionToken, setMFASessionTokenLocal] = useState("");
   const [devTestCode, setDevTestCode] = useState("");
   const [login, { isLoading: isLoginLoading }] = useLoginMutation();
-  const [verifyEmailMFA, { isLoading: isVerifyingEmailMFA }] = useVerifyEmailMFAMutation();
-  const [resendMFACode, { isLoading: isResending }] = useResendMFACodeMutation();
+  const [verifyEmailMFA, { isLoading: isVerifyingEmailMFA }] =
+    useVerifyEmailMFAMutation();
+  const [resendMFACode, { isLoading: isResending }] =
+    useResendMFACodeMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -57,7 +63,7 @@ const LoginPage = () => {
         console.log("📤 MFA Method:", mfaMethod);
         console.log("🧪 Test Code:", testCode);
         console.log("⏳ Switching to MFA verification step...");
-        
+
         setMFASessionTokenLocal(sessionToken);
         setMFAMethod(mfaMethod || "EMAIL");
         setDevTestCode(testCode || "");
@@ -78,7 +84,7 @@ const LoginPage = () => {
   };
 
   const handleEmailMFAVerify = async (data) => {
-    try { 
+    try {
       const res = await verifyEmailMFA({
         sessionToken: data.sessionToken,
         code: data.code,
@@ -194,14 +200,14 @@ const LoginPage = () => {
       {/* Left Side - Enterprise Bank Image with Large Logo */}
       <div className="hidden lg:block lg:w-1/2 relative bg-[#0A1929]">
         {/* Premium banking image */}
-        <img 
-          src="https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+        <img
+          src="https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
           alt="Modern bank corporate office with glass architecture"
           className="absolute inset-0 w-full h-full object-cover"
         />
         {/* Darker overlay for better logo visibility */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A1929]/80 via-[#0A1929]/60 to-[#0A1929]/90"></div>
-        
+
         {/* Large NCBA Logo on side image */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
@@ -210,26 +216,23 @@ const LoginPage = () => {
               alt="NCBA Bank"
               className="w-80 h-auto object-contain mx-auto"
               style={{
-                filter: "brightness(0) invert(1) drop-shadow(0 10px 20px rgba(0,0,0,0.4))"
+                filter:
+                  "brightness(0) invert(1) drop-shadow(0 10px 20px rgba(0,0,0,0.4))",
               }}
             />
-            <h2 className="text-white text-4xl font-bold mt-8 tracking-wide">NCBA BANK</h2>
-            <p className="text-white/80 text-xl mt-3">DOCUMENT CHECKLIST AND DEFERRAL MANAGEMENT SYSTEM</p>
+            <h2 className="text-white text-4xl font-bold mt-8 tracking-wide">
+              NCBA BANK
+            </h2>
+            <p className="text-white/80 text-xl mt-3">
+              DOCUMENT CHECKLIST AND DEFERRAL MANAGEMENT SYSTEM
+            </p>
           </div>
         </div>
-        
-        {/* Text overlay at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
-          <div className="flex items-center gap-6 justify-center">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm text-white/80">256-bit Encryption</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span className="text-sm text-white/80">ISO 27001 Certified</span>
-            </div>
-          </div>
+
+        <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#0A1929]/90 to-transparent py-4">
+          <p className="text-center text-white text-sm">
+            © 2026 NCBA Bank. All rights reserved.
+          </p>
         </div>
       </div>
 
@@ -251,7 +254,7 @@ const LoginPage = () => {
             <h2 className="text-[#0A1929] text-xl md:text-xl font-semibold leading-tight mb-1">
               DCL & Deferral Management System
             </h2>
-           
+
             {/* Login Form - completely borderless */}
             <form onSubmit={handleLoginSubmit} className="space-y-6 mt-6">
               {/* Email - darker text */}
@@ -266,7 +269,9 @@ const LoginPage = () => {
                     value={form.email}
                     placeholder="your@email.com"
                     className="w-full pl-12 pr-4 py-3 bg-transparent border-b-2 border-[#1E3A6F]/20 text-[#0A1929] placeholder-[#4A6FA5]/60 text-base focus:outline-none focus:ring-0 focus:border-[#0A1929] transition-colors"
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -283,7 +288,9 @@ const LoginPage = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     className="w-full pl-12 pr-12 py-3 bg-transparent border-b-2 border-[#1E3A6F]/20 text-[#0A1929] placeholder-[#4A6FA5]/60 text-base focus:outline-none focus:ring-0 focus:border-[#0A1929] transition-colors"
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, password: e.target.value })
+                    }
                     required
                   />
                   <button
@@ -291,7 +298,11 @@ const LoginPage = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1E3A6F] hover:text-[#0A1929] transition"
                   >
-                    {showPassword ? <FiEyeOff className="text-xl" /> : <FiEye className="text-xl" />}
+                    {showPassword ? (
+                      <FiEyeOff className="text-xl" />
+                    ) : (
+                      <FiEye className="text-xl" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -299,14 +310,16 @@ const LoginPage = () => {
               {/* Remember me & Forgot password - darker */}
               <div className="flex items-center justify-between text-xs md:text-base pt-1">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="w-4 h-4 rounded border-2 border-[#1E3A6F] text-[#0A1929] focus:ring-0 cursor-pointer"
                   />
-                  <span className="text-[#0A1929] font-medium">Remember me</span>
+                  <span className="text-[#0A1929] font-medium">
+                    Remember me
+                  </span>
                 </label>
-                <a 
-                  href="#" 
+                <a
+                  href="#"
                   className="text-[#0A1929] font-semibold hover:text-[#0A2647] transition"
                 >
                   Forgot Password?

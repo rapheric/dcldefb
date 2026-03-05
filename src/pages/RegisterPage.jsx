@@ -26,14 +26,14 @@ const RegisterPage = () => {
       {/* Left Side - Enterprise Bank Image with Large Logo */}
       <div className="hidden lg:block lg:w-1/2 relative bg-[#0A1929]">
         {/* Premium banking image */}
-        <img 
-          src="https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+        <img
+          src="https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
           alt="Modern bank corporate office with glass architecture"
           className="absolute inset-0 w-full h-full object-cover"
         />
         {/* Darker overlay for better logo visibility */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A1929]/80 via-[#0A1929]/60 to-[#0A1929]/90"></div>
-        
+
         {/* Large NCBA Logo on side image */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
@@ -42,26 +42,22 @@ const RegisterPage = () => {
               alt="NCBA Bank"
               className="w-80 h-auto object-contain mx-auto"
               style={{
-                filter: "brightness(0) invert(1) drop-shadow(0 10px 20px rgba(0,0,0,0.4))"
+                filter:
+                  "brightness(0) invert(1) drop-shadow(0 10px 20px rgba(0,0,0,0.4))",
               }}
             />
-            <h2 className="text-white text-4xl font-bold mt-16 tracking-wide">NCBA BANK</h2>
-            <p className="text-white/80 text-xl mt-16">DOCUMENT CHECKLIST AND DEFERRAL MANAGEMENT SYSTEM</p>
+            <h2 className="text-white text-4xl font-bold mt-16 tracking-wide">
+              NCBA BANK
+            </h2>
+            <p className="text-white/80 text-2xl mt-16">
+              DOCUMENT CHECKLIST AND DEFERRAL MANAGEMENT SYSTEM
+            </p>
           </div>
         </div>
-        
-        {/* Text overlay at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
-          <div className="flex items-center gap-6 justify-center">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm text-white/80">256-bit Encryption</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span className="text-sm text-white/80">ISO 27001 Certified</span>
-            </div>
-          </div>
+        <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#0A1929]/90 to-transparent py-4">
+          <p className="text-center text-white text-sm">
+            © 2026 NCBA Bank. All rights reserved.
+          </p>
         </div>
       </div>
 
@@ -70,7 +66,7 @@ const RegisterPage = () => {
         <div className="w-full max-w-[480px]">
           {/* No card - floating on background */}
           <div className="relative">
-              <div className="mb-2">
+            <div className="mb-2">
               <img
                 src={ncbabanklogo}
                 alt="NCBA Bank"
@@ -81,7 +77,7 @@ const RegisterPage = () => {
             {/* Welcome message - darker text */}
             <h2 className="text-[#0A1929] text-xl md:text-xl font-semibold leading-tight mb-1">
               Create Account
-            </h2>   
+            </h2>
 
             {/* Registration Form - completely borderless */}
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -115,7 +111,9 @@ const RegisterPage = () => {
                     value={form.email}
                     placeholder="your@email.com"
                     className="w-full pl-12 pr-4 py-3 bg-transparent border-b-2 border-[#1E3A6F]/20 text-[#0A1929] placeholder-[#4A6FA5]/60 text-base focus:outline-none focus:border-[#0A1929] transition-colors"
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -133,7 +131,9 @@ const RegisterPage = () => {
                     value={form.password}
                     placeholder="••••••••"
                     className="w-full pl-12 pr-12 py-3 bg-transparent border-b-2 border-[#1E3A6F]/20 text-[#0A1929] placeholder-[#4A6FA5]/60 text-base focus:outline-none focus:border-[#0A1929] transition-colors"
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, password: e.target.value })
+                    }
                     required
                   />
                   <button
@@ -141,7 +141,11 @@ const RegisterPage = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1E3A6F] hover:text-[#0A1929] transition"
                   >
-                    {showPassword ? <FiEyeOff className="text-xl" /> : <FiEye className="text-xl" />}
+                    {showPassword ? (
+                      <FiEyeOff className="text-xl" />
+                    ) : (
+                      <FiEye className="text-xl" />
+                    )}
                   </button>
                 </div>
                 <p className="text-[#1E3A6F] text-xs md:text-sm mt-1">
@@ -151,18 +155,24 @@ const RegisterPage = () => {
 
               {/* Terms Checkbox */}
               <label className="flex items-start gap-2 cursor-pointer pt-1">
-                <input 
-                  type="checkbox" 
-                  className="w-4 h-4 mt-1 rounded border-2 border-[#1E3A6F] text-[#0A1929] focus:ring-0 cursor-pointer" 
-                  required 
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 mt-1 rounded border-2 border-[#1E3A6F] text-[#0A1929] focus:ring-0 cursor-pointer"
+                  required
                 />
                 <span className="text-[#0A1929] text-xs md:text-sm">
                   I agree to the{" "}
-                  <a href="#" className="text-[#0A1929] font-semibold hover:text-[#0A2647] transition underline underline-offset-2">
+                  <a
+                    href="#"
+                    className="text-[#0A1929] font-semibold hover:text-[#0A2647] transition underline underline-offset-2"
+                  >
                     Terms & Conditions
-                  </a>
-                  {" "}and{" "}
-                  <a href="#" className="text-[#0A1929] font-semibold hover:text-[#0A2647] transition underline underline-offset-2">
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="#"
+                    className="text-[#0A1929] font-semibold hover:text-[#0A2647] transition underline underline-offset-2"
+                  >
                     Privacy Policy
                   </a>
                 </span>
@@ -195,7 +205,9 @@ const RegisterPage = () => {
                 <div className="w-full border-t border-[#1E3A6F]/20"></div>
               </div>
               <div className="relative flex justify-center text-sm md:text-base">
-                <span className="px-4 bg-[#F9FBFE] text-[#0A1929]">Already registered?</span>
+                <span className="px-4 bg-[#F9FBFE] text-[#0A1929]">
+                  Already registered?
+                </span>
               </div>
             </div>
 
