@@ -838,9 +838,18 @@ const CoChecklistPage = ({ userId, draftToRestore = null, setDraftToRestore = nu
 
   return (
     <div style={{ padding: typeof window !== 'undefined' && window.innerWidth <= 375 ? "8px 2px" : "16px", boxSizing: "border-box" }} className="cochecklist-table">
-      <Button type="primary" size="small" onClick={() => setDrawerOpen(true)}>
+      {/* <Button type="primary" size="small" className="p-1.5" onClick={() => setDrawerOpen(true)}>
         Create New DCL
-      </Button>
+      </Button> */}
+
+      <Button 
+  type="primary" 
+  size="small" 
+  className="px-5 py-2.5 bg-[#0A1929] text-white font-semibold text-sm rounded-md hover:bg-[#0A2647] transition-colors duration-200 tracking-wide"
+  onClick={() => setDrawerOpen(true)}
+>
+  + Create New DCL
+</Button>
 
       {drawerOpen && (
         <ChecklistsPage

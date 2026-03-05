@@ -135,7 +135,7 @@ const ChecklistsPage = ({ open, onClose }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
-              Create DCL Checklist
+              Create Document Checklist
             </span>
           </div>
           <Button
