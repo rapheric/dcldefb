@@ -220,9 +220,9 @@ const CreatorCompletedChecklistModal = ({
         }
         open={open}
         onCancel={onClose}
-        width="calc(100vw - 360px)"
-        centered={true}
-        style={{ marginLeft: '320px' }}
+        width={1200}
+        centered={false}
+        wrapperClassName="modal-centered-in-content"
         closeIcon={null}
         footer={renderFooter()}
         styles={modalStyles}

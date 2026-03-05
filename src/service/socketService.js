@@ -27,8 +27,13 @@ class SocketService {
         }
       });
 
-      this.socket.on("connect_error", (error) => {
-        console.error("❌ Socket connection error:", error);
+      this.socket.on("connect_error", () => {
+        // Only log on first attempt to avoid spamming console
+        if (!this._errorLogged) {
+          console.warn("⚠️ Socket server unavailable - real-time features disabled. The app will continue to work normally.");
+          console.info("💡 To enable real-time features, ensure the socket server is running on:", socketURL);
+          this._errorLogged = true;
+        }
       });
 
       this.socket.on("disconnect", (reason) => {

@@ -1,13 +1,11 @@
 // export default ReviewChecklistModal;
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Tag, Input } from "antd";
-import { FilePdfOutlined, LeftOutlined, CloseOutlined, PlusOutlined } from "@ant-design/icons";
+import { FilePdfOutlined, LeftOutlined, CloseOutlined, PlusOutlined, LockOutlined } from "@ant-design/icons";
 import ActionButtons from "./ActionButtons";
-import DocumentSidebar from "./DocumentSidebar";
+import DocumentSidebar from "../CheckerReviewChecklistModalComponents/DocumentSidebar";
 import ChecklistHeader from "./ChecklistHeader";
-import SupportingDocsSection from "./SupportingDocsSection";
 import { useDocumentHandlers } from "../../../hooks/useDocumentHandlers";
-// import { useDocumentStats } from "../../../hooks/useDocumentStats";
 import { useChecklistOperations } from "../../../hooks/useChecklistOperations";
 import { PRIMARY_BLUE } from "../../../utils/constants";
 import CommentHistory from "../../common/CommentHistory";
@@ -24,7 +22,7 @@ import ProgressStats from "./ProgressStats";
 import AddDocumentModal from "../../common/AddDocumentModal";
 import { getUniqueCategories } from "../../../utils/checklistUtils";
 import { loanTypeDocuments } from "../../../pages/docTypes";
-import { useAddDocumentMutation } from "../../../api/checklistApi";
+import { useAddDocumentMutation, useUnlockDclMutation } from "../../../api/checklistApi";
 import { message } from "antd";
 import { Upload } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
@@ -39,8 +37,16 @@ const ReviewChecklistModal = ({
   const auth = useSelector((state) => state.auth);
   const token = auth?.token || localStorage.getItem("token");
 
+  // Check if DCL is locked by someone else (early, before used in JSX)
+  const currentUserId = auth?.user?.id || auth?.user?._id;
+  const lockedByUserId = checklist?.lockedByUserId || checklist?.lockedBy?.id;
+  const lockedByUserName = checklist?.lockedBy?.name || checklist?.lockedByUserName;
+  const isLockedBySomeoneElse = lockedByUserId && lockedByUserId !== currentUserId;
+  const isLockedByMe = lockedByUserId === currentUserId;
+
   // State
   const [docs, setDocs] = useState([]);
+  const [supportingDocs, setSupportingDocs] = useState([]);
   const [creatorComment, setCreatorComment] = useState("");
   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
   const [localChecklist, setLocalChecklist] = useState(checklist);
@@ -48,8 +54,9 @@ const ReviewChecklistModal = ({
   const [isUploadingSupportingDoc, setIsUploadingSupportingDoc] = useState(false);
 
   // Hooks
-  const documentStats = useDocumentStats(docs);
-  const [addDocumentMutation, { isLoading: isAddingDocument }] = useAddDocumentMutation();
+  // const documentStats = useDocumentStats(docs);
+  const [addDocumentMutation] = useAddDocumentMutation();
+  const [unlockDcl] = useUnlockDclMutation();
 
   const { data: comments, isLoading: commentsLoading } =
     useGetChecklistCommentsQuery(checklist?.id || checklist?._id, {
@@ -79,7 +86,8 @@ const ReviewChecklistModal = ({
     "cocreatorreview",
     "co_creator_review",
   ].includes(checklistStatus);
-  const shouldGrayOut = isActionDisabled || !isCreatorReviewAllowed;
+  // Disable actions if locked by someone else
+  const shouldGrayOut = isActionDisabled || !isCreatorReviewAllowed || isLockedBySomeoneElse;
 
   const {
     handleActionChange,
@@ -87,15 +95,28 @@ const ReviewChecklistModal = ({
     handleDeferralNoChange,
     handleDelete,
     handleExpiryDateChange,
-    handleDeleteSupportingDoc,
   } = useDocumentHandlers(docs, setDocs, isActionDisabled);
 
   const handleChecklistUpdate = (updatedChecklist) => {
-    // Update local state
-    setLocalChecklist(updatedChecklist);
+    // Merge the updated checklist with existing localChecklist to preserve fields not returned by submission
+    const mergedChecklist = {
+      ...localChecklist,
+      ...checklist,
+      ...updatedChecklist,
+      // Ensure supportingDocs from backend response is preserved
+      supportingDocs: updatedChecklist?.supportingDocs || checklist?.supportingDocs || localChecklist?.supportingDocs || [],
+    };
+
+    console.log("🔄 handleChecklistUpdate called:");
+    console.log("   Updated checklist supportingDocs:", updatedChecklist?.supportingDocs?.length || 0);
+    console.log("   Merged checklist supportingDocs:", mergedChecklist.supportingDocs?.length || 0);
+
+    // Update local state with merged checklist
+    setLocalChecklist(mergedChecklist);
+
     // Call parent callback if provided
     if (onChecklistUpdate) {
-      onChecklistUpdate(updatedChecklist);
+      onChecklistUpdate(mergedChecklist);
     }
   };
 
@@ -109,7 +130,7 @@ const ReviewChecklistModal = ({
   } = useChecklistOperations(
     checklist,
     docs,
-    [], // Empty array for supportingDocs since we're adding them to main docs now
+    supportingDocs, // Pass supportingDocs state
     creatorComment,
     null,
     handleChecklistUpdate,
@@ -121,6 +142,42 @@ const ReviewChecklistModal = ({
       }
     }
   );
+
+  // Wrapper functions that unlock DCL after submission
+  const submitToRMWithUnlock = async () => {
+    const result = await submitToRM();
+    // Unlock after successful submission
+    const checklistId = checklist?.id || checklist?._id;
+    if (checklistId) {
+      try {
+        await unlockDcl(checklistId).unwrap();
+        console.log("🔓 DCL unlocked after RM submission");
+      } catch (error) {
+        console.warn("Failed to unlock DCL after RM submission:", error);
+      }
+    }
+    return result;
+  };
+
+  const submitToCheckersWithUnlock = async () => {
+    const result = await submitToCheckers();
+    // Unlock after successful submission
+    const checklistId = checklist?.id || checklist?._id;
+    if (checklistId) {
+      try {
+        await unlockDcl(checklistId).unwrap();
+        console.log("🔓 DCL unlocked after Checker submission");
+      } catch (error) {
+        console.warn("Failed to unlock DCL after Checker submission:", error);
+      }
+    }
+    return result;
+  };
+
+  // Handle closing modal - do NOT unlock (only unlocks on submit)
+  const handleClose = () => {
+    onClose();
+  };
 
   // Get available categories based on loan type or existing documents
   const getAvailableCategories = () => {
@@ -267,10 +324,10 @@ const ReviewChecklistModal = ({
         },
       };
 
-      console.log("✅ Co-Creator Modal - Adding supporting doc to main docs array:", newSupportingDoc);
+      console.log("✅ Co-Creator Modal - Adding supporting doc to supportingDocs state (NOT to docs array):", newSupportingDoc);
 
-      // Add to main docs array
-      setDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
+      // Add to supportingDocs state (separate from main docs - won't appear in DocumentTable)
+      setSupportingDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
 
       message.success(`"${file.name}" uploaded successfully!`);
 
@@ -359,47 +416,14 @@ const ReviewChecklistModal = ({
       firstDoc: preparedDocs[0]
     });
 
-    // ✅ CRITICAL FIX: Merge supporting documents into the docs array
-    // Backend returns supportingDocs separately from documents
-    const supportingDocs = sourceChecklist.supportingDocs || [];
-    console.log("📎 Supporting docs from backend:", supportingDocs.length);
+    // Set main docs WITHOUT supporting docs
+    setDocs(preparedDocs);
+    console.log("📋 Main docs (excluding supporting):", preparedDocs.length);
 
-    // Transform supporting docs to match the document structure
-    const transformedSupportingDocs = supportingDocs.map((sd, idx) => ({
-      id: sd.id || sd._id,
-      _id: sd._id || sd.id,
-      name: sd.name || sd.fileName,
-      fileName: sd.fileName || sd.name,
-      category: "Supporting Documents",
-      status: "submitted",
-      action: "submitted",
-      creatorStatus: "submitted",
-      checkerStatus: null,
-      comment: "",
-      fileUrl: sd.fileUrl || (sd.uploadData?.fileUrl),
-      fileSize: sd.fileSize,
-      fileType: sd.fileType,
-      uploadedBy: sd.uploadedBy?.name || sd.uploadedBy || "Unknown",
-      uploadedByRole: sd.uploadedByRole,
-      uploadedAt: sd.uploadedAt || sd.createdAt || sd.uploadData?.createdAt,
-      docIdx: preparedDocs.length + idx,
-      isSupporting: true,
-      uploadData: sd.uploadData || {
-        fileName: sd.fileName,
-        fileUrl: sd.fileUrl,
-        fileSize: sd.fileSize,
-        fileType: sd.fileType,
-        uploadedBy: sd.uploadedBy?.name || "Unknown",
-        uploadedByRole: sd.uploadedByRole,
-        createdAt: sd.uploadedAt || sd.createdAt
-      }
-    }));
-
-    // Merge main docs with supporting docs
-    const allDocs = [...preparedDocs, ...transformedSupportingDocs];
-    console.log("📋 Total docs after merging supporting docs:", allDocs.length);
-
-    setDocs(allDocs);
+    // Set supporting docs separately from checklist
+    const supportingDocsData = sourceChecklist.supportingDocs || [];
+    setSupportingDocs(supportingDocsData);
+    console.log("📎 Supporting docs loaded:", supportingDocsData.length);
   }, [localChecklist, checklist]);
 
   return (
@@ -419,9 +443,29 @@ const ReviewChecklistModal = ({
         closeIcon={null}
         title={
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
-              {`Review Checklist  ${checklist?.title || ""}`}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
+                {`Review Checklist  ${checklist?.title || ""}`}
+              </span>
+              {isLockedByMe && (
+                <Tag
+                  icon={<LockOutlined />}
+                  color="green"
+                  style={{ marginBottom: 0, fontWeight: 600 }}
+                >
+                  Locked by you
+                </Tag>
+              )}
+              {isLockedBySomeoneElse && (
+                <Tag
+                  icon={<LockOutlined />}
+                  color="orange"
+                  style={{ marginBottom: 0, fontWeight: 600 }}
+                >
+                  Locked by {lockedByUserName}
+                </Tag>
+              )}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Button
                 icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
@@ -448,7 +492,7 @@ const ReviewChecklistModal = ({
               </Button>
               <Button
                 icon={<CloseOutlined />}
-                onClick={onClose}
+                onClick={handleClose}
                 size="small"
                 type="default"
                 style={{
@@ -467,9 +511,10 @@ const ReviewChecklistModal = ({
           </div>
         }
         open={open}
-        onCancel={onClose}
-        width="calc(100vw - 360px)"
-        style={{ marginLeft: '320px' }}
+        onCancel={handleClose}
+        width={1200}
+        centered={false}
+        wrapperClassName="modal-centered-in-content"
         styles={{ body: { padding: "0 8px 24px" } }}
         footer={
           <ActionButtons
@@ -484,23 +529,23 @@ const ReviewChecklistModal = ({
             supportingDocs={[]} // Empty array - supporting docs are now in main docs array
             creatorComment={creatorComment}
             onSaveDraft={saveDraft}
-            onSubmitToRM={submitToRM}
-            onSubmitToCheckers={submitToCheckers}
+            onSubmitToRM={submitToRMWithUnlock}
+            onSubmitToCheckers={submitToCheckersWithUnlock}
             onUploadSupportingDoc={handleUploadSupportingDoc}
             uploadingSupportingDoc={isUploadingSupportingDoc}
-            onClose={onClose}
+            onClose={handleClose}
             comments={comments}
+            isLockedBySomeoneElse={isLockedBySomeoneElse}
+            lockedByUserName={lockedByUserName}
           />
         }
       >
-        {/* Document Sidebar */}
         <DocumentSidebar
-          documents={docs}
-          supportingDocs={[]} // Empty array - supporting docs are now in main docs array
-          open={showDocumentSidebar}
-          onClose={() => setShowDocumentSidebar(false)}
-          onDeleteSupportingDoc={handleDeleteSupportingDoc}
-        />
+        documents={docs}
+        supportingDocs={supportingDocs}
+        open={showDocumentSidebar}
+        onClose={() => setShowDocumentSidebar(false)}
+      />
 
         {checklist && (
           <div
@@ -516,7 +561,34 @@ const ReviewChecklistModal = ({
             {/* Progress Stats */}
             <ProgressStats docs={docs} />
 
-            {shouldGrayOut && !isActionDisabled && (
+            {/* Locked by someone else warning */}
+            {isLockedBySomeoneElse && (
+              <div
+                style={{
+                  background: "#fff1f0",
+                  border: "1px solid #ffccc7",
+                  borderRadius: 8,
+                  padding: "12px 16px",
+                  marginBottom: 16,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <LockOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />
+                <div>
+                  <div style={{ fontWeight: 600, color: "#cf1322", fontSize: 14, marginBottom: 4 }}>
+                    This DCL is currently being edited by {lockedByUserName}
+                  </div>
+                  <div style={{ color: "#8c8c8c", fontSize: 12 }}>
+                    You cannot make changes while someone else is working on this checklist.
+                    Please try again later or contact them if you need access.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {shouldGrayOut && !isActionDisabled && !isLockedBySomeoneElse && (
               <div
                 style={{
                   background: "#fff7e6",

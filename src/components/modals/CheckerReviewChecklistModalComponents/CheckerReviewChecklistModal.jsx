@@ -14,7 +14,6 @@ import ProgressSection from "./ProgressSection";
 import ChecklistDetails from "./ChecklistDetails";
 import DocumentSidebar from "./DocumentSidebar";
 import HeaderSection from "./HeaderSection";
-import SupportingDocsSection from "./SupportingDocsSection";
 import { calculateDocumentStats } from "../../../utils/checklistUtils";
 import { generateChecklistPDF } from "../../../utils/reportGenerator";
 import { saveDraft as saveDraftToStorage } from "../../../utils/draftsUtils";
@@ -34,6 +33,7 @@ const CheckerReviewChecklistModal = ({
     import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
   const [docs, setDocs] = useState([]);
+  const [supportingDocs, setSupportingDocs] = useState([]);
   const [checkerComment, setCheckerComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
@@ -72,11 +72,23 @@ const CheckerReviewChecklistModal = ({
     documentStats;
 
   const handleChecklistUpdate = (updatedChecklist) => {
-    // Update local state
-    setLocalChecklist(updatedChecklist);
+    // Merge the updated checklist with existing localChecklist to preserve fields not returned by submission
+    const mergedChecklist = {
+      ...localChecklist,
+      ...checklist,
+      ...updatedChecklist,
+      // Ensure supportingDocs from backend response is preserved
+      supportingDocs: updatedChecklist?.supportingDocs || checklist?.supportingDocs || localChecklist?.supportingDocs || [],
+    };
+
+    console.log("🔄 Checker handleChecklistUpdate called:");
+    console.log("   Updated checklist supportingDocs:", updatedChecklist?.supportingDocs?.length || 0);
+    console.log("   Merged checklist supportingDocs:", mergedChecklist.supportingDocs?.length || 0);
+
+    setLocalChecklist(mergedChecklist);
     // Call parent callback if provided
     if (onChecklistUpdate) {
-      onChecklistUpdate(updatedChecklist);
+      onChecklistUpdate(mergedChecklist);
     }
   };
 
@@ -139,45 +151,14 @@ const CheckerReviewChecklistModal = ({
       deferralNo: doc.deferralNo || null,
     }));
 
-    // ✅ CRITICAL FIX: Merge supporting documents into the docs array
-    // Backend returns supportingDocs separately from documents
-    const supportingDocs = checklist.supportingDocs || [];
-    console.log("📎 Checker Modal - Supporting docs from backend:", supportingDocs.length);
+    // ✅ Store supporting docs separately - NOT merged into docs array
+    // This keeps them out of the DocumentTable and visible only in SupportingDocsSection and DocumentSidebar
+    const supportingDocsData = checklist.supportingDocs || [];
+    console.log("📎 Checker Modal - Supporting docs from backend:", supportingDocsData.length);
 
-    // Transform supporting docs to match the document structure
-    const transformedSupportingDocs = supportingDocs.map((sd, idx) => ({
-      id: sd.id || sd._id,
-      _id: sd._id || sd.id,
-      key: `supporting-${sd.id || sd._id || idx}`,
-      name: sd.name || sd.fileName,
-      fileName: sd.fileName || sd.name,
-      category: "Supporting Documents",
-      status: "submitted",
-      action: "submitted",
-      approved: false,
-      checkerStatus: "pending",
-      comment: "",
-      fileUrl: sd.fileUrl || (sd.uploadData?.fileUrl),
-      uploadedBy: sd.uploadedBy?.name || sd.uploadedBy || "Unknown",
-      uploadedByRole: sd.uploadedByRole,
-      uploadedAt: sd.uploadedAt || sd.createdAt || sd.uploadData?.createdAt,
-      isSupporting: true,
-      uploadData: sd.uploadData || {
-        fileName: sd.fileName,
-        fileUrl: sd.fileUrl,
-        fileSize: sd.fileSize,
-        fileType: sd.fileType,
-        uploadedBy: sd.uploadedBy?.name || "Unknown",
-        uploadedByRole: sd.uploadedByRole,
-        createdAt: sd.uploadedAt || sd.createdAt
-      }
-    }));
-
-    // Merge main docs with supporting docs
-    const allDocs = [...processedDocs, ...transformedSupportingDocs];
-    console.log("📋 Checker Modal - Total docs after merging supporting docs:", allDocs.length);
-
-    setDocs(allDocs);
+    setSupportingDocs(supportingDocsData);
+    setDocs(processedDocs);
+    console.log("📋 Checker Modal - Main docs (excluding supporting):", processedDocs.length);
   }, [checklist, effectiveReadOnly]);
 
   const handlePdfDownload = async () => {
@@ -514,13 +495,13 @@ const CheckerReviewChecklistModal = ({
       {/* Document Sidebar - Rendered outside modal at body level */}
       <DocumentSidebar
         documents={docs}
-        supportingDocs={[]} // Empty - supporting docs are now in main docs array
+        supportingDocs={checklist?.supportingDocs || []}
         open={showDocumentSidebar}
         onClose={() => setShowDocumentSidebar(false)}
       />
 
-      <div className="fixed inset-0 z-[60] overflow-auto bg-black/40 flex items-start pt-10" style={{ paddingLeft: "300px", justifyContent: "center" }}>
-        <div className="review-checklist-modal w-[95%] max-w-7xl bg-white rounded-xl shadow-2xl overflow-hidden my-6 relative" style={{ maxWidth: "calc(100vw - 340px)" }}>
+      <div className="fixed inset-0 z-[60] overflow-auto bg-black/40 flex items-center justify-center" style={{}}>
+        <div className="review-checklist-modal bg-white rounded-xl shadow-2xl overflow-hidden my-6 relative" style={{ width: "1200px", maxWidth: "calc(100vw - 310px)" }}>
           {/* Header Section with Gradient */}
           <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white">
             <HeaderSection
@@ -577,9 +558,6 @@ const CheckerReviewChecklistModal = ({
             handleDocReject={handleDocReject}
             handleDocReset={handleDocReset}
           />
-
-          {/* Supporting Documents - Hidden as they now appear in View Documents sidebar */}
-          {/* <SupportingDocsSection supportingDocs={supportingDocs} /> */}
 
           <CommentSection
             comments={comments}

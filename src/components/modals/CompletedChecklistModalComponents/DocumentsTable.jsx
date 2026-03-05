@@ -10,7 +10,6 @@ import dayjs from "dayjs";
 import { getFullUrl as getFullUrlUtil } from "../../../utils/checklistUtils.js";
 import {
   getCheckerStatusDisplay,
-  getExpiryStatus,
   SECONDARY_PURPLE,
 } from "../../../utils/checklistConstants.js";
 import { formatStatusText } from "../../../utils/statusColors.js";
@@ -216,48 +215,6 @@ const DocumentsTable = ({ docs, checklist }) => {
           <span>{text || "-"}</span>
         </Tooltip>
       ),
-    },
-    {
-      title: "Expiry Date",
-      dataIndex: "expiryDate",
-      width: 90,
-      render: (_, record) => {
-        const category = (record.category || "").toLowerCase().trim();
-        if (category !== "compliance documents") return "-";
-        return record.expiryDate
-          ? dayjs(record.expiryDate).format("DD/MM/YYYY")
-          : "-";
-      },
-    },
-    {
-      title: "Expiry Status",
-      dataIndex: "expiryStatus",
-      width: 100,
-      render: (_, record) => {
-        const category = (record.category || "").toLowerCase().trim();
-        if (category !== "compliance documents") return "-";
-
-        const status = getExpiryStatus(record.expiryDate);
-        if (!status) return "-";
-
-        return (
-          <Tooltip title={status === "current" ? "Current" : "Expired"}>
-            <Button
-              size="small"
-              type="primary"
-              danger={status === "expired"}
-              style={{
-                backgroundColor: status === "current" ? "#52c41a" : undefined,
-                borderColor: status === "current" ? "#52c41a" : undefined,
-                cursor: "default",
-                fontWeight: "bold",
-              }}
-            >
-              {status === "current" ? "Current" : "Expired"}
-            </Button>
-          </Tooltip>
-        );
-      },
     },
     {
       title: "View",

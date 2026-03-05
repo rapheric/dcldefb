@@ -134,6 +134,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Space, message } from "antd";
+import { CloseOutlined } from "@ant-design/icons";
 import DocumentAccordion from "../../components/creator/DocumentAccordion";
 import { useGetUsersQuery } from "../../api/userApi";
 import { loanTypes, loanTypeDocuments } from "../docTypes";
@@ -429,14 +430,39 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
 
   return (
     <Modal
+      className="create-dcl-modal"
+      closeIcon={null}
       title={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Create DCL Checklist</span>
-          {lastSaved && (
-            <span style={{ fontSize: '12px', color: '#999', fontWeight: 'normal' }}>
-              Auto-saved: {new Date(lastSaved).toLocaleTimeString()}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
+              Create DCL Checklist
             </span>
-          )}
+            {lastSaved && (
+              <span style={{ fontSize: '12px', color: '#b5d334', fontWeight: 'normal' }}>
+                Auto-saved: {new Date(lastSaved).toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+          <Button
+            icon={<CloseOutlined />}
+            onClick={() => {
+              resetForm();
+              onClose();
+            }}
+            size="small"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderColor: 'rgba(255, 255, 255, 0.4)',
+              color: '#fff',
+              width: '32px',
+              height: '32px',
+              padding: 0,
+            }}
+          />
         </div>
       }
       open={open}
@@ -444,7 +470,17 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
         resetForm();
         onClose();
       }}
-      width={1100}
+      width={1065}
+      centered={true}
+      styles={{
+        body: { padding: "0 8px 24px" },
+        header: {
+          background: '#164679',
+          padding: '18px 24px',
+          borderTopLeftRadius: 8,
+          borderTopRightRadius: 8,
+        }
+      }}
       footer={null}
     >
       <Space direction="vertical" style={{ width: "100%" }} size="large">

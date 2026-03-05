@@ -58,7 +58,7 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
           category: "Supporting Documents",
           fileName: doc.fileName || doc.name,
           fileUrl: doc.fileUrl,
-          uploadedBy: doc.uploadedBy || "Current User",
+          uploadedBy: doc.uploadedBy?.name || doc.uploadedBy || "Unknown",
           uploadedByRole: doc.uploadedByRole,
           uploadDate: doc.uploadedAt || new Date().toISOString(),
         }))
@@ -82,7 +82,7 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
         </div>
       }
       placement="right"
-      width={280}
+      width={380}
       open={open}
       onClose={onClose}
       styles={{

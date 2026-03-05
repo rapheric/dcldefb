@@ -772,6 +772,35 @@ export const checklistApi = createApi({
       }),
       invalidatesTags: ["Notification"],
     }),
+
+    // ================= DCL LOCKING =================
+    // Get all unassigned/unworked DCLs (for Co Creator queue)
+    getUnassignedDcls: builder.query({
+      query: () => "cocreatorChecklist/unassigned",
+      providesTags: ["Checklist"],
+      // Refetch every 15 seconds to get updates
+      pollingInterval: 15000,
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+    }),
+
+    // Lock a DCL to the current user
+    lockDcl: builder.mutation({
+      query: (checklistId) => ({
+        url: `cocreatorChecklist/${checklistId}/lock`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Checklist"],
+    }),
+
+    // Unlock a DCL
+    unlockDcl: builder.mutation({
+      query: (checklistId) => ({
+        url: `cocreatorChecklist/${checklistId}/unlock`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Checklist"],
+    }),
   }),
 });
 
@@ -826,4 +855,9 @@ export const {
   useDeleteDocumentFileRMMutation,
   useGetRmNotificationsQuery,
   useMarkRmNotificationAsReadMutation,
+
+  // DCL Locking
+  useGetUnassignedDclsQuery,
+  useLockDclMutation,
+  useUnlockDclMutation,
 } = checklistApi;

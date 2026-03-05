@@ -1,128 +1,249 @@
-import React from "react";
-import { Drawer, Tag, Collapse, Card, Button } from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
+import React, { useMemo } from "react";
+import { Drawer, Card, Tag, Button } from "antd";
+import { DownloadOutlined, EyeOutlined, FileOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
-const { Panel } = Collapse;
 const API_BASE_URL = import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
 const DocumentSidebar = ({ documents, open, onClose, supportingDocs = [] }) => {
+  const getFileIcon = (fileName) => {
+    if (!fileName) return <FileOutlined style={{ fontSize: "11px" }} />;
+    const ext = fileName.split(".").pop().toLowerCase();
+
+    if (ext === "pdf") return <FileOutlined style={{ fontSize: "11px", color: "#FF4D4F" }} />;
+    if (["jpg", "jpeg", "png", "gif"].includes(ext)) return <FileOutlined style={{ fontSize: "11px", color: "#52C41A" }} />;
+    if (["doc", "docx"].includes(ext)) return <FileOutlined style={{ fontSize: "11px", color: "#1890FF" }} />;
+    if (["xls", "xlsx"].includes(ext)) return <FileOutlined style={{ fontSize: "11px", color: "#FAAD14" }} />;
+    return <FileOutlined style={{ fontSize: "11px" }} />;
+  };
+
+  const getRoleColor = (role) => {
+    if (!role) return "default";
+    const roleLower = role.toLowerCase();
+    if (roleLower === "rm" || roleLower === "admin") return { bg: "#FFF7E6", color: "#FA8C16", text: "RM" };
+    if (roleLower === "cocreator" || roleLower === "co_creator") return { bg: "#E6F7FF", color: "#1890FF", text: "CO" };
+    if (roleLower === "checker" || roleLower === "cochecker") return { bg: "#F9F0FF", color: "#722ED1", text: "Checker" };
+    return { bg: "#F5F5F5", color: "#8C8C8C", text: role };
+  };
+
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return "—";
+    return dayjs(dateStr).format("DD/MM/YYYY HH:mm");
+  };
+
+  const allDocs = useMemo(() => {
     // Include ALL documents - those with uploads, fileUrl, OR newly added ones
     const uploadedDocs = documents.filter(
-        (d) => (d.uploadData && d.uploadData.status !== "deleted") || d.fileUrl || d.isNew
+      (d) => (d.uploadData && d.uploadData.status !== "deleted") || d.fileUrl || d.isNew
     );
 
     // Combine with supporting docs
-    const allDocs = [...uploadedDocs, ...supportingDocs];
+    return [...uploadedDocs, ...supportingDocs];
+  }, [documents, supportingDocs]);
 
-    const groupedDocs = allDocs.reduce((acc, doc) => {
-        const group = doc.category || "Main Documents";
-        if (!acc[group]) acc[group] = [];
-        acc[group].push(doc);
-        return acc;
+  const groupedDocs = useMemo(() => {
+    return allDocs.reduce((acc, doc) => {
+      const group = doc.category || "Main Documents";
+      if (!acc[group]) acc[group] = [];
+      acc[group].push(doc);
+      return acc;
     }, {});
+  }, [allDocs]);
 
+  const getFullUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("blob:")) return url;
+    return `${API_BASE_URL}${url}`;
+  };
 
-    const getFullUrl = (url) => {
-        if (!url) return "";
-        if (url.startsWith("http") || url.startsWith("blob:")) return url;
-        return `${API_BASE_URL}${url}`;
-    };
+  return (
+    <Drawer
+      title={
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontWeight: 600, fontSize: "12px", color: "#164679" }}>Documents</span>
+          <Tag color="#164679" style={{ margin: 0, fontSize: "10px" }}>{allDocs.length}</Tag>
+        </div>
+      }
+      placement="right"
+      width={380}
+      open={open}
+      onClose={onClose}
+      styles={{
+        header: { borderBottom: "1px solid #E8E8E8", padding: "10px 14px" },
+        body: { padding: "6px 10px", backgroundColor: "#FAFAFA" }
+      }}
+    >
+      {allDocs.length === 0 ? (
+        <div style={{
+          textAlign: "center",
+          padding: "30px 12px",
+          color: "#8C8C8C",
+          fontSize: "11px"
+        }}>
+          <FileOutlined style={{ fontSize: "28px", marginBottom: 6, opacity: 0.5 }} />
+          <div>No documents</div>
+        </div>
+      ) : (
+        <div style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}>
+          {Object.entries(groupedDocs).map(([category, docs]) => (
+            <div key={category} style={{ marginBottom: 8 }}>
+              <div style={{
+                fontSize: "10px",
+                fontWeight: 600,
+                color: "#595959",
+                marginBottom: 4,
+                textTransform: "uppercase",
+                letterSpacing: "0.5px"
+              }}>
+                {category} ({docs.length})
+              </div>
 
-    return (
-        <Drawer
-            title={
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontWeight: 600 }}>Uploaded Documents</span>
-                    <Tag color="blue">{allDocs.length} doc</Tag>
-                </div>
-            }
-            placement="right"
-            width={420}
-            open={open}
-            onClose={onClose}
-        >
-            <div style={{ marginBottom: 12, color: "#6b7280", fontSize: 13 }}>
-                📄 Documents uploaded to this checklist
+              {docs.map((doc, idx) => {
+                const uploadData = doc.uploadData || doc;
+                const fileName = uploadData.fileName || doc.name;
+                const uploadDate = uploadData.createdAt || uploadData.uploadDate || doc.uploadedAt;
+                const uploadedBy = uploadData.uploadedBy?.name || uploadData.uploadedBy || doc.uploadedBy?.name || doc.uploadedBy || "Unknown";
+                const role = uploadData.uploadedByRole || doc.uploadedByRole;
+                const fileUrl = uploadData.fileUrl || doc.fileUrl;
+                const roleStyle = getRoleColor(role);
+
+                return (
+                  <Card
+                    key={idx}
+                    size="small"
+                    style={{
+                      marginBottom: 4,
+                      borderLeft: doc.isNew ? "2px solid #b5d334" : "2px solid #164679",
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                      fontSize: "10px"
+                    }}
+                    bodyStyle={{ padding: "6px 8px" }}
+                  >
+                    {/* Document Name */}
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                      marginBottom: 4,
+                      fontWeight: 500,
+                      color: "#262626",
+                      fontSize: "10px"
+                    }}>
+                      {getFileIcon(fileName)}
+                      <span style={{
+                        flex: 1,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap"
+                      }}>
+                        {fileName}
+                      </span>
+                      {doc.isNew && <Tag color="lime" style={{ fontSize: "8px", margin: 0 }}>New</Tag>}
+                    </div>
+
+                    {/* Upload Date & Time */}
+                    <div style={{
+                      fontSize: "9px",
+                      color: "#8C8C8C",
+                      marginBottom: 3
+                    }}>
+                      📅 {formatDateTime(uploadDate)}
+                    </div>
+
+                    {/* Uploader & Role */}
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 4
+                    }}>
+                      <div style={{ fontSize: "9px", color: "#595959" }}>
+                        👤 {uploadedBy}
+                      </div>
+                      {role && (
+                        <Tag
+                          style={{
+                            margin: 0,
+                            fontSize: "8px",
+                            padding: "0 5px",
+                            height: "16px",
+                            lineHeight: "16px",
+                            backgroundColor: roleStyle.bg,
+                            color: roleStyle.color,
+                            border: "none"
+                          }}
+                        >
+                          {roleStyle.text}
+                        </Tag>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    {fileUrl && (
+                      <div style={{
+                        display: "flex",
+                        gap: 4,
+                        marginTop: 3
+                      }}>
+                        <Button
+                          type="link"
+                          size="small"
+                          icon={<EyeOutlined />}
+                          style={{
+                            padding: "0 6px",
+                            fontSize: "9px",
+                            height: "20px",
+                            color: "#164679"
+                          }}
+                          onClick={() => window.open(getFullUrl(fileUrl), "_blank")}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          type="link"
+                          size="small"
+                          icon={<DownloadOutlined />}
+                          style={{
+                            padding: "0 6px",
+                            fontSize: "9px",
+                            height: "20px",
+                            color: "#52C41A"
+                          }}
+                          onClick={() => window.open(getFullUrl(fileUrl), "_blank")}
+                        >
+                          Download
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
+          ))}
+        </div>
+      )}
 
-            {Object.entries(groupedDocs).map(([category, docs]) => (
-                <Collapse
-                    key={category}
-                    defaultActiveKey={[category]}
-                    expandIconPosition="end"
-                    style={{ marginBottom: 16 }}
-                >
-                    <Panel
-                        header={<b style={{ color: "#164679" }}>{category} ({docs.length})</b>}
-                        key={category}
-                    >
-                        {docs.map((doc, idx) => {
-                            const uploadData = doc.uploadData || doc; // Handle both structures
-                            const fileUrl = uploadData.fileUrl || doc.fileUrl;
-                            const hasFile = fileUrl || (doc.uploadData && doc.uploadData.status !== "deleted");
-
-                            return (
-                                <Card
-                                    key={idx}
-                                    size="small"
-                                    style={{
-                                        borderRadius: 10,
-                                        marginBottom: 12,
-                                        border: doc.isNew ? "2px solid #b5d334" : "1px solid #e5e7eb",
-                                    }}
-                                >
-                                    {/* HEADER */}
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <b>{uploadData.fileName || doc.name}</b>
-                                        <div>
-                                            {doc.isNew && <Tag color="lime">New</Tag>}
-                                            {!hasFile && <Tag color="orange">No File</Tag>}
-                                        </div>
-                                    </div>
-
-
-                                    {/* META */}
-                                    <div style={{ fontSize: 12, color: "#374151" }}>
-                                        🕒{" "}
-                                        {uploadData.createdAt || uploadData.uploadDate
-                                            ? dayjs(uploadData.createdAt || uploadData.uploadDate).format(
-                                                "DD MMM YYYY HH:mm:ss"
-                                            )
-                                            : "N/A"}
-                                    </div>
-
-                                    {/* OWNER + DOWNLOAD */}
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            marginTop: 10,
-                                            fontSize: 12,
-                                        }}
-                                    >
-                                        <div>
-                                            👤 By: <b>{uploadData.uploadedBy || "Unknown"}</b>
-                                        </div>
-
-                                        {fileUrl && (
-                                            <Button
-                                                type="link"
-                                                icon={<DownloadOutlined />}
-                                                onClick={() => window.open(getFullUrl(fileUrl), "_blank")}
-                                            >
-                                                Download
-                                            </Button>
-                                        )}
-                                    </div>
-                                </Card>
-                            );
-                        })}
-                    </Panel>
-                </Collapse>
-            ))}
-        </Drawer>
-    );
+      {/* Footer Summary */}
+      {allDocs.length > 0 && (
+        <div style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "6px 10px",
+          backgroundColor: "#F5F5F5",
+          borderTop: "1px solid #E8E8E8",
+          fontSize: "9px",
+          color: "#595959"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span>Total: <strong>{allDocs.length}</strong></span>
+            <span style={{ color: "#52C41A" }}>● Active</span>
+          </div>
+        </div>
+      )}
+    </Drawer>
+  );
 };
 
 export default DocumentSidebar;

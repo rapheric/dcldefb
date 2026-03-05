@@ -2,7 +2,6 @@ import { Table, Tag, Button, Tooltip } from "antd";
 import { COLORS, TABLE_CONFIG } from "./constants";
 import {
   getCheckerStatusDisplay,
-  getExpiryStatus,
 } from "../../../utils/checklistConstants";
 import { formatDate } from "../../../utils/checklistUtils";
 import { formatStatusText } from "../../../utils/statusColors";
@@ -225,48 +224,6 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
             <span>{text || "-"}</span>
           </Tooltip>
         ),
-      };
-    }
-
-    if (col.key === "expiryDate") {
-      return {
-        ...col,
-        render: (_, record) => {
-          const category = (record.category || "").toLowerCase().trim();
-          if (category !== "compliance documents") return "-";
-          return formatDate(record.expiryDate, "DD/MM/YYYY");
-        },
-      };
-    }
-
-    if (col.key === "expiryStatus") {
-      return {
-        ...col,
-        render: (_, record) => {
-          const category = (record.category || "").toLowerCase().trim();
-          if (category !== "compliance documents") return "-";
-
-          const status = getExpiryStatus(record.expiryDate);
-          if (!status) return "-";
-
-          return (
-            <Tooltip title={status === "current" ? "Current" : "Expired"}>
-              <Button
-                size="small"
-                type="primary"
-                danger={status === "expired"}
-                style={{
-                  backgroundColor: status === "current" ? "#52c41a" : undefined,
-                  borderColor: status === "current" ? "#52c41a" : undefined,
-                  cursor: "default",
-                  fontWeight: "bold",
-                }}
-              >
-                {status === "current" ? "Current" : "Expired"}
-              </Button>
-            </Tooltip>
-          );
-        },
       };
     }
 

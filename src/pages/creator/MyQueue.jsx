@@ -1,7 +1,6 @@
 // export default Myqueue;
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
-  Button,
   Table,
   Tag,
   Spin,
@@ -11,19 +10,17 @@ import {
   Row,
   Col,
   Input,
-  DatePicker,
 } from "antd";
 import {
   SearchOutlined,
   FileTextOutlined,
   UserOutlined,
-  CustomerServiceOutlined,
 } from "@ant-design/icons";
-import CreatorQueueChecklistModal from "../../components/modals/CreatorQueueChecklistModal";
-import { useGetChecklistsByCreatorQuery } from "../../api/checklistApi";
+import { useGetChecklistsByCreatorQuery, useGetAllChecklistsQuery, useLockDclMutation } from "../../api/checklistApi";
 import dayjs from "dayjs";
 import ReviewChecklistModal from "../../components/modals/ReviewChecklistModalComponents/ReviewChecklistModal";
 import { useSelector } from "react-redux";
+import { LockOutlined, UnlockOutlined } from "@ant-design/icons";
 
 /* ---------------- THEME COLORS ---------------- */
 const PRIMARY_BLUE = "#164679";
@@ -35,13 +32,41 @@ const SUCCESS_GREEN = "#52c41a";
 const ERROR_RED = "#ff4d4f";
 const WARNING_ORANGE = "#faad14";
 
-const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
 
 const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
   const [selectedChecklist, setSelectedChecklist] = useState(null);
-  const [activeTab, setActiveTab] = useState("co_creator_review");
+  const [activeTab, setActiveTab] = useState("unassigned"); // Default to unassigned tab
   const [searchText, setSearchText] = useState("");
+
+  const { user } = useSelector((state) => state.auth);
+
+  // Handle both camelCase (id) and old format (_id) for backwards compatibility
+  const creatorId = user?.id || user?._id;
+
+  // Fetch creator's checklists (with polling to keep lock status fresh)
+  const { data: allChecklists = [], isLoading: isLoadingCreator, refetch: refetchCreatorChecklists } =
+    useGetChecklistsByCreatorQuery(creatorId, {
+      skip: !creatorId,
+      // Poll every 10 seconds to get latest lock status
+      pollingInterval: 10000,
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+    });
+
+  // Fetch ALL DCLs in the system (for Active DCLs tab)
+  const { data: allSystemDcls = [], isLoading: isLoadingUnassigned, refetch: refetchSystemDcls } =
+    useGetAllChecklistsQuery(undefined, {
+      refetchOnMountOrArgChange: true,
+      // Poll every 10 seconds to get latest lock status
+      pollingInterval: 10000,
+      refetchOnFocus: true,
+    });
+
+  console.log("Fetched all system DCLs:", allSystemDcls);
+
+  // Lock DCL mutation
+  const [lockDcl] = useLockDclMutation();
 
   // Handle draft restoration - open modal with draft data
   useEffect(() => {
@@ -60,7 +85,10 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
         documents: draftToRestore.data.documents || [],
       };
 
-      setSelectedChecklist(draftChecklist);
+      // Use setTimeout to defer state update and avoid cascading renders
+      setTimeout(() => {
+        setSelectedChecklist(draftChecklist);
+      }, 0);
 
       // Clear the draft restore after opening
       if (setDraftToRestore) {
@@ -69,19 +97,51 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
     }
   }, [draftToRestore, setDraftToRestore]);
 
-  const { user } = useSelector((state) => state.auth);
 
-  // Handle both camelCase (id) and old format (_id) for backwards compatibility
-  const creatorId = user?.id || user?._id;
+  // Function to handle DCL selection with locking
+  const handleSelectChecklist = async (checklist) => {
+    // Lock DCL for both active/unassigned and co-creator review tabs
+    if (activeTab === "unassigned" || activeTab === "co_creator_review") {
+      try {
+        await lockDcl(checklist.id || checklist._id).unwrap();
+        console.log("DCL locked:", checklist.dclNo);
 
-  const { data: allChecklists = [], isLoading } =
-    useGetChecklistsByCreatorQuery(creatorId, {
-      skip: !creatorId,
+        // Refetch data to update lock status across all tabs
+        refetchCreatorChecklists();
+        refetchSystemDcls();
+      } catch (error) {
+        console.error("Failed to lock DCL:", error);
+        // Still allow opening even if lock fails
+      }
+    }
+    setSelectedChecklist(checklist);
+  };
+
+  /* ---------------- UNASSIGNED DCLS QUEUE (NEW TAB) ---------------- */
+  const unassignedQueue = useMemo(() => {
+    let filtered = allSystemDcls.filter((c) => {
+      const status = (c.status || "").toLowerCase();
+      return status === "cocreatorreview";
     });
 
-  console.log("Creator ID:", creatorId);
-  console.log("Redux user:", user);
-  console.log("All Checklists in MyQueue:", allChecklists);
+    if (searchText) {
+      const q = searchText.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.dclNo?.toLowerCase().includes(q) ||
+          c.customerNumber?.toLowerCase().includes(q) ||
+          c.customerName?.toLowerCase().includes(q) ||
+          c.loanType?.toLowerCase().includes(q),
+      );
+    }
+
+    // Sort by most recent first
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.createdAt || 0);
+      const dateB = new Date(b.updatedAt || b.createdAt || 0);
+      return dateB - dateA;
+    });
+  }, [allSystemDcls, searchText]);
 
   /* ---------------- CO_CREATOR_REVIEW QUEUE ---------------- */
   const coCreatorReviewQueue = useMemo(() => {
@@ -159,7 +219,7 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
   }, [allChecklists, searchText]);
 
   /* ---------------- TABLE COLUMNS ---------------- */
-  const getColumns = (isCurrentTab) => [
+  const getColumns = () => [
     {
       title: "DCL Number",
       dataIndex: "dclNo",
@@ -271,6 +331,45 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
       },
     },
     {
+      title: "Locked By",
+      dataIndex: "lockedBy",
+      width: 140,
+      render: (lockedBy, record) => {
+        if (lockedBy && lockedBy.name) {
+          return (
+            <Tag
+              icon={<LockOutlined />}
+              color="warning"
+              style={{ fontWeight: 600 }}
+            >
+              {lockedBy.name}
+            </Tag>
+          );
+        }
+        // Show locked by current user if this DCL is being worked on
+        if (record.lockedByUserId === creatorId) {
+          return (
+            <Tag
+              icon={<LockOutlined />}
+              color="success"
+              style={{ fontWeight: 600 }}
+            >
+              You
+            </Tag>
+          );
+        }
+        return (
+          <Tag
+            icon={<UnlockOutlined />}
+            color="default"
+            style={{ fontWeight: 600 }}
+          >
+            Available
+          </Tag>
+        );
+      },
+    },
+    {
       title: "Status",
       width: 120,
       render: (_, record) => (
@@ -335,8 +434,11 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
 
       {/* TABS */}
       <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
+        {/* NEW TAB: Unassigned DCLs */}
+      
+
         <TabPane tab="CO Creator Review" key="co_creator_review">
-          {isLoading ? (
+          {isLoadingCreator ? (
             <Spin style={{ display: "block", margin: 40 }} />
           ) : coCreatorReviewQueue.length === 0 ? (
             <Empty description="No pending items" />
@@ -344,11 +446,11 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
             <div className="myqueue-table">
               <Table
                 rowKey="id"
-                columns={getColumns(true)}
+                columns={getColumns()}
                 dataSource={coCreatorReviewQueue}
                 pagination={{ pageSize: 10 }}
                 onRow={(r) => ({
-                  onClick: () => setSelectedChecklist(r),
+                  onClick: () => handleSelectChecklist(r),
                 })}
               />
             </div>
@@ -356,7 +458,7 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
         </TabPane>
 
         <TabPane tab="RM Review" key="rm_review">
-          {isLoading ? (
+          {isLoadingCreator ? (
             <Spin style={{ display: "block", margin: 40 }} />
           ) : rmReviewQueue.length === 0 ? (
             <Empty description="No RM review items" />
@@ -364,11 +466,11 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
             <div className="myqueue-table">
               <Table
                 rowKey="id"
-                columns={getColumns(false)}
+                columns={getColumns()}
                 dataSource={rmReviewQueue}
                 pagination={{ pageSize: 10 }}
                 onRow={(r) => ({
-                  onClick: () => setSelectedChecklist(r),
+                  onClick: () => handleSelectChecklist(r),
                 })}
               />
             </div>
@@ -376,7 +478,7 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
         </TabPane>
 
         <TabPane tab="CO Checker Review" key="co_checker_review">
-          {isLoading ? (
+          {isLoadingCreator ? (
             <Spin style={{ display: "block", margin: 40 }} />
           ) : coCheckerReviewQueue.length === 0 ? (
             <Empty description="No approved items" />
@@ -384,11 +486,44 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
             <div className="myqueue-table">
               <Table
                 rowKey="id"
-                columns={getColumns(false)}
+                columns={getColumns()}
                 dataSource={coCheckerReviewQueue}
                 pagination={{ pageSize: 10 }}
                 onRow={(r) => ({
-                  onClick: () => setSelectedChecklist(r),
+                  onClick: () => handleSelectChecklist(r),
+                })}
+              />
+            </div>
+          )}
+        </TabPane>
+
+          <TabPane
+          tab={
+            <span>
+             
+              Active DCLs
+              {unassignedQueue.length > 0 && (
+                <Tag color="blue" style={{ marginLeft: 8 }}>
+                  {unassignedQueue.length}
+                </Tag>
+              )}
+            </span>
+          }
+          key="unassigned"
+        >
+          {isLoadingUnassigned ? (
+            <Spin style={{ display: "block", margin: 40 }} />
+          ) : unassignedQueue.length === 0 ? (
+            <Empty description="No unassigned DCLs available" />
+          ) : (
+            <div className="myqueue-table">
+              <Table
+                rowKey="id"
+                columns={getColumns()}
+                dataSource={unassignedQueue}
+                pagination={{ pageSize: 10 }}
+                onRow={(r) => ({
+                  onClick: () => handleSelectChecklist(r),
                 })}
               />
             </div>
@@ -402,6 +537,12 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
           checklist={selectedChecklist}
           open={!!selectedChecklist}
           onClose={() => setSelectedChecklist(null)}
+          onChecklistUpdate={() => {
+            // Refetch data when checklist is updated (e.g., after unlock on submit)
+            console.log("Checklist updated, refetching data...");
+            refetchCreatorChecklists();
+            refetchSystemDcls();
+          }}
         />
       )}
     </div>

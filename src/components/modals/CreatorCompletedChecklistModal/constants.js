@@ -61,19 +61,7 @@ export const TABLE_CONFIG = {
       key: "checkerStatus",
     },
     { title: "Co Comment", dataIndex: "comment", width: 130, key: "comment" },
-    {
-      title: "Expiry Date",
-      dataIndex: "expiryDate",
-      width: 90,
-      key: "expiryDate",
-    },
-    {
-      title: "Expiry Status",
-      dataIndex: "expiryStatus",
-      width: 100,
-      key: "expiryStatus",
-    },
-    { title: "View", key: "view", width: 70, key: "view" },
+    { title: "View", key: "view", width: 70 },
   ],
 };
 

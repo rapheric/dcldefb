@@ -574,12 +574,11 @@ import {
   LeftOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
-import DocumentSidebar from "./DocumentSidebar";
+import DocumentSidebar from "../CheckerReviewChecklistModalComponents/DocumentSidebar";
 import ChecklistInfoCard from "./ChecklistInfoCard";
 import ProgressSummary from "./ProgressSummary";
 import DocumentTable from "./DocumentTable";
 import CommentSection from "./CommentSection";
-import SupportingDocsSection from "./SupportingDocsSection";
 import PDFGenerator from "./PDFGenerator.jsx";
 import SaveDraftButton from "./SaveDraftButton";
 import { useRmSubmitChecklistToCoCreatorMutation } from "../../../api/checklistApi";
@@ -600,6 +599,7 @@ const RmReviewChecklistModal = ({
   const token = auth?.token || localStorage.getItem("token");
 
   const [docs, setDocs] = useState([]);
+  const [supportingDocs, setSupportingDocs] = useState([]);
   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
   const [rmGeneralComment, setRmGeneralComment] = useState("");
   const [uploadingSupportingDoc, setUploadingSupportingDoc] = useState(false);
@@ -618,9 +618,22 @@ const RmReviewChecklistModal = ({
     import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
   const handleChecklistUpdate = (updatedChecklist) => {
-    setLocalChecklist(updatedChecklist);
+    // Merge the updated checklist with existing localChecklist to preserve fields not returned by submission
+    const mergedChecklist = {
+      ...localChecklist,
+      ...checklist,
+      ...updatedChecklist,
+      // Ensure supportingDocs from backend response is preserved
+      supportingDocs: updatedChecklist?.supportingDocs || checklist?.supportingDocs || localChecklist?.supportingDocs || [],
+    };
+
+    console.log("🔄 RM handleChecklistUpdate called:");
+    console.log("   Updated checklist supportingDocs:", updatedChecklist?.supportingDocs?.length || 0);
+    console.log("   Merged checklist supportingDocs:", mergedChecklist.supportingDocs?.length || 0);
+
+    setLocalChecklist(mergedChecklist);
     if (onChecklistUpdate) {
-      onChecklistUpdate(updatedChecklist);
+      onChecklistUpdate(mergedChecklist);
     }
   };
 
@@ -676,47 +689,16 @@ const RmReviewChecklistModal = ({
       docIdx: doc.docIdx !== undefined ? doc.docIdx : idx,
     }));
 
-    // ✅ CRITICAL FIX: Merge supporting documents into the docs array
-    // Backend returns supportingDocs separately from documents
-    const supportingDocs = checklist.supportingDocs || [];
-    console.log("📎 RM Modal - Supporting docs from backend:", supportingDocs.length);
+    // Store supporting docs separately - they should NOT appear in DocumentTable
+    const supportingDocsData = checklist.supportingDocs || [];
+    console.log("📎 RM Modal - Supporting docs from backend:", supportingDocsData.length);
 
-    // Transform supporting docs to match the document structure
-    const transformedSupportingDocs = supportingDocs.map((sd, idx) => ({
-      id: sd.id || sd._id,
-      _id: sd._id || sd.id,
-      name: sd.name || sd.fileName,
-      fileName: sd.fileName || sd.name,
-      category: "Supporting Documents",
-      status: "submitted",
-      action: "submitted",
-      rmStatus: "pendingrm",
-      rmTouched: false,
-      comment: "",
-      fileUrl: sd.fileUrl || (sd.uploadData?.fileUrl),
-      fileSize: sd.fileSize,
-      fileType: sd.fileType,
-      uploadedBy: sd.uploadedBy?.name || sd.uploadedBy || "Unknown",
-      uploadedByRole: sd.uploadedByRole,
-      uploadedAt: sd.uploadedAt || sd.createdAt || sd.uploadData?.createdAt,
-      docIdx: processedDocs.length + idx,
-      isSupporting: true,
-      uploadData: sd.uploadData || {
-        fileName: sd.fileName,
-        fileUrl: sd.fileUrl,
-        fileSize: sd.fileSize,
-        fileType: sd.fileType,
-        uploadedBy: sd.uploadedBy?.name || "Unknown",
-        uploadedByRole: sd.uploadedByRole,
-        createdAt: sd.uploadedAt || sd.createdAt
-      }
-    }));
+    // Set main docs WITHOUT supporting docs
+    setDocs(processedDocs);
+    console.log("📋 RM Modal - Main documents (no supporting docs):", processedDocs.length);
 
-    // Merge main docs with supporting docs
-    const allDocs = [...processedDocs, ...transformedSupportingDocs];
-    console.log("📋 RM Modal - Total docs after merging supporting docs:", allDocs.length);
-
-    setDocs(allDocs);
+    // Set supporting docs separately for DocumentSidebar
+    setSupportingDocs(supportingDocsData);
   }, [checklist]);
 
   // Wrapper for uploading supporting docs - uploads to backend and adds to main docs array
@@ -786,10 +768,10 @@ const RmReviewChecklistModal = ({
         },
       };
 
-      console.log("✅ RM Modal - Adding supporting doc to main docs array:", newSupportingDoc);
+      console.log("✅ RM Modal - Adding supporting doc to supportingDocs state (NOT to docs array):", newSupportingDoc);
 
-      // Add to main docs array
-      setDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
+      // Add to supportingDocs state (separate from main docs - won't appear in DocumentTable)
+      setSupportingDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
 
       message.success(`"${file.name}" uploaded successfully!`);
 
@@ -855,59 +837,6 @@ const RmReviewChecklistModal = ({
       progressPercent,
     };
   }, [docs]);
-
-  // 🔹 FILTER SUPPORTING DOCS BY UPLOADER ROLE
-  // Supporting docs are now in the main docs array with category "Supporting Documents"
-  const rmSupportingDocs = useMemo(() => {
-    return docs.filter(doc => {
-      // Only documents with "Supporting Documents" category
-      if (doc.category !== "Supporting Documents") return false;
-      // Check multiple possible locations for the role
-      const uploadedByRole =
-        doc.uploadedByRole ||
-        doc.uploadedBy?.role ||
-        doc.uploadData?.uploadedByRole;
-      return uploadedByRole?.toLowerCase() === 'rm';
-    });
-  }, [docs]);
-
-  const creatorSupportingDocs = useMemo(() => {
-    return docs.filter(doc => {
-      // Only documents with "Supporting Documents" category
-      if (doc.category !== "Supporting Documents") return false;
-      const uploadedByRole =
-        doc.uploadedByRole ||
-        doc.uploadedBy?.role ||
-        doc.uploadData?.uploadedByRole;
-      return !uploadedByRole || uploadedByRole?.toLowerCase() !== 'rm';
-    });
-  }, [docs]);
-
-  const handleDeleteSupportingDoc = async (docId, docName) => {
-    const confirm = window.confirm(`Delete "${docName}"?`);
-    if (!confirm) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/uploads/${docId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Remove from main docs array instead of separate supportingDocs array
-        setDocs((prev) => prev.filter((doc) => doc.id !== docId && doc._id !== docId));
-        message.success("Document deleted!");
-      } else {
-        message.error(result.error || "Delete failed");
-      }
-    } catch (error) {
-      message.error("Delete error: " + error.message);
-    }
-  };
 
   const handleFileUpload = async (docIdx, file) => {
     const document = docs[docIdx];
@@ -992,7 +921,7 @@ const RmReviewChecklistModal = ({
       const payload = {
         checklistId: checklistId,
         documents: docs
-          .filter(doc => !doc.isNew && doc.category !== "Supporting Documents") // Filter out new/temporary documents AND supporting docs
+          .filter(doc => !doc.isNew) // Filter out new/temporary documents
           .map((doc) => ({
             _id: doc._id,
             id: doc.id,
@@ -1005,8 +934,8 @@ const RmReviewChecklistModal = ({
             rmStatus: doc.rmStatus || null,
             deferralNumber: doc.deferralNumber || "",
           })),
-        supportingDocs: docs
-          .filter(doc => doc.category === "Supporting Documents" && !doc.isNew) // Filter out new/temporary supporting docs
+        supportingDocs: supportingDocs
+          .filter(doc => !doc.isNew) // Filter out new/temporary supporting docs
           .map((doc) => ({
             id: doc.id || doc._id,
             name: doc.fileName || doc.name,
@@ -1066,10 +995,10 @@ const RmReviewChecklistModal = ({
               }}
             >
               View Documents
-              {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length >
+              {(docs.filter((d) => d.fileUrl).length + supportingDocs.length) >
                 0 && (
                 <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
-                  {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length}
+                  {docs.filter((d) => d.fileUrl).length + supportingDocs.length}
                 </Tag>
               )}
             </Button>
@@ -1095,9 +1024,9 @@ const RmReviewChecklistModal = ({
       }
       open={open}
       onCancel={onClose}
-      width="calc(100vw - 360px)"
-      centered={true}
-      style={{ marginLeft: '320px' }}
+      width={1200}
+      centered={false}
+      wrapperClassName="modal-centered-in-content"
       closeIcon={null}
       styles={{
         body: { padding: "0 8px 24px" },
@@ -1116,7 +1045,7 @@ const RmReviewChecklistModal = ({
             dclNo: checklist?.dclNo || checklist?._id,
           }}
           docs={docs}
-          supportingDocs={docs.filter(d => d.category === "Supporting Documents") || []}
+          supportingDocs={supportingDocs || []}
           creatorComment=""
           rmGeneralComment={rmGeneralComment || ""}
           comments={comments || []}
@@ -1129,7 +1058,7 @@ const RmReviewChecklistModal = ({
             checklist={checklist}
             docs={docs}
             rmGeneralComment={rmGeneralComment}
-            supportingDocs={docs.filter(d => d.category === "Supporting Documents")}
+            supportingDocs={supportingDocs}
             isActionAllowed={isActionAllowed}
           />
         ),
@@ -1177,10 +1106,9 @@ const RmReviewChecklistModal = ({
       {console.log("🔍 RM Modal - Rendering DocumentSidebar with docs:", docs.length, docs)}
       <DocumentSidebar
         documents={docs}
-        supportingDocs={[]} // Empty - supporting docs are now in main docs array
+        supportingDocs={supportingDocs}
         open={showDocumentSidebar}
         onClose={() => setShowDocumentSidebar(false)}
-        getFullUrl={getFullUrl}
       />
 
       {checklist && (
@@ -1214,18 +1142,6 @@ const RmReviewChecklistModal = ({
             isActionAllowed={isActionAllowed}
             comments={comments}
             commentsLoading={commentsLoading}
-          />
-
-          {/* 🔹 UPDATED: Only show RM uploaded supporting docs */}
-          <SupportingDocsSection
-            supportingDocs={rmSupportingDocs}
-            handleDeleteSupportingDoc={handleDeleteSupportingDoc}
-            getFullUrl={getFullUrl}
-            isActionAllowed={isActionAllowed}
-            readOnly={readOnly}
-            title="RM Uploaded Supporting Documents"
-            showCreatorCount={creatorSupportingDocs.length > 0}
-            creatorCount={creatorSupportingDocs.length}
           />
         </>
       )}

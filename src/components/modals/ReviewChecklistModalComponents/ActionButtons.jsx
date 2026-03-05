@@ -30,6 +30,8 @@ const ActionButtons = ({
   onUploadSupportingDoc,
   onClose,
   comments,
+  isLockedBySomeoneElse = false,
+  lockedByUserName = "",
 }) => {
   // Check if any compliance document has expired
   const hasExpiredDocuments = React.useMemo(() => {
@@ -175,17 +177,18 @@ const ActionButtons = ({
         <Button
           key="submit"
           type="primary"
-          disabled={isActionDisabled || !canSubmitToRM || shouldGrayOut}
+          disabled={isActionDisabled || !canSubmitToRM || shouldGrayOut || isLockedBySomeoneElse}
           loading={isSubmittingToRM}
           onClick={handleSubmitToRM} // Use the wrapper function
           icon={<SendOutlined />}
+          title={isLockedBySomeoneElse ? `Locked by ${lockedByUserName}` : undefined}
           style={{
             borderRadius: "6px",
             fontWeight: 600,
-            opacity: shouldGrayOut ? 0.5 : 1,
+            opacity: (shouldGrayOut || isLockedBySomeoneElse) ? 0.5 : 1,
           }}
         >
-          Submit to RM
+          Submit to RM {isLockedBySomeoneElse && `(Locked by ${lockedByUserName})`}
         </Button>
       )}
 
@@ -196,16 +199,17 @@ const ActionButtons = ({
           type="primary"
           loading={isCheckerSubmitting}
           onClick={handleSubmitToCheckers} // Use the wrapper function
-          disabled={!canSubmitToCoChecker || shouldGrayOut}
+          disabled={!canSubmitToCoChecker || shouldGrayOut || isLockedBySomeoneElse}
           icon={<CheckCircleOutlined />}
+          title={isLockedBySomeoneElse ? `Locked by ${lockedByUserName}` : undefined}
           style={{
             backgroundColor: PRIMARY_BLUE,
             borderRadius: "6px",
             fontWeight: 600,
-            opacity: shouldGrayOut ? 0.5 : 1,
+            opacity: (shouldGrayOut || isLockedBySomeoneElse) ? 0.5 : 1,
           }}
         >
-          Submit to Co-Checker
+          Submit to Co-Checker {isLockedBySomeoneElse && `(Locked by ${lockedByUserName})`}
         </Button>
       )}
     </Space>

@@ -795,8 +795,8 @@ const RMActionModal = ({ checklist, open, onClose, actionType }) => {
         open={open}
         onCancel={() => !uploading && onClose()}
         width={900}
-        centered={true}
-        style={{ marginLeft: '160px' }}
+        centered={false}
+        wrapperClassName="modal-centered-in-content"
         footer={[
           <Button key="cancel" onClick={onClose} disabled={uploading}>
             Cancel

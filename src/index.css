@@ -41,6 +41,17 @@ body {
   transition: 0.25s ease-in-out;
 }
 
+/* ✅ FIX: Buttons inherit body color by default - reset this behavior */
+/* Ensure Tailwind text color utilities work on buttons */
+button {
+  color: unset !important; /* Don't inherit body text color */
+}
+
+/* Explicitly set white text for navy buttons */
+button[class*="bg-[#0A1929]"] {
+  color: white !important;
+}
+
 /* ✅ UNIFORM TABLE STYLING - Applied to all tables for professional appearance */
 .ant-table-wrapper {
   border-radius: 12px;
@@ -242,3 +253,34 @@ body {
     padding: 4px 8px !important;
   }
 }
+
+/* Modal positioning - center horizontally within page content area */
+/* This class is applied to Ant Design Modal wrapperClassName */
+.modal-centered-in-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: fixed !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 1000 !important;
+}
+
+.modal-centered-in-content > .ant-modal {
+  pointer-events: auto !important;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+}
+
+.modal-centered-in-content > .ant-modal-mask {
+  pointer-events: auto !important;
+}
+
+.modal-centered-in-content .ant-modal-wrap {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: auto !important;
+}
+

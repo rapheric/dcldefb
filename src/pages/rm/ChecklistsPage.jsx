@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Modal, Button, Space } from "antd";
+import { CloseOutlined } from "@ant-design/icons";
 // Import the new components
 import ChecklistFormFields from "../../components/rm/ChecklistFormFields";
 import DocumentInputSection from "../../components/rm/DocumentInputSection";
@@ -128,10 +129,46 @@ const ChecklistsPage = ({ open, onClose }) => {
 
   return (
     <Modal
-      title="Create DCL Checklist"
+      className="create-dcl-modal"
+      closeIcon={null}
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
+              Create DCL Checklist
+            </span>
+          </div>
+          <Button
+            icon={<CloseOutlined />}
+            onClick={onClose}
+            size="small"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderColor: 'rgba(255, 255, 255, 0.4)',
+              color: '#fff',
+              width: '32px',
+              height: '32px',
+              padding: 0,
+            }}
+          />
+        </div>
+      }
       open={open}
       onCancel={onClose}
-      width={1100}
+      width={1065}
+      centered={true}
+      styles={{
+        body: { padding: "0 8px 24px" },
+        header: {
+          background: '#164679',
+          padding: '18px 24px',
+          borderTopLeftRadius: 8,
+          borderTopRightRadius: 8,
+        }
+      }}
       footer={null}
     >
       <Space direction="vertical" style={{ width: "100%" }} size="large">

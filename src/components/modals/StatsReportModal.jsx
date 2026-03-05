@@ -198,8 +198,8 @@ export default function StatsReportModal({ open, onClose }) {
       open={open}
       onCancel={onClose}
       footer={null}
-      centered={true}
-      style={{ marginLeft: '160px' }}
+      centered={false}
+      wrapperClassName="modal-centered-in-content"
     >
       <Row gutter={12} style={{ marginBottom: 12 }}>
         <Col span={6}>

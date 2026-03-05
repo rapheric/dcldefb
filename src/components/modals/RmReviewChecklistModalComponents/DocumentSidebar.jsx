@@ -59,7 +59,7 @@ const DocumentSidebar = ({
         </div>
       }
       placement="right"
-      width={280}
+      width={380}
       open={open}
       onClose={onClose}
       styles={{

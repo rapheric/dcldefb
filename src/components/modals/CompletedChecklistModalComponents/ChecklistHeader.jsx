@@ -1,16 +1,3 @@
-// // src/components/completedChecklistModal/components/ChecklistHeader.jsx
-// import React from "react";
-// import { PRIMARY_BLUE } from "../utils/checklistConstants";
-
-// const ChecklistHeader = ({ title }) => (
-//   <div style={{ color: "white", fontWeight: "bold" }}>
-//     Completed Checklist - {title}
-//   </div>
-// );
-
-// export default ChecklistHeader;
-
-
 
 // src/components/completedChecklistModal/components/ChecklistHeader.jsx
 import React from "react";

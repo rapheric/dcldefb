@@ -100,8 +100,8 @@ const ExtensionApplicationModal = ({ open, onClose, deferral, onSubmit, loading 
             }}
             footer={null}
             width={600}
-            centered={true}
-            style={{ marginLeft: '160px' }}
+            centered={false}
+            wrapperClassName="modal-centered-in-content"
             styles={{
                 header: { backgroundColor: PRIMARY_BLUE },
                 title: { color: "white" },
