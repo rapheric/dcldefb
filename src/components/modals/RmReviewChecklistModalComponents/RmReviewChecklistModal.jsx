@@ -1,5 +1,3 @@
-
-
 // // export default RmReviewChecklistModal;
 // import React, { useState, useEffect, useMemo } from "react";
 // import { useSelector } from "react-redux";
@@ -624,12 +622,22 @@ const RmReviewChecklistModal = ({
       ...checklist,
       ...updatedChecklist,
       // Ensure supportingDocs from backend response is preserved
-      supportingDocs: updatedChecklist?.supportingDocs || checklist?.supportingDocs || localChecklist?.supportingDocs || [],
+      supportingDocs:
+        updatedChecklist?.supportingDocs ||
+        checklist?.supportingDocs ||
+        localChecklist?.supportingDocs ||
+        [],
     };
 
     console.log("🔄 RM handleChecklistUpdate called:");
-    console.log("   Updated checklist supportingDocs:", updatedChecklist?.supportingDocs?.length || 0);
-    console.log("   Merged checklist supportingDocs:", mergedChecklist.supportingDocs?.length || 0);
+    console.log(
+      "   Updated checklist supportingDocs:",
+      updatedChecklist?.supportingDocs?.length || 0,
+    );
+    console.log(
+      "   Merged checklist supportingDocs:",
+      mergedChecklist.supportingDocs?.length || 0,
+    );
 
     setLocalChecklist(mergedChecklist);
     if (onChecklistUpdate) {
@@ -657,12 +665,19 @@ const RmReviewChecklistModal = ({
 
     // Check if documents are in flat format (from draft) or nested format (from backend)
     const firstDoc = checklist.documents[0];
-    const isFlatFormat = firstDoc && (firstDoc._id || firstDoc.id || firstDoc.name) && !firstDoc.docList;
+    const isFlatFormat =
+      firstDoc &&
+      (firstDoc._id || firstDoc.id || firstDoc.name) &&
+      !firstDoc.docList;
 
     if (isFlatFormat) {
       // Flat format from draft - use directly
       docsToProcess = checklist.documents;
-      console.log("📋 RM Modal - Processing flat document format from draft:", docsToProcess.length, "docs");
+      console.log(
+        "📋 RM Modal - Processing flat document format from draft:",
+        docsToProcess.length,
+        "docs",
+      );
     } else {
       // Nested format from backend - flatten it
       let docIdxCounter = 0;
@@ -672,11 +687,15 @@ const RmReviewChecklistModal = ({
           .map((doc) => ({
             ...doc,
             category: categoryObj.category || "Missing Category",
-            docIdx: docIdxCounter++
+            docIdx: docIdxCounter++,
           }));
         return [...acc, ...filteredDocs];
       }, []);
-      console.log("📋 RM Modal - Processing nested document format from backend:", docsToProcess.length, "docs");
+      console.log(
+        "📋 RM Modal - Processing nested document format from backend:",
+        docsToProcess.length,
+        "docs",
+      );
     }
 
     // Process all documents
@@ -691,11 +710,17 @@ const RmReviewChecklistModal = ({
 
     // Store supporting docs separately - they should NOT appear in DocumentTable
     const supportingDocsData = checklist.supportingDocs || [];
-    console.log("📎 RM Modal - Supporting docs from backend:", supportingDocsData.length);
+    console.log(
+      "📎 RM Modal - Supporting docs from backend:",
+      supportingDocsData.length,
+    );
 
     // Set main docs WITHOUT supporting docs
     setDocs(processedDocs);
-    console.log("📋 RM Modal - Main documents (no supporting docs):", processedDocs.length);
+    console.log(
+      "📋 RM Modal - Main documents (no supporting docs):",
+      processedDocs.length,
+    );
 
     // Set supporting docs separately for DocumentSidebar
     setSupportingDocs(supportingDocsData);
@@ -768,13 +793,15 @@ const RmReviewChecklistModal = ({
         },
       };
 
-      console.log("✅ RM Modal - Adding supporting doc to supportingDocs state (NOT to docs array):", newSupportingDoc);
+      console.log(
+        "✅ RM Modal - Adding supporting doc to supportingDocs state (NOT to docs array):",
+        newSupportingDoc,
+      );
 
       // Add to supportingDocs state (separate from main docs - won't appear in DocumentTable)
       setSupportingDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
 
       message.success(`"${file.name}" uploaded successfully!`);
-
     } catch (error) {
       console.error("❌ RM Modal - Error uploading supporting doc:", error);
       message.error(error.message || "Failed to upload supporting document");
@@ -921,7 +948,7 @@ const RmReviewChecklistModal = ({
       const payload = {
         checklistId: checklistId,
         documents: docs
-          .filter(doc => !doc.isNew) // Filter out new/temporary documents
+          .filter((doc) => !doc.isNew) // Filter out new/temporary documents
           .map((doc) => ({
             _id: doc._id,
             id: doc.id,
@@ -935,7 +962,7 @@ const RmReviewChecklistModal = ({
             deferralNumber: doc.deferralNumber || "",
           })),
         supportingDocs: supportingDocs
-          .filter(doc => !doc.isNew) // Filter out new/temporary supporting docs
+          .filter((doc) => !doc.isNew) // Filter out new/temporary supporting docs
           .map((doc) => ({
             id: doc.id || doc._id,
             name: doc.fileName || doc.name,
@@ -974,28 +1001,35 @@ const RmReviewChecklistModal = ({
   return (
     <Modal
       title={
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <span style={{ color: "#fff", fontSize: "15px", fontWeight: 600 }}>
             {`Review Checklist  ${checklist?.customerNumber || ""}`}
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Button
               icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
               onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
               size="small"
               style={{
-                display: 'flex',
-                alignItems: 'center',
+                display: "flex",
+                alignItems: "center",
                 gap: 6,
-                backgroundColor: '#164679',
-                borderColor: '#164679',
-                color: '#fff',
-                padding: '4px 12px',
-                height: '32px',
+                backgroundColor: "#164679",
+                borderColor: "#164679",
+                color: "#fff",
+                padding: "4px 12px",
+                height: "32px",
               }}
             >
               View Documents
-              {(docs.filter((d) => d.fileUrl).length + supportingDocs.length) >
+              {docs.filter((d) => d.fileUrl).length + supportingDocs.length >
                 0 && (
                 <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
                   {docs.filter((d) => d.fileUrl).length + supportingDocs.length}
@@ -1008,14 +1042,14 @@ const RmReviewChecklistModal = ({
               size="small"
               type="default"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'rgba(255, 255, 255, 0.2)',
-                borderColor: 'rgba(255, 255, 255, 0.4)',
-                color: '#fff',
-                width: '32px',
-                height: '32px',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(255, 255, 255, 0.2)",
+                borderColor: "rgba(255, 255, 255, 0.4)",
+                color: "#fff",
+                width: "32px",
+                height: "32px",
                 padding: 0,
               }}
             />
@@ -1031,11 +1065,11 @@ const RmReviewChecklistModal = ({
       styles={{
         body: { padding: "0 8px 24px" },
         header: {
-          background: '#164679',
-          padding: '18px 24px',
+          background: "#164679",
+          padding: "18px 24px",
           borderTopLeftRadius: 8,
           borderTopRightRadius: 8,
-        }
+        },
       }}
       footer={[
         <PDFGenerator
@@ -1076,13 +1110,33 @@ const RmReviewChecklistModal = ({
             <Button
               icon={<UploadOutlined />}
               loading={uploadingSupportingDoc}
-              style={{ borderRadius: "6px" }}
+              style={{
+                color: "white !important",
+                backgroundColor:
+                  !isActionAllowed || uploadingSupportingDoc
+                    ? "#CCCCCC !important"
+                    : "#164679 !important",
+                borderColor:
+                  !isActionAllowed || uploadingSupportingDoc
+                    ? "#CCCCCC !important"
+                    : "#164679 !important",
+                borderRadius: "6px",
+              }}
             >
               Upload Supporting Doc
             </Button>
           </Upload>
         ),
-        <Button key="cancel" onClick={onClose} style={{ borderRadius: "6px" }}>
+        <Button
+          key="cancel"
+          onClick={onClose}
+          style={{
+            color: "white !important",
+            backgroundColor: "#164679 !important",
+            borderColor: "#164679 !important",
+            borderRadius: "6px",
+          }}
+        >
           Close
         </Button>,
         !readOnly && (
@@ -1093,7 +1147,13 @@ const RmReviewChecklistModal = ({
             onClick={submitRM}
             disabled={!isActionAllowed}
             style={{
-              backgroundColor: PRIMARY_BLUE,
+              color: "white !important",
+              backgroundColor: !isActionAllowed
+                ? "#CCCCCC !important"
+                : "#164679 !important",
+              borderColor: !isActionAllowed
+                ? "#CCCCCC !important"
+                : "#164679 !important",
               borderRadius: "6px",
               fontWeight: 600,
             }}
@@ -1103,7 +1163,11 @@ const RmReviewChecklistModal = ({
         ),
       ]}
     >
-      {console.log("🔍 RM Modal - Rendering DocumentSidebar with docs:", docs.length, docs)}
+      {console.log(
+        "🔍 RM Modal - Rendering DocumentSidebar with docs:",
+        docs.length,
+        docs,
+      )}
       <DocumentSidebar
         documents={docs}
         supportingDocs={supportingDocs}

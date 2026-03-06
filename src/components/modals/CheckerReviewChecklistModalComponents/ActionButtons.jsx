@@ -88,11 +88,17 @@ const ActionButtons = ({
             loading={isSavingDraft}
             disabled={isDisabled || effectiveReadOnly}
             style={{
-              borderColor: ACCENT_LIME,
-              color: PRIMARY_BLUE,
+              color: "white !important",
+              backgroundColor:
+                isDisabled || effectiveReadOnly
+                  ? "#CCCCCC !important"
+                  : "#164679 !important",
+              borderColor:
+                isDisabled || effectiveReadOnly
+                  ? "#CCCCCC !important"
+                  : "#164679 !important",
               borderRadius: "6px",
               fontWeight: 600,
-              opacity: effectiveReadOnly ? 0.5 : 1,
             }}
           >
             Save Draft
@@ -114,10 +120,16 @@ const ActionButtons = ({
               loading={uploadingSupportingDoc}
               disabled={isDisabled || effectiveReadOnly}
               style={{
-                borderColor: PRIMARY_BLUE,
-                color: PRIMARY_BLUE,
+                color: "white !important",
+                backgroundColor:
+                  isDisabled || effectiveReadOnly
+                    ? "#CCCCCC !important"
+                    : "#164679 !important",
+                borderColor:
+                  isDisabled || effectiveReadOnly
+                    ? "#CCCCCC !important"
+                    : "#164679 !important",
                 borderRadius: "6px",
-                opacity: effectiveReadOnly ? 0.5 : 1,
               }}
             >
               Upload Supporting Doc
@@ -129,7 +141,12 @@ const ActionButtons = ({
           <Button
             key="cancel"
             onClick={onClose}
-            style={{ borderRadius: "6px" }}
+            style={{
+              color: "white !important",
+              backgroundColor: "#164679 !important",
+              borderColor: "#164679 !important",
+              borderRadius: "6px",
+            }}
           >
             Close
           </Button>
@@ -143,8 +160,15 @@ const ActionButtons = ({
                   disabled={!canReturnToCreator() || effectiveReadOnly}
                   style={{
                     borderRadius: "6px",
-                    opacity:
-                      canReturnToCreator() && !effectiveReadOnly ? 1 : 0.6,
+                    backgroundColor:
+                      !canReturnToCreator() || effectiveReadOnly
+                        ? "#CCCCCC !important"
+                        : "#ff4d4f !important",
+                    borderColor:
+                      !canReturnToCreator() || effectiveReadOnly
+                        ? "#CCCCCC !important"
+                        : "#ff4d4f !important",
+                    color: "white !important",
                   }}
                 >
                   Return to Creator
@@ -163,17 +187,17 @@ const ActionButtons = ({
                     setConfirmAction("approved");
                   }}
                   style={{
+                    color: "white !important",
                     backgroundColor:
-                      canApproveChecklist() && !effectiveReadOnly
-                        ? "#52c41a"
-                        : "#ccc",
+                      !canApproveChecklist() || effectiveReadOnly
+                        ? "#CCCCCC !important"
+                        : "#164679 !important",
                     borderColor:
-                      canApproveChecklist() && !effectiveReadOnly
-                        ? "#52c41a"
-                        : "#ccc",
+                      !canApproveChecklist() || effectiveReadOnly
+                        ? "#CCCCCC !important"
+                        : "#164679 !important",
                     borderRadius: "6px",
                     fontWeight: 600,
-                    opacity: effectiveReadOnly ? 0.5 : 1,
                   }}
                 >
                   Approve Checklist

@@ -226,19 +226,25 @@ export default function ApproverSelector({
   const requiredSteps = slots.length;
   const selectedCount = slots.filter((slot) => !!slot.userId).length;
   const remainingApprovers = Math.max(requiredSteps - selectedCount, 0);
-  const selectedUserIds = slots.filter((slot) => !!slot.userId).map((slot) => String(slot.userId));
-  const hasDuplicateApprovers = new Set(selectedUserIds).size !== selectedUserIds.length;
-  const hasDocuments = Array.isArray(selectedDocuments) && selectedDocuments.length > 0;
+  const selectedUserIds = slots
+    .filter((slot) => !!slot.userId)
+    .map((slot) => String(slot.userId));
+  const hasDuplicateApprovers =
+    new Set(selectedUserIds).size !== selectedUserIds.length;
+  const hasDocuments =
+    Array.isArray(selectedDocuments) && selectedDocuments.length > 0;
   const hasLoanAmount = !!String(loanAmount || "").trim();
   const canDetermineMatrix = hasDocuments && hasLoanAmount;
 
   const parsedLoanAmount = useMemo(() => {
-    const loanStr = String(loanAmount || "").toLowerCase().trim();
-    
+    const loanStr = String(loanAmount || "")
+      .toLowerCase()
+      .trim();
+
     // Handle predefined dropdown values
     if (loanStr === "above75") return 76000000; // Above threshold
     if (loanStr === "below75") return 74000000; // Below threshold
-    
+
     // Handle numeric input (fallback for direct number entry)
     const normalized = loanStr.replace(/[^0-9.-]+/g, "");
     return parseFloat(normalized) || 0;
@@ -250,10 +256,10 @@ export default function ApproverSelector({
     }
 
     const hasPrimary = selectedDocuments.some(
-      (doc) => String(doc?.type || "").toLowerCase() === "primary"
+      (doc) => String(doc?.type || "").toLowerCase() === "primary",
     );
     const hasSecondary = selectedDocuments.some(
-      (doc) => String(doc?.type || "").toLowerCase() === "secondary"
+      (doc) => String(doc?.type || "").toLowerCase() === "secondary",
     );
     const amountLabel = parsedLoanAmount > 75000000 ? "Above 75M" : "Below 75M";
 
@@ -262,7 +268,10 @@ export default function ApproverSelector({
     return `Selected Documents (${amountLabel})`;
   }, [canDetermineMatrix, requiredSteps, selectedDocuments, parsedLoanAmount]);
 
-  const canSubmit = requiredSteps > 0 && selectedCount === requiredSteps && !hasDuplicateApprovers;
+  const canSubmit =
+    requiredSteps > 0 &&
+    selectedCount === requiredSteps &&
+    !hasDuplicateApprovers;
 
   const getApproverLabel = (index) => {
     if (index === requiredSteps - 1) return "Final Approver";
@@ -339,8 +348,24 @@ export default function ApproverSelector({
           <div style={{ marginTop: 4, fontSize: 11, color: "#8c8c8c" }}>
             For selected documents with current loan amount
           </div>
-          <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
-            <Text type="secondary" style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <div
+            style={{
+              marginTop: 8,
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+            }}
+          >
+            <Text
+              type="secondary"
+              style={{
+                fontSize: 11,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                flexWrap: "wrap",
+              }}
+            >
               <span>Required Steps:</span>
               <span
                 style={{
@@ -354,7 +379,16 @@ export default function ApproverSelector({
                 {requiredSteps} levels
               </span>
             </Text>
-            <Text type="secondary" style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <Text
+              type="secondary"
+              style={{
+                fontSize: 11,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                flexWrap: "wrap",
+              }}
+            >
               <span>Completed:</span>
               <span
                 style={{
@@ -376,7 +410,13 @@ export default function ApproverSelector({
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {!canDetermineMatrix || requiredSteps === 0 ? (
-          <div style={{ textAlign: "center", padding: "42px 14px", color: "#bfbfbf" }}>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "42px 14px",
+              color: "#bfbfbf",
+            }}
+          >
             <InfoCircleOutlined style={{ fontSize: 64, color: "#d9d9d9" }} />
             <div style={{ marginTop: 16, fontSize: 32, lineHeight: 1 }}>·</div>
             <div style={{ fontSize: 28, lineHeight: 1 }}>·</div>
@@ -391,7 +431,14 @@ export default function ApproverSelector({
           <>
             {slots.map((slot, index) => (
               <div key={`selector-${index}`}>
-                <Text strong style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <Text
+                  strong
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
                   {getApproverLabel(index)}: {slot.role || "Approver"}
                 </Text>
                 <Select
@@ -399,12 +446,17 @@ export default function ApproverSelector({
                   onChange={(value) => {
                     const selectedApprover = availableApprovers.find(
                       (approver) =>
-                        String(approver.id || approver._id || approver.userId) === String(value)
+                        String(
+                          approver.id || approver._id || approver.userId,
+                        ) === String(value),
                     );
-                    const selectedRole = selectedApprover?.position || slot.role || "Approver";
+                    const selectedRole =
+                      selectedApprover?.position || slot.role || "Approver";
                     updateApprover(index, value, selectedRole);
                   }}
-                  onClear={() => updateApprover(index, "", slot.role || "Approver")}
+                  onClear={() =>
+                    updateApprover(index, "", slot.role || "Approver")
+                  }
                   style={{ width: "100%", marginTop: 6 }}
                   placeholder="-- Select --"
                   size="middle"
@@ -412,52 +464,91 @@ export default function ApproverSelector({
                   allowClear
                   optionFilterProp="children"
                 >
-                  {Array.isArray(availableApprovers) && availableApprovers.length > 0 ? (
+                  {Array.isArray(availableApprovers) &&
+                  availableApprovers.length > 0 ? (
                     (() => {
                       const matching = availableApprovers.filter(
                         (approver) =>
                           String(approver.position || "").toLowerCase() ===
-                          String(slot.role || "").toLowerCase()
+                          String(slot.role || "").toLowerCase(),
                       );
                       const others = availableApprovers.filter(
                         (approver) =>
                           String(approver.position || "").toLowerCase() !==
-                          String(slot.role || "").toLowerCase()
+                          String(slot.role || "").toLowerCase(),
                       );
 
                       return (
                         <>
                           {matching.map((approver) => (
                             <Option
-                              key={approver.id || approver._id || approver.userId}
-                              value={approver.id || approver._id || approver.userId}
+                              key={
+                                approver.id || approver._id || approver.userId
+                              }
+                              value={
+                                approver.id || approver._id || approver.userId
+                              }
                               disabled={
-                                selectedUserIds.includes(String(approver.id || approver._id || approver.userId)) &&
-                                String(slot.userId || "") !== String(approver.id || approver._id || approver.userId)
+                                selectedUserIds.includes(
+                                  String(
+                                    approver.id ||
+                                      approver._id ||
+                                      approver.userId,
+                                  ),
+                                ) &&
+                                String(slot.userId || "") !==
+                                  String(
+                                    approver.id ||
+                                      approver._id ||
+                                      approver.userId,
+                                  )
                               }
                             >
                               {approver.name}
-                              {approver.position ? ` — ${approver.position}` : ""}
+                              {approver.position
+                                ? ` — ${approver.position}`
+                                : ""}
                             </Option>
                           ))}
                           {others.map((approver) => (
                             <Option
-                              key={approver.id || approver._id || approver.userId}
-                              value={approver.id || approver._id || approver.userId}
+                              key={
+                                approver.id || approver._id || approver.userId
+                              }
+                              value={
+                                approver.id || approver._id || approver.userId
+                              }
                               disabled={
-                                selectedUserIds.includes(String(approver.id || approver._id || approver.userId)) &&
-                                String(slot.userId || "") !== String(approver.id || approver._id || approver.userId)
+                                selectedUserIds.includes(
+                                  String(
+                                    approver.id ||
+                                      approver._id ||
+                                      approver.userId,
+                                  ),
+                                ) &&
+                                String(slot.userId || "") !==
+                                  String(
+                                    approver.id ||
+                                      approver._id ||
+                                      approver.userId,
+                                  )
                               }
                             >
                               {approver.name}
-                              {approver.position ? ` — ${approver.position}` : ""}
+                              {approver.position
+                                ? ` — ${approver.position}`
+                                : ""}
                             </Option>
                           ))}
                         </>
                       );
                     })()
                   ) : (
-                    <Option key="no-approvers" value="__no_approvers__" disabled>
+                    <Option
+                      key="no-approvers"
+                      value="__no_approvers__"
+                      disabled
+                    >
                       No approvers available
                     </Option>
                   )}
@@ -473,21 +564,21 @@ export default function ApproverSelector({
                   />
                 )}
 
-                {slot.isCustom === true && typeof removeApprover === "function" && (
-                  <Button
-                    type="link"
-                    danger
-                    onClick={() => removeApprover(index)}
-                    style={{ marginTop: 2, paddingLeft: 0 }}
-                  >
-                    Remove
-                  </Button>
-                )}
+                {slot.isCustom === true &&
+                  typeof removeApprover === "function" && (
+                    <Button
+                      type="link"
+                      danger
+                      onClick={() => removeApprover(index)}
+                      style={{ marginTop: 2, paddingLeft: 0 }}
+                    >
+                      Remove
+                    </Button>
+                  )}
               </div>
             ))}
           </>
         )}
-
       </div>
       <div
         style={{
@@ -504,19 +595,33 @@ export default function ApproverSelector({
             loading={isSubmitting}
             size="large"
             type="primary"
-            style={{ width: "100%", background: canSubmit ? "#52c41a" : undefined, borderColor: canSubmit ? "#52c41a" : undefined }}
+            style={{
+              width: "100%",
+              background: canSubmit ? "#52c41a" : undefined,
+              borderColor: canSubmit ? "#52c41a" : undefined,
+            }}
             disabled={!canSubmit}
           >
             {isSubmitting ? "Submitting..." : "Submit Deferral"}
           </Button>
         </div>
 
-        <div style={{ fontSize: 12, textAlign: "center", minHeight: 36, paddingTop: 10 }}>
+        <div
+          style={{
+            fontSize: 12,
+            textAlign: "center",
+            minHeight: 36,
+            paddingTop: 10,
+          }}
+        >
           {!canDetermineMatrix || requiredSteps === 0 ? (
-            <Text type="secondary">Complete loan amount and document selection first</Text>
+            <Text type="secondary">
+              Complete loan amount and document selection first
+            </Text>
           ) : hasDuplicateApprovers ? (
             <div style={{ color: "#ff4d4f" }}>
-              <WarningOutlined /> Same approver cannot be selected in more than one step
+              <WarningOutlined /> Same approver cannot be selected in more than
+              one step
             </div>
           ) : canSubmit ? (
             <div style={{ color: "#389e0d", fontWeight: 600 }}>

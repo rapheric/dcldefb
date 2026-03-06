@@ -197,14 +197,39 @@ function normalizeDeferralRecord(deferral) {
   );
   const derivedStatus = deriveWorkflowStatus(deferral, normalizedStatus, allApproversApproved);
 
+  // Determine and mark the current approver index and expose a lightweight currentApprover
+  const safeIndex = Number.isInteger(deferral?.currentApproverIndex) ? deferral.currentApproverIndex : 0;
+  const approversWithCurrentFlag = Array.isArray(normalizedApprovers)
+    ? normalizedApprovers.map((a, i) => ({ ...a, isCurrent: i === safeIndex }))
+    : normalizedApprovers;
+
+  // Try to resolve current approver from approvers first, then from approverFlow if needed
+  const pickCurrentFromList = (list) => {
+    if (!Array.isArray(list) || list.length === 0) return null;
+    const item = list[safeIndex] || list[0] || null;
+    if (!item) return null;
+    return {
+      name: item?.user?.name || item?.name || "Approver",
+      email: item?.user?.email || item?.email || item?.userEmail || null,
+      role: item?.role || item?.position || null,
+    };
+  };
+
+  let currentApprover = pickCurrentFromList(approversWithCurrentFlag);
+  if (!currentApprover) {
+    // fallback to approverFlow
+    currentApprover = pickCurrentFromList(normalizedApproverFlow);
+  }
+
   return {
     ...deferral,
     _id: normalizedId,
     id: normalizedId,
     status: derivedStatus,
     allApproversApproved,
-    approvers: normalizedApprovers,
+    approvers: approversWithCurrentFlag,
     approverFlow: normalizedApproverFlow,
+    currentApprover,
   };
 }
 
@@ -378,7 +403,18 @@ const deferralApi = {
         `Failed to update deferral (${res.status})`;
       throw new Error(validationError);
     }
-    return res.json();
+    const payload = await res.json().catch(() => null);
+    if (!payload) return payload;
+    // If backend returns wrapped object with deferral, normalize that deferral
+    if (payload && typeof payload === 'object' && payload.deferral) {
+      return {
+        ...payload,
+        deferral: normalizeDeferralRecord(payload.deferral),
+      };
+    }
+    // If it's a plain deferral object, normalize it for consistency
+    if (payload && typeof payload === 'object') return normalizeDeferralRecord(payload);
+    return payload;
   },
 
   addHistory: async (id, entry, token) => {
@@ -532,6 +568,28 @@ const deferralApi = {
     return res.json();
   },
 
+  // Send reminder and log a system comment to the deferral history
+  sendReminderAndLog: async (id, token, options = {}) => {
+    const actor = options.actorName || 'System';
+    try {
+      // Attempt to send reminder (email/notification)
+      await deferralApi.sendReminder(id, token, {});
+    } catch (e) {
+      // ignore individual send failures - still record the remark
+      console.warn('sendReminder failed:', e?.message || e);
+    }
+
+    // Add a permanent system comment in the deferral's comment trail
+    const text = options.text || `${actor} initiated a reminder for this deferral.`;
+    try {
+      await deferralApi.addComment(id, text, token);
+    } catch (e) {
+      console.warn('addComment (reminder) failed:', e?.message || e);
+    }
+
+    return { ok: true };
+  },
+
   approveDeferral: async (id, data, token) => {
     // Handle both string and object inputs
     let body = {};
@@ -622,6 +680,23 @@ const deferralApi = {
       throw new Error(err.message || "Failed to withdraw deferral");
     }
     return res.json();
+  },
+
+  // Withdraw (RM) - mark deferral as withdrawn/closed by RM
+  withdrawDeferral: async (id, data, token) => {
+    const payload = data || {};
+    const res = await fetch(`${API_BASE}/${id}/withdraw`, {
+      method: "POST",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Failed to withdraw deferral");
+    }
+    const payloadRes = await res.json().catch(() => null);
+    if (!payloadRes) return payloadRes;
+    return typeof payloadRes === 'object' && payloadRes.deferral ? { ...payloadRes, deferral: normalizeDeferralRecord(payloadRes.deferral) } : normalizeDeferralRecord(payloadRes);
   },
 
   // Return deferral for re-work to RM - FIXED: Now properly handles the data parameter

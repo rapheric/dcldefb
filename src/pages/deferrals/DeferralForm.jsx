@@ -21,7 +21,7 @@ import {
   Descriptions,
   Tooltip,
   List,
-  Avatar
+  Avatar,
 } from "antd";
 import {
   SearchOutlined,
@@ -48,12 +48,14 @@ import {
   SendOutlined,
   BellOutlined,
   ArrowLeftOutlined,
-  FileOutlined
+  FileOutlined,
 } from "@ant-design/icons";
 
 import deferralApi from "../../service/deferralApi";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
+import { generateChecklistPDFBlob } from "../../utils/reportGenerator";
+import { getStatusStyle, formatStatusText } from "../../utils/statusColors";
 
 // Import the separate components
 import DocumentPicker from "../../components/deferrals/DocumentPicker";
@@ -91,26 +93,26 @@ export default function DeferralForm({ userId, onSuccess }) {
     name: "",
     role: "",
     email: "",
-    employeeId: ""
+    employeeId: "",
   });
 
   // Populate current user from stored auth info so the Requestor label shows their name
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('user');
+      const stored = localStorage.getItem("user");
       if (stored) {
         const parsed = JSON.parse(stored);
         const u = parsed?.user || {};
         setCurrentUser((prev) => ({
           ...prev,
-          name: u.name || prev.name || 'Requestor',
+          name: u.name || prev.name || "Requestor",
           role: u.role || prev.role,
           email: u.email || prev.email,
           employeeId: u.employeeId || prev.employeeId,
         }));
       }
     } catch (e) {
-      console.warn('Unable to load user from storage', e);
+      console.warn("Unable to load user from storage", e);
     }
   }, []);
 
@@ -129,13 +131,16 @@ export default function DeferralForm({ userId, onSuccess }) {
   const [approverCustomized, setApproverCustomized] = useState(false);
 
   // Fetch available approvers from server for selector
-  const { data: approverList = [], isLoading: approversLoading } = useGetApproversQuery();
+  const { data: approverList = [], isLoading: approversLoading } =
+    useGetApproversQuery();
   const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [isFetching, setIsFetching] = useState(false);
 
   // Determine document category (Primary when any selected doc is Primary)
-  const documentCategory = selectedDocuments.some((d) => d.type === "Primary") ? "Primary" : "Secondary";
+  const documentCategory = selectedDocuments.some((d) => d.type === "Primary")
+    ? "Primary"
+    : "Secondary";
 
   // Loan amount state needed by parsedLoanAmount — define before function to avoid TDZ
   const [loanAmount, setLoanAmount] = useState("");
@@ -144,11 +149,11 @@ export default function DeferralForm({ userId, onSuccess }) {
     if (!loanAmount) return 0;
     try {
       const loanStr = String(loanAmount).toLowerCase().trim();
-      
+
       // Handle predefined dropdown values
       if (loanStr === "above75") return 76000000; // Above threshold
       if (loanStr === "below75") return 74000000; // Below threshold
-      
+
       // Handle numeric input (fallback for direct number entry)
       const normalized = loanStr.replace(/[^0-9.-]+/g, "");
       return parseFloat(normalized) || 0;
@@ -161,10 +166,10 @@ export default function DeferralForm({ userId, onSuccess }) {
 
   const computeDefaultRoles = () => {
     const hasPrimary = selectedDocuments.some(
-      (d) => String(d?.type || "").toLowerCase() === "primary"
+      (d) => String(d?.type || "").toLowerCase() === "primary",
     );
     const hasSecondary = selectedDocuments.some(
-      (d) => String(d?.type || "").toLowerCase() === "secondary"
+      (d) => String(d?.type || "").toLowerCase() === "secondary",
     );
     const isAboveThreshold = parsedLoanAmount() > LOAN_THRESHOLD;
 
@@ -211,13 +216,12 @@ export default function DeferralForm({ userId, onSuccess }) {
           return {
             role,
             userId: existingSlot?.userId || "",
-            isCustom: existingSlot?.isCustom || false
+            isCustom: existingSlot?.isCustom || false,
           };
         });
       });
     }
   }, [selectedDocuments.length, loanAmount, LOAN_THRESHOLD]);
-
 
   const [daysSought, setDaysSought] = useState("");
   const [nextDueDate, setNextDueDate] = useState("");
@@ -228,7 +232,8 @@ export default function DeferralForm({ userId, onSuccess }) {
   const [searchCustomerNumber, setSearchCustomerNumber] = useState("");
   const [searchLoanType, setSearchLoanType] = useState("");
   const [customerSearchResults, setCustomerSearchResults] = useState([]);
-  const [selectCustomerModalVisible, setSelectCustomerModalVisible] = useState(false);
+  const [selectCustomerModalVisible, setSelectCustomerModalVisible] =
+    useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const searchTimeoutRef = useRef(null);
 
@@ -239,12 +244,13 @@ export default function DeferralForm({ userId, onSuccess }) {
   const dclSearchTimeoutRef = useRef(null);
   const [isSearchedByDcl, setIsSearchedByDcl] = useState(false); // Track if DCL search was used
   const [selectedDclId, setSelectedDclId] = useState(null); // Store selected DCL ID
+  const [selectedChecklistStatus, setSelectedChecklistStatus] = useState("");
 
   // File upload states
   const [dclFile, setDclFile] = useState(null);
   const [additionalFiles, setAdditionalFiles] = useState([]);
   // Comments for the deferral
-  const [comments, setComments] = useState('');
+  const [comments, setComments] = useState("");
   const [postedComments, setPostedComments] = useState([]);
   // Post-submission modal state removed; we will redirect to My Deferrals after create
 
@@ -257,7 +263,7 @@ export default function DeferralForm({ userId, onSuccess }) {
     const fetchCurrentUser = async () => {
       try {
         // Example: Get user from localStorage, context, or API
-        const userData = localStorage.getItem('currentUser');
+        const userData = localStorage.getItem("currentUser");
 
         if (userData) {
           // If you store user data in localStorage
@@ -266,7 +272,7 @@ export default function DeferralForm({ userId, onSuccess }) {
             name: parsedUser.name || "",
             role: parsedUser.role || "",
             email: parsedUser.email || "",
-            employeeId: parsedUser.employeeId || ""
+            employeeId: parsedUser.employeeId || "",
           });
         } else {
           // No stored user; integrate with your auth system to populate `currentUser`
@@ -290,14 +296,16 @@ export default function DeferralForm({ userId, onSuccess }) {
     const loanTypeMap = {
       "asset finance": "Asset Finance",
       "business loan": "Business Loan",
-      "consumer": "Consumer",
-      "mortgage": "Mortgage",
-      "construction": "Construction Loan",
-      "shamba loan": "Shamba Loan"
+      consumer: "Consumer",
+      mortgage: "Mortgage",
+      construction: "Construction Loan",
+      "shamba loan": "Shamba Loan",
     };
 
-    return loanTypeMap[loanType.toLowerCase()] ||
-      loanType.charAt(0).toUpperCase() + loanType.slice(1);
+    return (
+      loanTypeMap[loanType.toLowerCase()] ||
+      loanType.charAt(0).toUpperCase() + loanType.slice(1)
+    );
   };
 
   // ----------------------
@@ -341,7 +349,7 @@ export default function DeferralForm({ userId, onSuccess }) {
     try {
       setIsFetching(true);
       // token is stored under localStorage 'user' as { user, token }
-      const stored = JSON.parse(localStorage.getItem('user') || 'null');
+      const stored = JSON.parse(localStorage.getItem("user") || "null");
       const token = stored?.token;
 
       let data = null;
@@ -372,7 +380,10 @@ export default function DeferralForm({ userId, onSuccess }) {
             "content-type": "application/json",
             ...(token ? { authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify({ customerNumber: searchCustomerNumber, loanType: searchLoanType }),
+          body: JSON.stringify({
+            customerNumber: searchCustomerNumber,
+            loanType: searchLoanType,
+          }),
         });
 
         if (res.status === 401) {
@@ -423,12 +434,9 @@ export default function DeferralForm({ userId, onSuccess }) {
         setLoanType(data.loanType);
       }
 
-
-
       // Proceed to deferral details page (hide search form)
       setIsCustomerFetched(true);
       setShowSearchForm(false);
-
     } catch (err) {
       console.error(err);
       message.error("Failed to fetch customers");
@@ -440,10 +448,10 @@ export default function DeferralForm({ userId, onSuccess }) {
   // Lightweight typeahead search used while typing customer number
   const searchCustomersTypeahead = async (q) => {
     try {
-      const stored = JSON.parse(localStorage.getItem('user') || 'null');
+      const stored = JSON.parse(localStorage.getItem("user") || "null");
       const token = stored?.token;
       const url = `${import.meta.env.VITE_API_URL}/api/users/customers?q=${encodeURIComponent(
-        q
+        q,
       )}${searchLoanType ? `&loanType=${encodeURIComponent(searchLoanType)}` : ""}`;
       const res = await fetch(url, {
         headers: {
@@ -501,20 +509,37 @@ export default function DeferralForm({ userId, onSuccess }) {
   // ----------------------
   const searchDclsTypeahead = async (q) => {
     try {
-      const stored = JSON.parse(localStorage.getItem('user') || 'null');
+      const stored = JSON.parse(localStorage.getItem("user") || "null");
       const token = stored?.token;
-      const url = `${import.meta.env.VITE_API_URL}/api/customers/search-dcl?dclNo=${encodeURIComponent(q)}`;
+
+      // Normalize API base similar to service utilities and fall back to localhost:5000
+      const rawApi = String(import.meta.env.VITE_API_URL || "")
+        .trim()
+        .replace(/^['"]|['"]$/g, "");
+      const apiBase = (() => {
+        if (!rawApi) return "http://localhost:5000";
+        if (/^https?:\/\//i.test(rawApi)) return rawApi.replace(/\/$/, "");
+        if (rawApi.startsWith(":")) return `http://localhost${rawApi}`;
+        return `http://${rawApi}`;
+      })();
+
+      const url = `${apiBase.replace(/\/$/, "")}/api/customers/search-dcl?dclNo=${encodeURIComponent(q)}`;
       const res = await fetch(url, {
         headers: {
           ...(token ? { authorization: `Bearer ${token}` } : {}),
           "content-type": "application/json",
         },
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.debug("DCL typeahead response not OK", res.status);
+        setDclSearchResults([]);
+        return;
+      }
       const results = await res.json();
       setDclSearchResults(Array.isArray(results) ? results : []);
     } catch (err) {
       console.error("DCL typeahead search failed", err);
+      setDclSearchResults([]);
     }
   };
 
@@ -532,7 +557,8 @@ export default function DeferralForm({ userId, onSuccess }) {
     }, 300);
 
     return () => {
-      if (dclSearchTimeoutRef.current) clearTimeout(dclSearchTimeoutRef.current);
+      if (dclSearchTimeoutRef.current)
+        clearTimeout(dclSearchTimeoutRef.current);
     };
   }, [searchDclNumber]);
 
@@ -546,6 +572,7 @@ export default function DeferralForm({ userId, onSuccess }) {
     setDclNumber(deferral.dclNo || ""); // Auto-fill DCL number field
     setSelectedCustomerId(deferral.customerId || null);
     setSelectedDclId(deferral.id); // Store the selected DCL ID
+    setSelectedChecklistStatus(deferral.status || "");
     setIsSearchedByDcl(true); // Mark that DCL search was used
 
     // Fetch and auto-download the DCL file
@@ -558,11 +585,11 @@ export default function DeferralForm({ userId, onSuccess }) {
   };
 
   // ----------------------
-  // FETCH DCL FILE
+  // FETCH DCL FILE (attempt to use existing upload, otherwise auto-generate PDF)
   // ----------------------
   const fetchDclFile = async (checklistId, dclNumber) => {
     try {
-      const stored = JSON.parse(localStorage.getItem('user') || 'null');
+      const stored = JSON.parse(localStorage.getItem("user") || "null");
       const token = stored?.token;
 
       // Fetch the checklist to get the documents
@@ -581,36 +608,56 @@ export default function DeferralForm({ userId, onSuccess }) {
 
       const checklist = await res.json();
 
-      // Find the most recent DCL file (if documents array exists)
+      // Track the checklist status so UI can display it in customer info
+      setSelectedChecklistStatus(checklist.status || "");
+
+      // Flatten any document lists
+      const allDocs = [];
       if (checklist.documents && Array.isArray(checklist.documents)) {
-        // Flatten all documents and find the most recent one
-        const allDocs = [];
-        checklist.documents.forEach(category => {
+        checklist.documents.forEach((category) => {
           if (category.docList && Array.isArray(category.docList)) {
             allDocs.push(...category.docList);
           }
         });
+      }
 
-        // Sort by timestamp and get the most recent
-        allDocs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-        if (allDocs.length > 0) {
-          const latestDoc = allDocs[0];
-
-          // Set the DCL file with the document details for display in the compartment
-          if (latestDoc.fileUrl || latestDoc.url) {
-            const fileName = latestDoc.name || `${dclNumber}.pdf`;
-            const fileUrl = latestDoc.fileUrl || latestDoc.url;
-
-            setDclFile({
-              name: fileName,
-              url: fileUrl,
-              type: latestDoc.type || 'DCL',
-              isDCL: true,
-              size: latestDoc.size || 0,
-            });
-          }
+      // If an uploaded DCL file exists, use it
+      if (allDocs.length > 0) {
+        allDocs.sort(
+          (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+        );
+        const latestDoc = allDocs[0];
+        if (latestDoc && (latestDoc.fileUrl || latestDoc.url)) {
+          const fileName = latestDoc.name || `${dclNumber}.pdf`;
+          const fileUrl = latestDoc.fileUrl || latestDoc.url;
+          setDclFile({
+            name: fileName,
+            url: fileUrl,
+            type: latestDoc.type || "DCL",
+            isDCL: true,
+            size: latestDoc.size || 0,
+          });
+          return;
         }
+      }
+
+      // No existing upload found — try to auto-generate a PDF from checklist data
+      try {
+        const blob = await generateChecklistPDFBlob(
+          checklist,
+          allDocs,
+          checklist.comments || [],
+        );
+        if (blob) {
+          const fileName = `${dclNumber || checklist.dclNo || "DCL"}.pdf`;
+          const generatedFile = new File([blob], fileName, {
+            type: "application/pdf",
+          });
+          setDclFile(generatedFile);
+          message.success(`${fileName} auto-generated and attached`);
+        }
+      } catch (genErr) {
+        console.error("Failed to auto-generate DCL PDF:", genErr);
       }
     } catch (err) {
       console.error("Failed to fetch DCL file:", err);
@@ -620,7 +667,7 @@ export default function DeferralForm({ userId, onSuccess }) {
   // Helper function to download file
   const downloadFile = (url, filename) => {
     try {
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
@@ -631,18 +678,28 @@ export default function DeferralForm({ userId, onSuccess }) {
     }
   };
 
-
-
   // ----------------------
   // FILE UPLOAD HANDLERS
   // ----------------------
   const handleDCLUpload = (file) => {
     // Check file type
-    const allowedTypes = ['.pdf', '.PDF', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'];
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    const allowedTypes = [
+      ".pdf",
+      ".PDF",
+      ".doc",
+      ".docx",
+      ".xls",
+      ".xlsx",
+      ".png",
+      ".jpg",
+      ".jpeg",
+    ];
+    const fileExtension = "." + file.name.split(".").pop().toLowerCase();
 
     if (!allowedTypes.includes(fileExtension)) {
-      message.error(`File type not allowed. Please upload: ${allowedTypes.join(', ')}`);
+      message.error(
+        `File type not allowed. Please upload: ${allowedTypes.join(", ")}`,
+      );
       return false;
     }
 
@@ -653,11 +710,23 @@ export default function DeferralForm({ userId, onSuccess }) {
 
   const handleAdditionalFileUpload = (file) => {
     // Check file type
-    const allowedTypes = ['.pdf', '.PDF', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'];
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    const allowedTypes = [
+      ".pdf",
+      ".PDF",
+      ".doc",
+      ".docx",
+      ".xls",
+      ".xlsx",
+      ".png",
+      ".jpg",
+      ".jpeg",
+    ];
+    const fileExtension = "." + file.name.split(".").pop().toLowerCase();
 
     if (!allowedTypes.includes(fileExtension)) {
-      message.error(`File type not allowed. Please upload: ${allowedTypes.join(', ')}`);
+      message.error(
+        `File type not allowed. Please upload: ${allowedTypes.join(", ")}`,
+      );
       return false;
     }
 
@@ -670,11 +739,11 @@ export default function DeferralForm({ userId, onSuccess }) {
 
   const removeDCLFile = () => {
     setDclFile(null);
-    message.info('DCL file removed');
+    message.info("DCL file removed");
   };
 
   const removeAdditionalFile = (file) => {
-    const newFileList = additionalFiles.filter(f => f.uid !== file.uid);
+    const newFileList = additionalFiles.filter((f) => f.uid !== file.uid);
     setAdditionalFiles(newFileList);
     message.info(`${file.name} removed`);
   };
@@ -683,19 +752,19 @@ export default function DeferralForm({ userId, onSuccess }) {
   // DOCUMENT VIEW HANDLER
   // ----------------------
   const getFileIcon = (fileName) => {
-    const extension = fileName.split('.').pop().toLowerCase();
+    const extension = fileName.split(".").pop().toLowerCase();
     switch (extension) {
-      case 'pdf':
+      case "pdf":
         return <FilePdfOutlined style={{ color: ERROR_RED }} />;
-      case 'doc':
-      case 'docx':
+      case "doc":
+      case "docx":
         return <FileWordOutlined style={{ color: PRIMARY_BLUE }} />;
-      case 'xls':
-      case 'xlsx':
+      case "xls":
+      case "xlsx":
         return <FileExcelOutlined style={{ color: SUCCESS_GREEN }} />;
-      case 'png':
-      case 'jpg':
-      case 'jpeg':
+      case "png":
+      case "jpg":
+      case "jpeg":
         return <FileImageOutlined style={{ color: WARNING_ORANGE }} />;
       default:
         return <FileOutlined />;
@@ -708,7 +777,7 @@ export default function DeferralForm({ userId, onSuccess }) {
       const fileURL = URL.createObjectURL(file.originFileObj);
 
       // Open in new tab
-      window.open(fileURL, '_blank');
+      window.open(fileURL, "_blank");
 
       // Clean up the URL object after some time
       setTimeout(() => {
@@ -719,30 +788,35 @@ export default function DeferralForm({ userId, onSuccess }) {
     } else if (file && file instanceof File) {
       // If it's a file object directly
       const fileURL = URL.createObjectURL(file);
-      window.open(fileURL, '_blank');
+      window.open(fileURL, "_blank");
       setTimeout(() => {
         URL.revokeObjectURL(fileURL);
       }, 10000);
       message.info(`Opening ${file.name}`);
     } else if (file && file.url) {
       // If it's a saved URL (data URL or external)
-      window.open(file.url, '_blank');
-      message.info(`Opening ${file.name || 'document'}`);
+      window.open(file.url, "_blank");
+      message.info(`Opening ${file.name || "document"}`);
     } else {
-      message.info('No preview available');
+      message.info("No preview available");
     }
   };
 
   // Download helper for both File objects and saved URLs
   const handleDownload = (item) => {
-    if (!item) return message.info('No file available');
+    if (!item) return message.info("No file available");
 
-    if (item.fileObj && (item.fileObj instanceof File || item.fileObj.originFileObj)) {
-      const blob = item.fileObj.originFileObj ? item.fileObj.originFileObj : item.fileObj;
+    if (
+      item.fileObj &&
+      (item.fileObj instanceof File || item.fileObj.originFileObj)
+    ) {
+      const blob = item.fileObj.originFileObj
+        ? item.fileObj.originFileObj
+        : item.fileObj;
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = (blob.name || item.name || 'download');
+      a.download = blob.name || item.name || "download";
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -752,47 +826,51 @@ export default function DeferralForm({ userId, onSuccess }) {
 
     if (item.url) {
       // For data URLs or external links, set download
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = item.url;
-      a.download = item.name || 'download';
+      a.download = item.name || "download";
       document.body.appendChild(a);
       a.click();
       a.remove();
       return;
     }
 
-    message.info('No file available for download');
+    message.info("No file available for download");
   };
 
   // ----------------------
   // RENDER DOCUMENT LIST ITEMS
   // ----------------------
   const renderDocumentItem = (file, allowDelete = true) => {
-    const fileSize = file.size ? `${(file.size / 1024).toFixed(2)} KB` : 'Size unknown';
+    const fileSize = file.size
+      ? `${(file.size / 1024).toFixed(2)} KB`
+      : "Size unknown";
 
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '8px 12px',
-        border: '1px solid #f0f0f0',
-        borderRadius: '6px',
-        marginBottom: '8px',
-        backgroundColor: '#fafafa'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "8px 12px",
+          border: "1px solid #f0f0f0",
+          borderRadius: "6px",
+          marginBottom: "8px",
+          backgroundColor: "#fafafa",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {getFileIcon(file.name)}
           <div>
-            <Text strong style={{ display: 'block', fontSize: '13px' }}>
+            <Text strong style={{ display: "block", fontSize: "13px" }}>
               {file.name}
             </Text>
-            <Text type="secondary" style={{ fontSize: '11px' }}>
+            <Text type="secondary" style={{ fontSize: "11px" }}>
               {fileSize}
             </Text>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: "flex", gap: "8px" }}>
           <Tooltip title="View document">
             <Button
               type="text"
@@ -808,7 +886,9 @@ export default function DeferralForm({ userId, onSuccess }) {
                 size="small"
                 danger
                 icon={<DeleteOutlined />}
-                onClick={() => file.isDCL ? removeDCLFile() : removeAdditionalFile(file)}
+                onClick={() =>
+                  file.isDCL ? removeDCLFile() : removeAdditionalFile(file)
+                }
               />
             </Tooltip>
           )}
@@ -827,20 +907,22 @@ export default function DeferralForm({ userId, onSuccess }) {
   // ----------------------
   const renderCustomerInfoCard = () => {
     // Get the first selected approver or show "Pending" if none
-    const firstApprover = approvers.find(a => a !== "") || "Pending";
+    const firstApprover = approvers.find((a) => a !== "") || "Pending";
 
     return (
       <Card
         size="small"
         title={
           <div style={{ display: "flex", alignItems: "center" }}>
-            <div style={{
-              width: 4,
-              height: 20,
-              backgroundColor: ACCENT_LIME,
-              marginRight: 12,
-              borderRadius: 2
-            }} />
+            <div
+              style={{
+                width: 4,
+                height: 20,
+                backgroundColor: ACCENT_LIME,
+                marginRight: 12,
+                borderRadius: 2,
+              }}
+            />
             {/* Changed to use Title level={4} to match Deferral Details */}
             <Title level={4} style={{ color: PRIMARY_BLUE, margin: 0 }}>
               Customer Information
@@ -877,27 +959,31 @@ export default function DeferralForm({ userId, onSuccess }) {
           <Descriptions.Item label="Created At">
             <div>
               <Text strong style={{ color: PRIMARY_PURPLE }}>
-                {new Date().toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric'
+                {new Date().toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
                 })}
               </Text>
               <Text type="secondary" style={{ fontSize: 11, marginLeft: 4 }}>
-                {new Date().toLocaleTimeString('en-GB', {
-                  hour: '2-digit',
-                  minute: '2-digit'
+                {new Date().toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
                 })}
               </Text>
             </div>
           </Descriptions.Item>
-          <Descriptions.Item label="Approver">
+          <Descriptions.Item label="DCL Status">
             <div style={{ display: "flex", alignItems: "center" }}>
-              <Text strong style={{
-                color: firstApprover === "Pending" ? "#d9d9d9" : PRIMARY_PURPLE
-              }}>
-                {firstApprover}
-              </Text>
+              {selectedChecklistStatus ? (
+                <Tag style={getStatusStyle(selectedChecklistStatus)}>
+                  {formatStatusText(selectedChecklistStatus)}
+                </Tag>
+              ) : (
+                <Text strong style={{ color: "#d9d9d9" }}>
+                  Pending
+                </Text>
+              )}
             </div>
           </Descriptions.Item>
           <Descriptions.Item label="Loan Type">
@@ -948,13 +1034,15 @@ export default function DeferralForm({ userId, onSuccess }) {
       }}
       title={
         <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={{
-            width: 4,
-            height: 20,
-            backgroundColor: ACCENT_LIME,
-            marginRight: 12,
-            borderRadius: 2
-          }} />
+          <div
+            style={{
+              width: 4,
+              height: 20,
+              backgroundColor: ACCENT_LIME,
+              marginRight: 12,
+              borderRadius: 2,
+            }}
+          />
           {/* Removed FileTextOutlined icon and kept just the title */}
           <Title level={4} style={{ color: PRIMARY_PURPLE, margin: 0 }}>
             Deferral Details
@@ -963,8 +1051,6 @@ export default function DeferralForm({ userId, onSuccess }) {
       }
     >
       <Row gutter={[16, 16]}>
-
-
         <Col span={12}>
           <Text strong>Loan Amount</Text>
           <Select
@@ -978,9 +1064,6 @@ export default function DeferralForm({ userId, onSuccess }) {
             <Option value="above75">Above 75 million</Option>
           </Select>
         </Col>
-
-
-
 
         <Col span={12}>
           <Text strong>No. of Days Sought</Text>
@@ -1011,7 +1094,9 @@ export default function DeferralForm({ userId, onSuccess }) {
           <Text strong>Next Document Due Date</Text>
           <DatePicker
             value={nextDueDate ? dayjs(nextDueDate) : null}
-            onChange={(date) => setNextDueDate(date ? date.format("YYYY-MM-DD") : "")}
+            onChange={(date) =>
+              setNextDueDate(date ? date.format("YYYY-MM-DD") : "")
+            }
             style={{ width: "100%" }}
             size="large"
             format="DD/MM/YYYY"
@@ -1019,22 +1104,25 @@ export default function DeferralForm({ userId, onSuccess }) {
           />
         </Col>
 
-
-
-
-
-
         {/* Document Picker Component - Imported with custom title */}
         <Col span={24}>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-              <div style={{
-                width: 4,
-                height: 20,
-                backgroundColor: ACCENT_LIME,
-                marginRight: 12,
-                borderRadius: 2
-              }} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 4,
+                  height: 20,
+                  backgroundColor: ACCENT_LIME,
+                  marginRight: 12,
+                  borderRadius: 2,
+                }}
+              />
               <Title level={4} style={{ color: PRIMARY_BLUE, margin: 0 }}>
                 Document Name
               </Title>
@@ -1060,14 +1148,22 @@ export default function DeferralForm({ userId, onSuccess }) {
         {/* Facility Table Component - Imported with custom title */}
         <Col span={24}>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-              <div style={{
-                width: 4,
-                height: 20,
-                backgroundColor: ACCENT_LIME,
-                marginRight: 12,
-                borderRadius: 2
-              }} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 4,
+                  height: 20,
+                  backgroundColor: ACCENT_LIME,
+                  marginRight: 12,
+                  borderRadius: 2,
+                }}
+              />
               <Title level={4} style={{ color: PRIMARY_BLUE, margin: 0 }}>
                 Facility Details
               </Title>
@@ -1090,8 +1186,8 @@ export default function DeferralForm({ userId, onSuccess }) {
             required
             disabled={isSearchedByDcl}
             style={{
-              backgroundColor: isSearchedByDcl ? '#f5f5f5' : '#fff',
-              cursor: isSearchedByDcl ? 'not-allowed' : 'text',
+              backgroundColor: isSearchedByDcl ? "#f5f5f5" : "#fff",
+              cursor: isSearchedByDcl ? "not-allowed" : "text",
               opacity: isSearchedByDcl ? 0.7 : 1,
             }}
           />
@@ -1100,14 +1196,22 @@ export default function DeferralForm({ userId, onSuccess }) {
         <Col span={24}>
           {/* Updated Mandatory: DCL Upload with view and delete actions */}
           <Card size="small" style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-              <div style={{
-                width: 4,
-                height: 20,
-                backgroundColor: ACCENT_LIME,
-                marginRight: 12,
-                borderRadius: 2
-              }} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 4,
+                  height: 20,
+                  backgroundColor: ACCENT_LIME,
+                  marginRight: 12,
+                  borderRadius: 2,
+                }}
+              />
               <Title level={4} style={{ color: PRIMARY_BLUE, margin: 0 }}>
                 Mandatory: DCL Upload
               </Title>
@@ -1136,25 +1240,39 @@ export default function DeferralForm({ userId, onSuccess }) {
                 Please enter DCL number first
               </Text>
             ) : !dclFile ? (
-              <Text type="secondary" style={{ display: "block", marginTop: 8, color: WARNING_ORANGE }}>
+              <Text
+                type="secondary"
+                style={{
+                  display: "block",
+                  marginTop: 8,
+                  color: WARNING_ORANGE,
+                }}
+              >
                 DCL document is required for submission
               </Text>
             ) : null}
-
           </Card>
         </Col>
 
         <Col span={24}>
           {/* Updated Additional Documents with view and delete actions */}
           <Card size="small">
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-              <div style={{
-                width: 4,
-                height: 20,
-                backgroundColor: ACCENT_LIME,
-                marginRight: 12,
-                borderRadius: 2
-              }} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 4,
+                  height: 20,
+                  backgroundColor: ACCENT_LIME,
+                  marginRight: 12,
+                  borderRadius: 2,
+                }}
+              />
               <Title level={4} style={{ color: PRIMARY_BLUE, margin: 0 }}>
                 Additional Documents
               </Title>
@@ -1174,32 +1292,40 @@ export default function DeferralForm({ userId, onSuccess }) {
             {additionalFiles.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 {additionalFiles.map((file, index) => (
-                  <div key={file.uid || index}>
-                    {renderDocumentItem(file)}
-                  </div>
+                  <div key={file.uid || index}>{renderDocumentItem(file)}</div>
                 ))}
                 <div>
-                  <Text type="success" style={{ display: "block", marginTop: 8, fontSize: '12px' }}>
-                    ✓ {additionalFiles.length} additional document{additionalFiles.length !== 1 ? 's' : ''} ready
+                  <Text
+                    type="success"
+                    style={{ display: "block", marginTop: 8, fontSize: "12px" }}
+                  >
+                    ✓ {additionalFiles.length} additional document
+                    {additionalFiles.length !== 1 ? "s" : ""} ready
                   </Text>
-
                 </div>
               </div>
             )}
-
           </Card>
         </Col>
 
         <Col span={24}>
           <Card size="small" style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
-              <div style={{
-                width: 4,
-                height: 20,
-                backgroundColor: ACCENT_LIME,
-                marginRight: 12,
-                borderRadius: 2
-              }} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 4,
+                  height: 20,
+                  backgroundColor: ACCENT_LIME,
+                  marginRight: 12,
+                  borderRadius: 2,
+                }}
+              />
               <Title level={4} style={{ color: PRIMARY_BLUE, margin: 0 }}>
                 Comments
               </Title>
@@ -1212,28 +1338,35 @@ export default function DeferralForm({ userId, onSuccess }) {
               placeholder="Add any notes or comments for the deferral (optional)"
             />
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8, gap: 8 }}>
-              <Button
-                type="default"
-                onClick={() => setComments('')}
-              >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: 8,
+                gap: 8,
+              }}
+            >
+              <Button type="default" onClick={() => setComments("")}>
                 Clear
               </Button>
               <Button
                 type="primary"
                 onClick={() => {
                   if (!comments || !comments.trim()) {
-                    message.error('Please enter a comment before posting');
+                    message.error("Please enter a comment before posting");
                     return;
                   }
                   const newComment = {
                     message: comments.trim(),
-                    user: { name: currentUser.name || 'You', role: currentUser.role || 'rm' },
-                    createdAt: new Date().toISOString()
+                    user: {
+                      name: currentUser.name || "You",
+                      role: currentUser.role || "rm",
+                    },
+                    createdAt: new Date().toISOString(),
                   };
                   setPostedComments((p) => [newComment, ...p]);
-                  setComments('');
-                  message.success('Comment posted');
+                  setComments("");
+                  message.success("Comment posted");
                 }}
               >
                 Post Comment
@@ -1250,25 +1383,42 @@ export default function DeferralForm({ userId, onSuccess }) {
                       <List.Item.Meta
                         avatar={<Avatar icon={<UserOutlined />} />}
                         title={
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
                             <div>
                               <b>{item.user.name}</b>
-                              <Tag style={{ marginLeft: 8, textTransform: 'uppercase' }}>{item.user.role}</Tag>
+                              <Tag
+                                style={{
+                                  marginLeft: 8,
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {item.user.role}
+                              </Tag>
                             </div>
-                            <div style={{ fontSize: 12, color: '#777' }}>{new Date(item.createdAt).toLocaleString()}</div>
+                            <div style={{ fontSize: 12, color: "#777" }}>
+                              {new Date(item.createdAt).toLocaleString()}
+                            </div>
                           </div>
                         }
-                        description={<div style={{ whiteSpace: 'pre-wrap' }}>{item.message}</div>}
+                        description={
+                          <div style={{ whiteSpace: "pre-wrap" }}>
+                            {item.message}
+                          </div>
+                        }
                       />
                     </List.Item>
                   )}
                 />
               </div>
             )}
-
           </Card>
         </Col>
-
       </Row>
     </Card>
   );
@@ -1277,60 +1427,76 @@ export default function DeferralForm({ userId, onSuccess }) {
   // SUBMIT HANDLER for Deferral
   // ----------------------
   // Helper: read a File (or File-like object) into a data URL for upload preview/storage
-  const fileToDataUrl = (file) => new Promise((resolve, reject) => {
-    try {
-      const f = file.originFileObj || file;
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (err) => reject(err);
-      reader.readAsDataURL(f);
-    } catch (err) {
-      reject(err);
-    }
-  });
+  const fileToDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      try {
+        const f = file.originFileObj || file;
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(f);
+      } catch (err) {
+        reject(err);
+      }
+    });
 
   const handleSubmitDeferral = async () => {
     // Basic validation
-    if (!selectedCustomerId && !String(customerNumber || '').trim()) {
-      message.error('Please fetch and confirm a customer before submitting');
+    if (!selectedCustomerId && !String(customerNumber || "").trim()) {
+      message.error("Please fetch and confirm a customer before submitting");
       return;
     }
     if (!dclNumber || !dclNumber.trim()) {
-      message.error('Please enter DCL number');
+      message.error("Please enter DCL number");
       return;
     }
     if (!Array.isArray(selectedDocuments) || selectedDocuments.length === 0) {
-      message.error('Please select at least one document before submitting');
+      message.error("Please select at least one document before submitting");
       return;
     }
 
     const expectedRoles = computeDefaultRoles();
     const selectedApproverSlots = approverSlots.filter((slot) => !!slot.userId);
-    const approverIds = selectedApproverSlots.map((slot) => String(slot.userId));
+    const approverIds = selectedApproverSlots.map((slot) =>
+      String(slot.userId),
+    );
     if (new Set(approverIds).size !== approverIds.length) {
-      message.error('Same approver cannot be selected for multiple approval steps');
+      message.error(
+        "Same approver cannot be selected for multiple approval steps",
+      );
       return;
     }
     if (selectedApproverSlots.length !== approverSlots.length) {
-      message.error('Please assign all approvers before submitting');
+      message.error("Please assign all approvers before submitting");
       return;
     }
 
-    const normalizedExpectedRoles = expectedRoles.map((role) => String(role || "").trim().toLowerCase());
-    const normalizedSelectedRoles = selectedApproverSlots.map((slot) => String(slot?.role || "").trim().toLowerCase());
+    const normalizedExpectedRoles = expectedRoles.map((role) =>
+      String(role || "")
+        .trim()
+        .toLowerCase(),
+    );
+    const normalizedSelectedRoles = selectedApproverSlots.map((slot) =>
+      String(slot?.role || "")
+        .trim()
+        .toLowerCase(),
+    );
 
     if (normalizedSelectedRoles.length < normalizedExpectedRoles.length) {
-      message.error('Please assign all required approvers before submitting');
+      message.error("Please assign all required approvers before submitting");
       return;
     }
 
-    const firstRoleMismatch = normalizedSelectedRoles[0] !== normalizedExpectedRoles[0];
+    const firstRoleMismatch =
+      normalizedSelectedRoles[0] !== normalizedExpectedRoles[0];
     const lastRoleMismatch =
       normalizedSelectedRoles[normalizedSelectedRoles.length - 1] !==
       normalizedExpectedRoles[normalizedExpectedRoles.length - 1];
 
     if (firstRoleMismatch || lastRoleMismatch) {
-      message.error('First and final approvers must match the required approval matrix');
+      message.error(
+        "First and final approvers must match the required approval matrix",
+      );
       return;
     }
 
@@ -1343,11 +1509,14 @@ export default function DeferralForm({ userId, onSuccess }) {
     }
 
     if (expectedIndex < normalizedExpectedRoles.length) {
-      message.error('Required approval matrix order must be preserved when adding extra approvers');
+      message.error(
+        "Required approval matrix order must be preserved when adding extra approvers",
+      );
       return;
     }
 
-    const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const guidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
     setIsSubmitting(true);
 
@@ -1355,10 +1524,12 @@ export default function DeferralForm({ userId, onSuccess }) {
       const resolvedApprovers = selectedApproverSlots.map((slot) => {
         const matched = approverList.find(
           (approver) =>
-            String(approver?._id || approver?.id || approver?.userId || "") === String(slot.userId)
+            String(approver?._id || approver?.id || approver?.userId || "") ===
+            String(slot.userId),
         );
 
-        const resolvedUserId = matched?.id || matched?._id || matched?.userId || slot.userId;
+        const resolvedUserId =
+          matched?.id || matched?._id || matched?.userId || slot.userId;
         return {
           role: slot.role,
           userId: resolvedUserId,
@@ -1366,8 +1537,14 @@ export default function DeferralForm({ userId, onSuccess }) {
         };
       });
 
-      if (resolvedApprovers.some((approver) => !guidRegex.test(String(approver.userId || "")))) {
-        message.error('One or more selected approvers have invalid IDs. Please reselect approvers and try again.');
+      if (
+        resolvedApprovers.some(
+          (approver) => !guidRegex.test(String(approver.userId || "")),
+        )
+      ) {
+        message.error(
+          "One or more selected approvers have invalid IDs. Please reselect approvers and try again.",
+        );
         setIsSubmitting(false);
         return;
       }
@@ -1376,11 +1553,21 @@ export default function DeferralForm({ userId, onSuccess }) {
         type: facility?.type || facility?.facilityType || facility?.name || "",
         sanctioned: Number(facility?.sanctioned ?? facility?.amount ?? 0) || 0,
         balance: Number(facility?.balance ?? 0) || 0,
-        headroom: Number(facility?.headroom ?? Math.max(0, (Number(facility?.amount ?? facility?.sanctioned ?? 0) || 0) - (Number(facility?.balance ?? 0) || 0))) || 0,
+        headroom:
+          Number(
+            facility?.headroom ??
+              Math.max(
+                0,
+                (Number(facility?.amount ?? facility?.sanctioned ?? 0) || 0) -
+                  (Number(facility?.balance ?? 0) || 0),
+              ),
+          ) || 0,
       }));
 
       const normalizeDocumentType = (doc) => {
-        const rawType = String(doc?.type || "").trim().toLowerCase();
+        const rawType = String(doc?.type || "")
+          .trim()
+          .toLowerCase();
         if (rawType === "primary") return "Primary";
         if (rawType === "secondary") return "Secondary";
         return documentCategory === "Primary" ? "Primary" : "Secondary";
@@ -1395,15 +1582,20 @@ export default function DeferralForm({ userId, onSuccess }) {
         loanType,
         loanAmount: parsedLoanAmount(),
         daysSought: Number(daysSought) || undefined,
-        nextDocumentDueDate: nextDueDate ? dayjs(nextDueDate).toISOString() : undefined,
+        nextDocumentDueDate: nextDueDate
+          ? dayjs(nextDueDate).toISOString()
+          : undefined,
         dclNumber,
         deferralDescription,
         facilities: normalizedFacilities,
         approvers: resolvedApprovers,
         // Preserve selected document names/metadata so they appear in pending modal
         selectedDocuments: (selectedDocuments || []).map((doc) => {
-          if (typeof doc === 'string') {
-            return { name: doc, type: documentCategory === "Primary" ? "Primary" : "Secondary" };
+          if (typeof doc === "string") {
+            return {
+              name: doc,
+              type: documentCategory === "Primary" ? "Primary" : "Secondary",
+            };
           }
           return {
             ...doc,
@@ -1411,16 +1603,16 @@ export default function DeferralForm({ userId, onSuccess }) {
           };
         }),
         // Include posted comments so they appear in the comment trail
-        comments: postedComments.map(c => ({
+        comments: postedComments.map((c) => ({
           text: c.message,
           createdAt: c.createdAt,
-          authorName: c.user?.name || currentUser.name || 'RM',
-          authorRole: c.user?.role || currentUser.role || 'RM',
+          authorName: c.user?.name || currentUser.name || "RM",
+          authorRole: c.user?.role || currentUser.role || "RM",
           author: {
-            name: c.user?.name || currentUser.name || 'RM',
-            role: c.user?.role || currentUser.role || 'RM',
+            name: c.user?.name || currentUser.name || "RM",
+            role: c.user?.role || currentUser.role || "RM",
           },
-        }))
+        })),
       };
 
       // Convert uploaded files to data URLs and include them in the create payload so documents are persisted atomically
@@ -1429,10 +1621,24 @@ export default function DeferralForm({ userId, onSuccess }) {
       if (dclFile) {
         try {
           const dataUrl = await fileToDataUrl(dclFile);
-          docsToAttach.push({ name: dclFile.name, url: dataUrl, size: dclFile.size, uploadDate: new Date().toISOString(), isDCL: true });
+          docsToAttach.push({
+            name: dclFile.name,
+            url: dataUrl,
+            size: dclFile.size,
+            uploadDate: new Date().toISOString(),
+            isDCL: true,
+          });
         } catch (e) {
-          console.error('Failed to read DCL file for upload, will still create record without url', e);
-          docsToAttach.push({ name: dclFile.name, size: dclFile.size, uploadDate: new Date().toISOString(), isDCL: true });
+          console.error(
+            "Failed to read DCL file for upload, will still create record without url",
+            e,
+          );
+          docsToAttach.push({
+            name: dclFile.name,
+            size: dclFile.size,
+            uploadDate: new Date().toISOString(),
+            isDCL: true,
+          });
         }
       }
 
@@ -1440,10 +1646,24 @@ export default function DeferralForm({ userId, onSuccess }) {
         for (const f of additionalFiles) {
           try {
             const dataUrl = await fileToDataUrl(f);
-            docsToAttach.push({ name: f.name, url: dataUrl, size: f.size, uploadDate: new Date().toISOString(), isAdditional: true });
+            docsToAttach.push({
+              name: f.name,
+              url: dataUrl,
+              size: f.size,
+              uploadDate: new Date().toISOString(),
+              isAdditional: true,
+            });
           } catch (e) {
-            console.error('Failed to read additional file for upload, creating record without url', e);
-            docsToAttach.push({ name: f.name, size: f.size, uploadDate: new Date().toISOString(), isAdditional: true });
+            console.error(
+              "Failed to read additional file for upload, creating record without url",
+              e,
+            );
+            docsToAttach.push({
+              name: f.name,
+              size: f.size,
+              uploadDate: new Date().toISOString(),
+              isAdditional: true,
+            });
           }
         }
       }
@@ -1453,7 +1673,7 @@ export default function DeferralForm({ userId, onSuccess }) {
         // Let the server generate the authoritative deferral number
         newDeferral = await deferralApi.createDeferral(payload);
       } catch (err) {
-        message.error(err.message || 'Failed to create deferral');
+        message.error(err.message || "Failed to create deferral");
         setIsSubmitting(false);
         return;
       }
@@ -1463,9 +1683,14 @@ export default function DeferralForm({ userId, onSuccess }) {
       const createdDeferralId = newDeferral?.id || newDeferral?._id;
 
       if (!createdDeferralId) {
-        console.error('Create deferral succeeded but response had no id/_id', newDeferral);
-        message.warning('Deferral created but document linking failed: missing deferral ID');
-        navigate('/rm/deferrals/pending');
+        console.error(
+          "Create deferral succeeded but response had no id/_id",
+          newDeferral,
+        );
+        message.warning(
+          "Deferral created but document linking failed: missing deferral ID",
+        );
+        navigate("/rm/deferrals/pending");
         return;
       }
 
@@ -1476,7 +1701,10 @@ export default function DeferralForm({ userId, onSuccess }) {
         dclNumber,
         facilities,
         selectedDocuments,
-        approverFlow: approverSlots.map((s) => ({ role: s.role, userId: s.userId }))
+        approverFlow: approverSlots.map((s) => ({
+          role: s.role,
+          userId: s.userId,
+        })),
       };
 
       // Upload any selected files as multipart form uploads (binary)
@@ -1489,43 +1717,50 @@ export default function DeferralForm({ userId, onSuccess }) {
             url: doc.url || "",
             isDCL: doc.isDCL === true,
             isAdditional: doc.isAdditional === true,
-          })
+          }),
         );
 
       // Best-effort attach; do not fail deferral creation if a document attachment fails
       try {
         await Promise.all(documentRequests);
       } catch (e) {
-        console.error('One or more document attachments failed', e);
+        console.error("One or more document attachments failed", e);
       }
 
-      const attemptedRecipients = Number(newDeferral?.emailNotification?.attemptedRecipients || 0);
-      const hadDispatchError = !!newDeferral?.emailNotification?.hadDispatchError;
+      const attemptedRecipients = Number(
+        newDeferral?.emailNotification?.attemptedRecipients || 0,
+      );
+      const hadDispatchError =
+        !!newDeferral?.emailNotification?.hadDispatchError;
 
       // Redirect to My Deferrals after uploads are attempted
-      navigate('/rm/deferrals/pending');
+      navigate("/rm/deferrals/pending");
 
       if (attemptedRecipients > 0) {
         message.success(
           hadDispatchError
             ? `Deferral request created. Email notifications attempted for ${attemptedRecipients} recipient(s), but dispatch had issues.`
-            : `Deferral request created. Email notifications queued for ${attemptedRecipients} recipient(s).`
+            : `Deferral request created. Email notifications queued for ${attemptedRecipients} recipient(s).`,
         );
       } else {
-        message.success('Deferral request created');
+        message.success("Deferral request created");
       }
 
       // Dispatch a global event so other dashboards (CO/Creator) can refresh their pending lists
-      try { window.dispatchEvent(new CustomEvent('deferral:created', { detail: newDeferral })); } catch (e) { /* ignore */ }
-
+      try {
+        window.dispatchEvent(
+          new CustomEvent("deferral:created", { detail: newDeferral }),
+        );
+      } catch (e) {
+        /* ignore */
+      }
     } catch (err) {
       console.error(err);
-      message.error('Failed to submit deferral');
+      message.error("Failed to submit deferral");
     } finally {
       setIsSubmitting(false);
     }
   };
-
 
   // ----------------------
   // Confirmation modal and Approver SIDEBAR (with confirm-before-submit)
@@ -1537,22 +1772,22 @@ export default function DeferralForm({ userId, onSuccess }) {
 
   const openConfirmModal = async () => {
     // Minimal validation before showing the summary
-    if (!selectedCustomerId && !String(customerNumber || '').trim()) {
-      message.error('Please fetch and confirm a customer before submitting');
+    if (!selectedCustomerId && !String(customerNumber || "").trim()) {
+      message.error("Please fetch and confirm a customer before submitting");
       return;
     }
     if (!dclNumber || !dclNumber.trim()) {
-      message.error('Please enter DCL number');
+      message.error("Please enter DCL number");
       return;
     }
 
     // Ask backend for a preview next deferral number. If it fails, fall back to 'TBD'
     try {
       const resp = await deferralApi.getNextDeferralNumber();
-      setPreviewDeferralNumber(resp.deferralNumber || 'TBD');
+      setPreviewDeferralNumber(resp.deferralNumber || "TBD");
     } catch (e) {
-      console.error('Preview number fetch failed', e);
-      setPreviewDeferralNumber('TBD');
+      console.error("Preview number fetch failed", e);
+      setPreviewDeferralNumber("TBD");
     }
 
     setShowConfirmModal(true);
@@ -1563,156 +1798,377 @@ export default function DeferralForm({ userId, onSuccess }) {
     await handleSubmitDeferral();
   };
 
-  const renderConfirmModal = () => (
-    <Modal
-      open={showConfirmModal}
-      title={`Confirm submission to approver${approverSlots.filter(s => s.userId).length > 1 ? 's' : ''}`}
-      onCancel={() => setShowConfirmModal(false)}
-      footer={[
-        <Button key="back" onClick={() => setShowConfirmModal(false)}>Cancel</Button>,
-        <Button key="submit" type="primary" onClick={handleConfirmSubmit} disabled={approverSlots.filter(s => s.userId).length === 0} loading={isSubmitting}>
-          Confirm & Submit
-        </Button>
-      ]}
-      width={900}
-      centered
-    >
-      <Descriptions bordered column={1} size="small">
-        <Descriptions.Item label="Deferral Number">{previewDeferralNumber}</Descriptions.Item>
-        <Descriptions.Item label="Customer">{customerName} — {customerNumber}</Descriptions.Item>
-        <Descriptions.Item label="DCL No">{dclNumber}</Descriptions.Item>
+  const renderConfirmModal = () => {
+    // Derive formatted loan amount using the same logic as DeferralPending
+    const numericLoan = parsedLoanAmount();
+    const formattedLoanAmount =
+      numericLoan && Number(numericLoan) > 0
+        ? `KSh ${Number(numericLoan).toLocaleString()}`
+        : "Not specified";
+    const isAboveThreshold = Number(numericLoan) > LOAN_THRESHOLD;
 
-        <Descriptions.Item label="Loan Type">{formatLoanType(loanType)}</Descriptions.Item>
-        <Descriptions.Item label="Days Sought">{daysSought || '-'}</Descriptions.Item>
-        <Descriptions.Item label="Deferred due date">{nextDueDate || '-'}</Descriptions.Item>
+    // Format deferred due date consistently
+    const formattedDeferredDueDate = nextDueDate
+      ? dayjs(nextDueDate).format("DD MMM YYYY")
+      : "-";
 
-        <Descriptions.Item label="Document(s) to be deferred">
-          {selectedDocuments && selectedDocuments.length > 0 ? (
+    return (
+      <Modal
+        open={showConfirmModal}
+        title={`Confirm submission to approver${approverSlots.filter((s) => s.userId).length > 1 ? "s" : ""}`}
+        onCancel={() => setShowConfirmModal(false)}
+        footer={[
+          <Button key="back" onClick={() => setShowConfirmModal(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={handleConfirmSubmit}
+            disabled={approverSlots.filter((s) => s.userId).length === 0}
+            loading={isSubmitting}
+          >
+            Confirm & Submit
+          </Button>,
+        ]}
+        width={900}
+        centered
+      >
+        <Descriptions bordered column={1} size="small">
+          <Descriptions.Item label="Deferral Number">
+            {previewDeferralNumber}
+          </Descriptions.Item>
+          <Descriptions.Item label="Customer">
+            {customerName} — {customerNumber}
+          </Descriptions.Item>
+          <Descriptions.Item label="DCL No">{dclNumber}</Descriptions.Item>
+
+          <Descriptions.Item label="Loan Type">
+            {formatLoanType(loanType)}
+          </Descriptions.Item>
+          <Descriptions.Item label="Loan Amount">
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {formattedLoanAmount === "Not specified" ? (
+                <div>Not specified</div>
+              ) : (
+                <div>
+                  <Tag
+                    color={isAboveThreshold ? "red" : "blue"}
+                    style={{ fontWeight: 700 }}
+                  >
+                    {isAboveThreshold ? "Above 75 million" : "Below 75 million"}
+                  </Tag>
+                </div>
+              )}
+            </div>
+          </Descriptions.Item>
+          <Descriptions.Item label="Days Sought">
+            {daysSought || "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="Deferred due date">
+            {formattedDeferredDueDate}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Document(s) to be deferred">
+            {selectedDocuments && selectedDocuments.length > 0 ? (
+              <List
+                size="small"
+                dataSource={selectedDocuments}
+                renderItem={(doc) => {
+                  const docName =
+                    typeof doc === "string"
+                      ? doc
+                      : doc.name || doc.label || "Document";
+                  const docTypeRaw =
+                    typeof doc === "string"
+                      ? ""
+                      : String(doc.type || "")
+                          .trim()
+                          .toLowerCase();
+                  const docType =
+                    docTypeRaw === "primary"
+                      ? "Primary"
+                      : docTypeRaw === "secondary"
+                        ? "Secondary"
+                        : documentCategory;
+                  const uploadedFiles = [
+                    ...(dclFile
+                      ? [{ name: dclFile.name, fileObj: dclFile }]
+                      : []),
+                    ...additionalFiles.map((f) => ({
+                      name: f.name,
+                      fileObj: f,
+                    })),
+                  ];
+                  const uploaded = uploadedFiles.find(
+                    (u) =>
+                      u.name &&
+                      docName &&
+                      u.name.toLowerCase().includes(docName.toLowerCase()),
+                  );
+                  return (
+                    <List.Item>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          width: "100%",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{docName}</div>
+                          <div style={{ marginTop: 4 }}>
+                            <Tag
+                              color={
+                                docType === "Primary" ? "purple" : "orange"
+                              }
+                              style={{ margin: 0 }}
+                            >
+                              {docType}
+                            </Tag>
+                          </div>
+                          {uploaded && (
+                            <div style={{ fontSize: 12, color: "#666" }}>
+                              Uploaded as: {uploaded.name}
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <Tag
+                            color={uploaded ? "green" : "orange"}
+                            style={{ alignSelf: "center" }}
+                          >
+                            {uploaded ? "Uploaded" : "Requested"}
+                          </Tag>
+                          {uploaded ? (
+                            <>
+                              <Button
+                                type="link"
+                                size="small"
+                                onClick={() =>
+                                  uploaded.fileObj
+                                    ? handleViewDocument(uploaded.fileObj)
+                                    : uploaded.url &&
+                                      window.open(uploaded.url, "_blank")
+                                }
+                              >
+                                View
+                              </Button>
+                              <Button
+                                type="link"
+                                size="small"
+                                onClick={() => handleDownload(uploaded)}
+                              >
+                                Download
+                              </Button>
+                            </>
+                          ) : null}
+                        </div>
+                      </div>
+                    </List.Item>
+                  );
+                }}
+              />
+            ) : (
+              "-"
+            )}
+          </Descriptions.Item>
+
+          {deferralDescription && (
+            <Descriptions.Item label="Deferral Description">
+              <div
+                style={{
+                  padding: 8,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: 6,
+                }}
+              >
+                {deferralDescription}
+              </div>
+            </Descriptions.Item>
+          )}
+
+          <Descriptions.Item label="Approvers">
             <List
               size="small"
-              dataSource={selectedDocuments}
-              renderItem={(doc) => {
-                const docName = typeof doc === 'string' ? doc : doc.name || doc.label || 'Document';
-                const docTypeRaw = typeof doc === 'string' ? '' : String(doc.type || '').trim().toLowerCase();
-                const docType = docTypeRaw === 'primary' ? 'Primary' : docTypeRaw === 'secondary' ? 'Secondary' : documentCategory;
-                const uploadedFiles = [...(dclFile ? [{ name: dclFile.name, fileObj: dclFile }] : []), ...additionalFiles.map(f => ({ name: f.name, fileObj: f }))];
-                const uploaded = uploadedFiles.find(u => u.name && docName && u.name.toLowerCase().includes(docName.toLowerCase()));
+              dataSource={approverSlots.filter((s) => s.userId)}
+              renderItem={(s) => {
+                const user = approverList.find((a) => a._id === s.userId);
                 return (
                   <List.Item>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                      <div>
-                        <div style={{ fontWeight: 600 }}>{docName}</div>
-                        <div style={{ marginTop: 4 }}>
-                          <Tag color={docType === 'Primary' ? 'purple' : 'orange'} style={{ margin: 0 }}>
-                            {docType}
-                          </Tag>
-                        </div>
-                        {uploaded && <div style={{ fontSize: 12, color: '#666' }}>Uploaded as: {uploaded.name}</div>}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Tag color={uploaded ? 'green' : 'orange'} style={{ alignSelf: 'center' }}>{uploaded ? 'Uploaded' : 'Requested'}</Tag>
-                        {uploaded ? (
-                          <>
-                            <Button type="link" size="small" onClick={() => uploaded.fileObj ? handleViewDocument(uploaded.fileObj) : (uploaded.url && window.open(uploaded.url, '_blank'))}>View</Button>
-                            <Button type="link" size="small" onClick={() => handleDownload(uploaded)}>Download</Button>
-                          </>
-                        ) : null}
-                      </div>
-                    </div>
+                    {user
+                      ? `${user.name} — ${user.position || user.role || ""}`
+                      : s.userId}
                   </List.Item>
                 );
               }}
             />
-          ) : '-'}
-        </Descriptions.Item>
-
-        {deferralDescription && (
-          <Descriptions.Item label="Deferral Description">
-            <div style={{ padding: 8, backgroundColor: '#f8f9fa', borderRadius: 6 }}>{deferralDescription}</div>
           </Descriptions.Item>
-        )}
 
-        <Descriptions.Item label="Approvers">
-          <List
-            size="small"
-            dataSource={approverSlots.filter(s => s.userId)}
-            renderItem={(s) => {
-              const user = approverList.find(a => a._id === s.userId);
-              return <List.Item>{user ? `${user.name} — ${user.position || user.role || ''}` : s.userId}</List.Item>;
-            }}
-          />
-        </Descriptions.Item>
+          <Descriptions.Item label="Facilities">
+            <Table
+              size="small"
+              dataSource={facilities.map((f, i) => ({ ...f, key: i }))}
+              pagination={false}
+              columns={[
+                {
+                  title: "Facility Type",
+                  dataIndex: "type",
+                  key: "type",
+                  render: (t, record) => (
+                    <Text strong>
+                      {t || record.facilityType || record.name || "N/A"}
+                    </Text>
+                  ),
+                },
+                {
+                  title: "Sanctioned (KES '000)",
+                  dataIndex: "sanctioned",
+                  key: "sanctioned",
+                  align: "right",
+                  render: (v, r) => Number(v ?? r.amount ?? 0).toLocaleString(),
+                },
+                {
+                  title: "Balance (KES '000)",
+                  dataIndex: "balance",
+                  key: "balance",
+                  align: "right",
+                  render: (v, r) =>
+                    Number(v ?? r.balance ?? 0).toLocaleString(),
+                },
+                {
+                  title: "Headroom (KES '000)",
+                  dataIndex: "headroom",
+                  key: "headroom",
+                  align: "right",
+                  render: (v, r) =>
+                    Number(
+                      v ??
+                        r.headroom ??
+                        Math.max(0, (r.amount || 0) - (r.balance || 0)),
+                    ).toLocaleString(),
+                },
+              ]}
+            />
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Facilities">
-          <Table
-            size="small"
-            dataSource={facilities.map((f, i) => ({ ...f, key: i }))}
-            pagination={false}
-            columns={[
-              { title: 'Facility Type', dataIndex: 'type', key: 'type', render: (t, record) => <Text strong>{t || record.facilityType || record.name || 'N/A'}</Text> },
-              { title: "Sanctioned (KES '000)", dataIndex: 'sanctioned', key: 'sanctioned', align: 'right', render: (v, r) => Number(v ?? r.amount ?? 0).toLocaleString() },
-              { title: "Balance (KES '000)", dataIndex: 'balance', key: 'balance', align: 'right', render: (v, r) => Number(v ?? r.balance ?? 0).toLocaleString() },
-              { title: "Headroom (KES '000)", dataIndex: 'headroom', key: 'headroom', align: 'right', render: (v, r) => Number(v ?? r.headroom ?? Math.max(0, (r.amount || 0) - (r.balance || 0))).toLocaleString() },
-            ]}
-          />
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Uploaded Documents">
-          <List
-            size="small"
-            dataSource={[...(dclFile ? [{ name: dclFile.name, fileObj: dclFile }] : []), ...additionalFiles.map(f => ({ name: f.name, fileObj: f }))]}
-            renderItem={(it) => (
-              <List.Item>
-                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {getFileIcon(it.name)}
-                    <div>
-                      <div>{it.name}</div>
-                      <div style={{ fontSize: 12, color: '#666' }}>{it.fileObj && it.fileObj.size ? `${(it.fileObj.size / 1024).toFixed(2)} KB` : ''}</div>
-                    </div>
-                  </div>
-                  <div>
-                    <Button type="link" onClick={() => it.fileObj ? handleViewDocument(it.fileObj) : (it.url && window.open(it.url, '_blank'))}>View</Button>
-                    <Button type="link" onClick={() => handleDownload(it)}>Download</Button>
-                  </div>
-                </div>
-              </List.Item>
-            )}
-          />
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Comment Trail & History">
-          {postedComments && postedComments.length > 0 ? (
+          <Descriptions.Item label="Uploaded Documents">
             <List
-              dataSource={postedComments}
-              itemLayout="horizontal"
-              renderItem={(item) => (
+              size="small"
+              dataSource={[
+                ...(dclFile ? [{ name: dclFile.name, fileObj: dclFile }] : []),
+                ...additionalFiles.map((f) => ({ name: f.name, fileObj: f })),
+              ]}
+              renderItem={(it) => (
                 <List.Item>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Avatar icon={<UserOutlined />} />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <b>{item.user?.name || 'Unknown'}</b>
-                        {item.user?.role && (
-                          <Tag style={{ textTransform: 'uppercase', margin: 0 }}>
-                            {item.user.role}
-                          </Tag>
-                        )}
-                        <span style={{ color: '#4a4a4a' }}>{item.message}</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      width: "100%",
+                    }}
+                  >
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 12 }}
+                    >
+                      {getFileIcon(it.name)}
+                      <div>
+                        <div>{it.name}</div>
+                        <div style={{ fontSize: 12, color: "#666" }}>
+                          {it.fileObj && it.fileObj.size
+                            ? `${(it.fileObj.size / 1024).toFixed(2)} KB`
+                            : ""}
+                        </div>
                       </div>
                     </div>
-                    <div style={{ fontSize: 12, color: '#777' }}>
-                      {item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}
+                    <div>
+                      <Button
+                        type="link"
+                        onClick={() =>
+                          it.fileObj
+                            ? handleViewDocument(it.fileObj)
+                            : it.url && window.open(it.url, "_blank")
+                        }
+                      >
+                        View
+                      </Button>
+                      <Button type="link" onClick={() => handleDownload(it)}>
+                        Download
+                      </Button>
                     </div>
                   </div>
                 </List.Item>
               )}
             />
-          ) : '-'}
-        </Descriptions.Item>
-      </Descriptions>
-    </Modal>
-  );
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Comment Trail & History">
+            {postedComments && postedComments.length > 0 ? (
+              <List
+                dataSource={postedComments}
+                itemLayout="horizontal"
+                renderItem={(item) => (
+                  <List.Item>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
+                        <Avatar icon={<UserOutlined />} />
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <b>{item.user?.name || "Unknown"}</b>
+                          {item.user?.role && (
+                            <Tag
+                              style={{ textTransform: "uppercase", margin: 0 }}
+                            >
+                              {item.user.role}
+                            </Tag>
+                          )}
+                          <span style={{ color: "#4a4a4a" }}>
+                            {item.message}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 12, color: "#777" }}>
+                        {item.createdAt
+                          ? new Date(item.createdAt).toLocaleString()
+                          : ""}
+                      </div>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            ) : (
+              "-"
+            )}
+          </Descriptions.Item>
+        </Descriptions>
+      </Modal>
+    );
+  };
 
   const renderApproverSidebar = () => (
     <Card
@@ -1736,7 +2192,7 @@ export default function DeferralForm({ userId, onSuccess }) {
         selectedDocuments={selectedDocuments}
         loanAmount={loanAmount}
         // dclFileReady={!!dclFile}
-        onCancel={() => navigate('/rm/deferrals/pending')}
+        onCancel={() => navigate("/rm/deferrals/pending")}
       />
       {renderConfirmModal()}
     </Card>
@@ -1758,13 +2214,18 @@ export default function DeferralForm({ userId, onSuccess }) {
             borderTop: `4px solid ${ACCENT_LIME}`,
           }}
         >
-          <BankOutlined style={{ fontSize: 64, color: PRIMARY_PURPLE, marginBottom: 24 }} />
+          <BankOutlined
+            style={{ fontSize: 64, color: PRIMARY_PURPLE, marginBottom: 24 }}
+          />
 
           <Title level={3} style={{ color: PRIMARY_PURPLE, marginBottom: 8 }}>
             Start New Deferral Request
           </Title>
 
-          <Text type="secondary" style={{ display: "block", marginBottom: 32, fontSize: 16 }}>
+          <Text
+            type="secondary"
+            style={{ display: "block", marginBottom: 32, fontSize: 16 }}
+          >
             Please search for a customer to begin the deferral request process
           </Text>
 
@@ -1774,35 +2235,46 @@ export default function DeferralForm({ userId, onSuccess }) {
               <Divider style={{ margin: "24px 0" }} />
 
               {/* Search Mode Tabs */}
-              <div style={{ marginBottom: 24, display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <div
+                style={{
+                  marginBottom: 24,
+                  display: "flex",
+                  gap: 12,
+                  justifyContent: "center",
+                }}
+              >
                 <Button
-                  type={searchMode === 'customer' ? 'primary' : 'default'}
+                  type={searchMode === "customer" ? "primary" : "default"}
                   onClick={() => {
-                    setSearchMode('customer');
-                    setSearchDclNumber('');
+                    setSearchMode("customer");
+                    setSearchDclNumber("");
                     setDclSearchResults([]);
                   }}
                   style={{
-                    backgroundColor: searchMode === 'customer' ? PRIMARY_PURPLE : 'transparent',
+                    backgroundColor:
+                      searchMode === "customer"
+                        ? PRIMARY_PURPLE
+                        : "transparent",
                     borderColor: PRIMARY_PURPLE,
-                    color: searchMode === 'customer' ? '#fff' : PRIMARY_PURPLE,
+                    color: searchMode === "customer" ? "#fff" : PRIMARY_PURPLE,
                     fontWeight: 600,
                   }}
                 >
                   Search by Customer Number
                 </Button>
                 <Button
-                  type={searchMode === 'dcl' ? 'primary' : 'default'}
+                  type={searchMode === "dcl" ? "primary" : "default"}
                   onClick={() => {
-                    setSearchMode('dcl');
-                    setSearchCustomerNumber('');
-                    setSearchLoanType('');
+                    setSearchMode("dcl");
+                    setSearchCustomerNumber("");
+                    setSearchLoanType("");
                     setCustomerSearchResults([]);
                   }}
                   style={{
-                    backgroundColor: searchMode === 'dcl' ? PRIMARY_PURPLE : 'transparent',
+                    backgroundColor:
+                      searchMode === "dcl" ? PRIMARY_PURPLE : "transparent",
                     borderColor: PRIMARY_PURPLE,
-                    color: searchMode === 'dcl' ? '#fff' : PRIMARY_PURPLE,
+                    color: searchMode === "dcl" ? "#fff" : PRIMARY_PURPLE,
                     fontWeight: 600,
                   }}
                 >
@@ -1811,70 +2283,89 @@ export default function DeferralForm({ userId, onSuccess }) {
               </div>
 
               <div style={{ textAlign: "left", marginBottom: 32 }}>
-                {searchMode === 'customer' ? (
-                  <Form
-                    layout="vertical"
-                    onFinish={fetchCustomer}
-                  >
+                {searchMode === "customer" ? (
+                  <Form layout="vertical" onFinish={fetchCustomer}>
                     <Form.Item
                       label="Customer Number"
                       name="customerNumber"
-                      rules={[{ required: true, message: 'Please enter customer number' }]}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please enter customer number",
+                        },
+                      ]}
                     >
-                      <div style={{ position: 'relative' }}>
+                      <div style={{ position: "relative" }}>
                         <Input
                           type="text"
                           size="large"
                           value={searchCustomerNumber}
-                          onChange={(e) => setSearchCustomerNumber(e.target.value.replace(/\D/g, ""))}
+                          onChange={(e) =>
+                            setSearchCustomerNumber(
+                              e.target.value.replace(/\D/g, ""),
+                            )
+                          }
                           placeholder="e.g. 123456"
                           autoFocus
                         />
 
                         {/* Typeahead suggestions */}
-                        {customerSearchResults && customerSearchResults.length > 0 && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '42px',
-                            left: 0,
-                            right: 0,
-                            zIndex: 1200,
-                            background: '#fff',
-                            border: '1px solid #eee',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                            maxHeight: 240,
-                            overflowY: 'auto',
-                            borderRadius: 6,
-                          }}>
-                            {customerSearchResults.map((c) => (
-                              <div
-                                key={c._id}
-                                onClick={() => handleSelectCustomer(c)}
-                                style={{
-                                  padding: '10px 12px',
-                                  borderBottom: '1px solid #f6f6f6',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center'
-                                }}
-                              >
-                                <div>
-                                  <div style={{ fontWeight: 600 }}>{c.name}</div>
-                                  <div style={{ fontSize: 12, color: '#666' }}>{c.customerNumber}</div>
+                        {customerSearchResults &&
+                          customerSearchResults.length > 0 && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: "42px",
+                                left: 0,
+                                right: 0,
+                                zIndex: 1200,
+                                background: "#fff",
+                                border: "1px solid #eee",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                                maxHeight: 240,
+                                overflowY: "auto",
+                                borderRadius: 6,
+                              }}
+                            >
+                              {customerSearchResults.map((c) => (
+                                <div
+                                  key={c._id}
+                                  onClick={() => handleSelectCustomer(c)}
+                                  style={{
+                                    padding: "10px 12px",
+                                    borderBottom: "1px solid #f6f6f6",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <div>
+                                    <div style={{ fontWeight: 600 }}>
+                                      {c.name}
+                                    </div>
+                                    <div
+                                      style={{ fontSize: 12, color: "#666" }}
+                                    >
+                                      {c.customerNumber}
+                                    </div>
+                                  </div>
+                                  <div style={{ fontSize: 12, color: "#999" }}>
+                                    {c.email}
+                                  </div>
                                 </div>
-                                <div style={{ fontSize: 12, color: '#999' }}>{c.email}</div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                              ))}
+                            </div>
+                          )}
                       </div>
                     </Form.Item>
 
                     <Form.Item
                       label="Loan Type"
                       name="loanType"
-                      rules={[{ required: true, message: 'Please select loan type' }]}
+                      rules={[
+                        { required: true, message: "Please select loan type" },
+                      ]}
                     >
                       <Select
                         size="large"
@@ -1892,7 +2383,14 @@ export default function DeferralForm({ userId, onSuccess }) {
                       </Select>
                     </Form.Item>
 
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 24 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 8,
+                        marginTop: 24,
+                      }}
+                    >
                       <Button
                         type="default"
                         onClick={() => setShowSearchForm(false)}
@@ -1918,9 +2416,11 @@ export default function DeferralForm({ userId, onSuccess }) {
                   <Form layout="vertical">
                     <Form.Item
                       label="DCL Number"
-                      rules={[{ required: true, message: 'Please enter DCL number' }]}
+                      rules={[
+                        { required: true, message: "Please enter DCL number" },
+                      ]}
                     >
-                      <div style={{ position: 'relative' }}>
+                      <div style={{ position: "relative" }}>
                         <Input
                           type="text"
                           size="large"
@@ -1932,37 +2432,46 @@ export default function DeferralForm({ userId, onSuccess }) {
 
                         {/* DCL Typeahead suggestions */}
                         {dclSearchResults && dclSearchResults.length > 0 && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '42px',
-                            left: 0,
-                            right: 0,
-                            zIndex: 1200,
-                            background: '#fff',
-                            border: '1px solid #eee',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                            maxHeight: 240,
-                            overflowY: 'auto',
-                            borderRadius: 6,
-                          }}>
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "42px",
+                              left: 0,
+                              right: 0,
+                              zIndex: 1200,
+                              background: "#fff",
+                              border: "1px solid #eee",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                              maxHeight: 240,
+                              overflowY: "auto",
+                              borderRadius: 6,
+                            }}
+                          >
                             {dclSearchResults.map((dcl) => (
                               <div
                                 key={dcl.id}
                                 onClick={() => handleSelectDcl(dcl)}
                                 style={{
-                                  padding: '12px',
-                                  borderBottom: '1px solid #f6f6f6',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: 4
+                                  padding: "12px",
+                                  borderBottom: "1px solid #f6f6f6",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 4,
                                 }}
                               >
-                                <div style={{ fontWeight: 600, color: PRIMARY_PURPLE }}>{dcl.dclNo}</div>
-                                <div style={{ fontSize: 12, color: '#666' }}>
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    color: PRIMARY_PURPLE,
+                                  }}
+                                >
+                                  {dcl.dclNo}
+                                </div>
+                                <div style={{ fontSize: 12, color: "#666" }}>
                                   {dcl.customerName} ({dcl.customerNumber})
                                 </div>
-                                <div style={{ fontSize: 12, color: '#999' }}>
+                                <div style={{ fontSize: 12, color: "#999" }}>
                                   Loan Type: {dcl.loanType}
                                 </div>
                               </div>
@@ -1972,11 +2481,22 @@ export default function DeferralForm({ userId, onSuccess }) {
                       </div>
                     </Form.Item>
 
-                    <Text type="secondary" style={{ marginTop: 8, display: 'block', fontSize: 13 }}>
-                      Tip: Start typing a DCL number to search. Customer details will auto-populate when you select a DCL.
+                    <Text
+                      type="secondary"
+                      style={{ marginTop: 8, display: "block", fontSize: 13 }}
+                    >
+                      Tip: Start typing a DCL number to search. Customer details
+                      will auto-populate when you select a DCL.
                     </Text>
 
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 24 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 8,
+                        marginTop: 24,
+                      }}
+                    >
                       <Button
                         type="default"
                         onClick={() => setShowSearchForm(false)}
@@ -2011,16 +2531,14 @@ export default function DeferralForm({ userId, onSuccess }) {
           <div style={{ marginTop: 24 }}>
             <Button
               type="default"
-              onClick={() => navigate('/rm/deferrals/pending')}
+              onClick={() => navigate("/rm/deferrals/pending")}
               style={{ marginTop: 16 }}
             >
               ← Back to My Deferrals
             </Button>
           </div>
 
-          <div style={{ marginTop: 24 }}>
-
-          </div>
+          <div style={{ marginTop: 24 }}></div>
         </Card>
       </div>
     );
@@ -2034,9 +2552,7 @@ export default function DeferralForm({ userId, onSuccess }) {
           {renderDeferralDetailsCard()}
         </Col>
 
-        <Col span={6}>
-          {renderApproverSidebar()}
-        </Col>
+        <Col span={6}>{renderApproverSidebar()}</Col>
       </Row>
       {renderCustomerSelectionModal()}
     </div>

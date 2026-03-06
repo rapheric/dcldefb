@@ -559,7 +559,13 @@ const capitalizeWords = (str) => {
 /**
  * Generate Checklist PDF with consistent professional formatting
  */
-export const generateChecklistPDF = (checklist, docs = [], documentStats = {}, comments = []) => {
+export const generateChecklistPDF = (
+  checklist,
+  docs = [],
+  documentStats = {},
+  comments = [],
+  options = { save: true }
+) => {
   const doc = new jsPDF("p", "mm", "a4");
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 15;
@@ -769,7 +775,16 @@ export const generateChecklistPDF = (checklist, docs = [], documentStats = {}, c
 
   // Download
   const filename = `Checklist_${checklist?.dclNo || "export"}_${dayjs().format("YYYYMMDD_HHmmss")}.pdf`;
-  doc.save(filename);
+  const blob = doc.output("blob");
+  if (options.save !== false) {
+    doc.save(filename);
+  }
+  return blob;
+};
+
+// Convenience: return a Blob instead of triggering a download
+export const generateChecklistPDFBlob = async (checklist, docs = [], documentStats = {}, comments = []) => {
+  return generateChecklistPDF(checklist, docs, documentStats, comments, { save: false });
 };
 
 /**
