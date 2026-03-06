@@ -1,6 +1,11 @@
 import React from "react";
 import { Button, Typography, Tag } from "antd";
-import { CloseOutlined, FileTextOutlined, RightOutlined, LeftOutlined } from "@ant-design/icons";
+import {
+  CloseOutlined,
+  FileTextOutlined,
+  RightOutlined,
+  LeftOutlined,
+} from "@ant-design/icons";
 
 const { Title } = Typography;
 
@@ -76,6 +81,7 @@ const HeaderSection = ({
             onClick={onClose}
             style={{
               color: "white !important",
+              backgroundColor: "rgba(255,255,255,0.2)",
               background: "transparent !important",
               border: "none !important",
               fontSize: "20px !important",

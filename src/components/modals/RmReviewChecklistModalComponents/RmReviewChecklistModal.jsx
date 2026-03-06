@@ -565,7 +565,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { Modal, Button, message, Upload, Tag } from "antd";
+import { Modal, Button, message, Upload, Tag, Space } from "antd";
 import {
   UploadOutlined,
   RightOutlined,
@@ -1059,7 +1059,7 @@ const RmReviewChecklistModal = ({
       open={open}
       onCancel={onClose}
       width={1200}
-      centered={false}
+      centered={true}
       wrapperClassName="modal-centered-in-content"
       closeIcon={null}
       styles={{
@@ -1070,98 +1070,118 @@ const RmReviewChecklistModal = ({
           borderTopLeftRadius: 8,
           borderTopRightRadius: 8,
         },
+        mask: { backgroundColor: "rgba(0, 0, 0, 0.45)" },
       }}
-      footer={[
-        <PDFGenerator
-          key="download"
-          checklist={{
-            ...checklist,
-            dclNo: checklist?.dclNo || checklist?._id,
-          }}
-          docs={docs}
-          supportingDocs={supportingDocs || []}
-          creatorComment=""
-          rmGeneralComment={rmGeneralComment || ""}
-          comments={comments || []}
-          buttonText="Download PDF"
-          variant="primary"
-        />,
-        !readOnly && (
-          <SaveDraftButton
-            key="save-draft"
-            checklist={checklist}
-            docs={docs}
-            rmGeneralComment={rmGeneralComment}
-            supportingDocs={supportingDocs}
-            isActionAllowed={isActionAllowed}
-          />
-        ),
-        !readOnly && (
-          <Upload
-            key="upload-support"
-            showUploadList={false}
-            beforeUpload={(file) => {
-              handleUploadSupportingDoc(file);
-              return false;
-            }}
-            disabled={!isActionAllowed || uploadingSupportingDoc}
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
-          >
-            <Button
-              icon={<UploadOutlined />}
-              loading={uploadingSupportingDoc}
-              style={{
-                color: "white !important",
-                backgroundColor:
-                  !isActionAllowed || uploadingSupportingDoc
-                    ? "#CCCCCC !important"
-                    : "#164679 !important",
-                borderColor:
-                  !isActionAllowed || uploadingSupportingDoc
-                    ? "#CCCCCC !important"
-                    : "#164679 !important",
-                borderRadius: "6px",
-              }}
-            >
-              Upload Supporting Doc
-            </Button>
-          </Upload>
-        ),
-        <Button
-          key="cancel"
-          onClick={onClose}
+      wrapperStyle={{
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        paddingLeft: "120px",
+        paddingTop: "80px",
+      }}
+      footer={
+        <Space
+          size="middle"
           style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
-            borderRadius: "6px",
+            display: "flex",
+            justifyContent: "flex-end",
+            width: "100%",
+            gap: "12px",
           }}
         >
-          Close
-        </Button>,
-        !readOnly && (
+          <PDFGenerator
+            key="download"
+            checklist={{
+              ...checklist,
+              dclNo: checklist?.dclNo || checklist?._id,
+            }}
+            docs={docs}
+            supportingDocs={supportingDocs || []}
+            creatorComment=""
+            rmGeneralComment={rmGeneralComment || ""}
+            comments={comments || []}
+            buttonText="Download PDF"
+            variant="primary"
+          />
+          {!readOnly && (
+            <SaveDraftButton
+              key="save-draft"
+              checklist={checklist}
+              docs={docs}
+              rmGeneralComment={rmGeneralComment}
+              supportingDocs={supportingDocs}
+              isActionAllowed={isActionAllowed}
+            />
+          )}
+          {!readOnly && (
+            <Upload
+              key="upload-support"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                handleUploadSupportingDoc(file);
+                return false;
+              }}
+              disabled={!isActionAllowed || uploadingSupportingDoc}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+            >
+              <Button
+                icon={<UploadOutlined />}
+                loading={uploadingSupportingDoc}
+                style={{
+                  color: "white !important",
+                  backgroundColor:
+                    !isActionAllowed || uploadingSupportingDoc
+                      ? "#CCCCCC !important"
+                      : "#164679 !important",
+                  borderColor:
+                    !isActionAllowed || uploadingSupportingDoc
+                      ? "#CCCCCC !important"
+                      : "#164679 !important",
+                  borderRadius: "6px",
+                }}
+              >
+                Upload Supporting Doc
+              </Button>
+            </Upload>
+          )}
           <Button
-            key="submit"
-            type="primary"
-            loading={isLoading}
-            onClick={submitRM}
-            disabled={!isActionAllowed}
+            key="cancel"
+            onClick={onClose}
             style={{
               color: "white !important",
-              backgroundColor: !isActionAllowed
-                ? "#CCCCCC !important"
-                : "#164679 !important",
-              borderColor: !isActionAllowed
-                ? "#CCCCCC !important"
-                : "#164679 !important",
+              backgroundColor: "#164679 !important",
+              borderColor: "#164679 !important",
               borderRadius: "6px",
-              fontWeight: 600,
             }}
           >
-            Submit to CO
+            Close
           </Button>
-        ),
-      ]}
+          {!readOnly && (
+            <Button
+              key="submit"
+              type="primary"
+              loading={isLoading}
+              onClick={submitRM}
+              disabled={!isActionAllowed}
+              style={{
+                color: "white !important",
+                backgroundColor: !isActionAllowed
+                  ? "#CCCCCC !important"
+                  : "#164679 !important",
+                borderColor: !isActionAllowed
+                  ? "#CCCCCC !important"
+                  : "#164679 !important",
+                borderRadius: "6px",
+                fontWeight: 600,
+              }}
+            >
+              Submit to CO
+            </Button>
+          )}
+        </Space>
+      }
     >
       {console.log(
         "🔍 RM Modal - Rendering DocumentSidebar with docs:",

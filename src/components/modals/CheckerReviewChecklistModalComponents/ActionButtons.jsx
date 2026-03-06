@@ -1,4 +1,23 @@
 import React from "react";
+// Inject global style override for Ant Design buttons in this modal
+if (typeof window !== "undefined") {
+  const style = document.createElement("style");
+  style.innerHTML = `
+    .ant-btn.checker-modal-action {
+      background: #164679 !important;
+      color: #ffffff !important;
+      border: none !important;
+      font-weight: 600 !important;
+    }
+    .ant-btn.checker-modal-action[disabled],
+    .ant-btn.checker-modal-action.ant-btn-disabled {
+      background: #d9d9d9 !important;
+      color: #a1a1a1 !important;
+      border: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
 import { Button, Space, Tooltip, message, Upload } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import PDFGenerator from "./PDFGenerator";
@@ -14,7 +33,7 @@ const ActionButtons = ({
   uploadingSupportingDoc,
   isDisabled,
   canApproveChecklist,
-  canReturnToCreator, // NEW prop
+  canReturnToCreator,
   handlePdfDownload,
   handleSaveDraft,
   handleUploadSupportingDoc,
@@ -23,7 +42,7 @@ const ActionButtons = ({
   documentStats,
   total,
   getApproveButtonTooltip,
-  getReturnToCreatorTooltip, // NEW prop
+  getReturnToCreatorTooltip,
 }) => {
   const { checkerReviewed, checkerRejected, checkerApproved } = documentStats;
 
@@ -41,7 +60,7 @@ const ActionButtons = ({
         return "Approve this checklist";
       })();
 
-  // NEW: Return to creator tooltip
+  // Return to creator tooltip
   const returnToCreatorTooltipText = getReturnToCreatorTooltip
     ? getReturnToCreatorTooltip()
     : (() => {
@@ -49,6 +68,19 @@ const ActionButtons = ({
         if (checkerRejected === 0) return "No rejected documents to return";
         return `Return checklist to creator with ${checkerRejected} rejected document(s)`;
       })();
+
+  // Base button styles
+  const getButtonStyles = (isButtonDisabled, bgColor = "#164679") => ({
+    backgroundColor: isButtonDisabled ? "#f5f5f5" : bgColor,
+    borderColor: isButtonDisabled ? "#d9d9d9" : bgColor,
+    color: isButtonDisabled ? "#rgba(0, 0, 0, 0.25)" : "#FFFFFF",
+    fontWeight: 600,
+    borderRadius: "6px",
+    height: "32px",
+    padding: "4px 15px",
+    fontSize: "14px",
+    boxShadow: isButtonDisabled ? "none" : "0 2px 0 rgba(0, 0, 0, 0.045)",
+  });
 
   return (
     <div
@@ -87,19 +119,7 @@ const ActionButtons = ({
             onClick={handleSaveDraft}
             loading={isSavingDraft}
             disabled={isDisabled || effectiveReadOnly}
-            style={{
-              color: "white !important",
-              backgroundColor:
-                isDisabled || effectiveReadOnly
-                  ? "#CCCCCC !important"
-                  : "#164679 !important",
-              borderColor:
-                isDisabled || effectiveReadOnly
-                  ? "#CCCCCC !important"
-                  : "#164679 !important",
-              borderRadius: "6px",
-              fontWeight: 600,
-            }}
+            className="checker-modal-action"
           >
             Save Draft
           </Button>
@@ -119,18 +139,7 @@ const ActionButtons = ({
               icon={<UploadOutlined />}
               loading={uploadingSupportingDoc}
               disabled={isDisabled || effectiveReadOnly}
-              style={{
-                color: "white !important",
-                backgroundColor:
-                  isDisabled || effectiveReadOnly
-                    ? "#CCCCCC !important"
-                    : "#164679 !important",
-                borderColor:
-                  isDisabled || effectiveReadOnly
-                    ? "#CCCCCC !important"
-                    : "#164679 !important",
-                borderRadius: "6px",
-              }}
+              className="checker-modal-action"
             >
               Upload Supporting Doc
             </Button>
@@ -141,12 +150,7 @@ const ActionButtons = ({
           <Button
             key="cancel"
             onClick={onClose}
-            style={{
-              color: "white !important",
-              backgroundColor: "#164679 !important",
-              borderColor: "#164679 !important",
-              borderRadius: "6px",
-            }}
+            className="checker-modal-action"
           >
             Close
           </Button>
@@ -155,21 +159,9 @@ const ActionButtons = ({
             <>
               <Tooltip title={returnToCreatorTooltipText}>
                 <Button
-                  danger
                   onClick={() => setConfirmAction("co_creator_review")}
                   disabled={!canReturnToCreator() || effectiveReadOnly}
-                  style={{
-                    borderRadius: "6px",
-                    backgroundColor:
-                      !canReturnToCreator() || effectiveReadOnly
-                        ? "#CCCCCC !important"
-                        : "#ff4d4f !important",
-                    borderColor:
-                      !canReturnToCreator() || effectiveReadOnly
-                        ? "#CCCCCC !important"
-                        : "#ff4d4f !important",
-                    color: "white !important",
-                  }}
+                  className="checker-modal-action"
                 >
                   Return to Creator
                 </Button>
@@ -177,7 +169,6 @@ const ActionButtons = ({
 
               <Tooltip title={approveTooltipText}>
                 <Button
-                  type="primary"
                   disabled={!canApproveChecklist() || effectiveReadOnly}
                   onClick={() => {
                     if (!canApproveChecklist()) {
@@ -186,19 +177,7 @@ const ActionButtons = ({
                     }
                     setConfirmAction("approved");
                   }}
-                  style={{
-                    color: "white !important",
-                    backgroundColor:
-                      !canApproveChecklist() || effectiveReadOnly
-                        ? "#CCCCCC !important"
-                        : "#164679 !important",
-                    borderColor:
-                      !canApproveChecklist() || effectiveReadOnly
-                        ? "#CCCCCC !important"
-                        : "#164679 !important",
-                    borderRadius: "6px",
-                    fontWeight: 600,
-                  }}
+                  className="checker-modal-action"
                 >
                   Approve Checklist
                 </Button>

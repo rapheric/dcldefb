@@ -98,6 +98,7 @@ const CheckerLayout = () => {
         overflow: "hidden",
         background: "#f0f2f5",
         boxSizing: "border-box",
+        "--sidebar-width": `${getSidebarWidth(collapsed)}px`,
       }}
     >
       {/* Overlay for mobile sidebar */}
@@ -115,7 +116,7 @@ const CheckerLayout = () => {
           }}
         />
       )}
-      
+
       <SharedSidebar
         selectedKey={selectedKey}
         setSelectedKey={setSelectedKey}
@@ -132,7 +133,9 @@ const CheckerLayout = () => {
           display: "flex",
           flexDirection: "column",
           marginLeft: isMobile ? 0 : getSidebarWidth(collapsed),
-          width: isMobile ? "100%" : `calc(100% - ${getSidebarWidth(collapsed)}px)`,
+          width: isMobile
+            ? "100%"
+            : `calc(100% - ${getSidebarWidth(collapsed)}px)`,
           maxWidth: "100vw",
           transition: "all 0.2s cubic-bezier(0.2, 0, 0, 1) 0s",
           height: "100vh",
@@ -155,17 +158,37 @@ const CheckerLayout = () => {
           }}
         >
           <Routes>
-            <Route path="/" element={<AllChecklists userId={userId} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />} />
+            <Route
+              path="/"
+              element={
+                <AllChecklists
+                  userId={userId}
+                  draftToRestore={draftToRestore}
+                  setDraftToRestore={setDraftToRestore}
+                />
+              }
+            />
             <Route
               path="/myQueue"
-              element={<AllChecklists userId={userId} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />}
+              element={
+                <AllChecklists
+                  userId={userId}
+                  draftToRestore={draftToRestore}
+                  setDraftToRestore={setDraftToRestore}
+                />
+              }
             />
             <Route
               path="/completed"
               element={<CompletedChecklists userId={userId} />}
             />
             <Route path="/deferrals" element={<Deferrals userId={userId} />} />
-            <Route path="/drafts" element={<DraftsPage type="checker" onSelectDraft={handleRestoreDraft} />} />
+            <Route
+              path="/drafts"
+              element={
+                <DraftsPage type="checker" onSelectDraft={handleRestoreDraft} />
+              }
+            />
             <Route path="/reports" element={<Reportss />} />
           </Routes>
         </div>

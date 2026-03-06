@@ -1,7 +1,13 @@
 // export default ReviewChecklistModal;
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Tag, Input } from "antd";
-import { FilePdfOutlined, LeftOutlined, CloseOutlined, PlusOutlined, LockOutlined } from "@ant-design/icons";
+import {
+  FilePdfOutlined,
+  LeftOutlined,
+  CloseOutlined,
+  PlusOutlined,
+  LockOutlined,
+} from "@ant-design/icons";
 import ActionButtons from "./ActionButtons";
 import DocumentSidebar from "../CheckerReviewChecklistModalComponents/DocumentSidebar";
 import ChecklistHeader from "./ChecklistHeader";
@@ -22,7 +28,10 @@ import ProgressStats from "./ProgressStats";
 import AddDocumentModal from "../../common/AddDocumentModal";
 import { getUniqueCategories } from "../../../utils/checklistUtils";
 import { loanTypeDocuments } from "../../../pages/docTypes";
-import { useAddDocumentMutation, useUnlockDclMutation } from "../../../api/checklistApi";
+import {
+  useAddDocumentMutation,
+  useUnlockDclMutation,
+} from "../../../api/checklistApi";
 import { message } from "antd";
 import { Upload } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
@@ -40,8 +49,10 @@ const ReviewChecklistModal = ({
   // Check if DCL is locked by someone else (early, before used in JSX)
   const currentUserId = auth?.user?.id || auth?.user?._id;
   const lockedByUserId = checklist?.lockedByUserId || checklist?.lockedBy?.id;
-  const lockedByUserName = checklist?.lockedBy?.name || checklist?.lockedByUserName;
-  const isLockedBySomeoneElse = lockedByUserId && lockedByUserId !== currentUserId;
+  const lockedByUserName =
+    checklist?.lockedBy?.name || checklist?.lockedByUserName;
+  const isLockedBySomeoneElse =
+    lockedByUserId && lockedByUserId !== currentUserId;
   const isLockedByMe = lockedByUserId === currentUserId;
 
   // State
@@ -51,7 +62,8 @@ const ReviewChecklistModal = ({
   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
   const [localChecklist, setLocalChecklist] = useState(checklist);
   const [isAddDocModalOpen, setIsAddDocModalOpen] = useState(false);
-  const [isUploadingSupportingDoc, setIsUploadingSupportingDoc] = useState(false);
+  const [isUploadingSupportingDoc, setIsUploadingSupportingDoc] =
+    useState(false);
 
   // Hooks
   // const documentStats = useDocumentStats(docs);
@@ -66,7 +78,10 @@ const ReviewChecklistModal = ({
   // DEBUG: Log comment fetching
   React.useEffect(() => {
     const checklistId = checklist?.id || checklist?._id;
-    console.log("📋 ReviewChecklistModal - Checklist ID for comments:", checklistId);
+    console.log(
+      "📋 ReviewChecklistModal - Checklist ID for comments:",
+      checklistId,
+    );
     console.log("📋 Comments Loading:", commentsLoading);
     console.log("📋 Comments Data:", comments);
     if (comments && Array.isArray(comments)) {
@@ -87,7 +102,8 @@ const ReviewChecklistModal = ({
     "co_creator_review",
   ].includes(checklistStatus);
   // Disable actions if locked by someone else
-  const shouldGrayOut = isActionDisabled || !isCreatorReviewAllowed || isLockedBySomeoneElse;
+  const shouldGrayOut =
+    isActionDisabled || !isCreatorReviewAllowed || isLockedBySomeoneElse;
 
   const {
     handleActionChange,
@@ -104,12 +120,22 @@ const ReviewChecklistModal = ({
       ...checklist,
       ...updatedChecklist,
       // Ensure supportingDocs from backend response is preserved
-      supportingDocs: updatedChecklist?.supportingDocs || checklist?.supportingDocs || localChecklist?.supportingDocs || [],
+      supportingDocs:
+        updatedChecklist?.supportingDocs ||
+        checklist?.supportingDocs ||
+        localChecklist?.supportingDocs ||
+        [],
     };
 
     console.log("🔄 handleChecklistUpdate called:");
-    console.log("   Updated checklist supportingDocs:", updatedChecklist?.supportingDocs?.length || 0);
-    console.log("   Merged checklist supportingDocs:", mergedChecklist.supportingDocs?.length || 0);
+    console.log(
+      "   Updated checklist supportingDocs:",
+      updatedChecklist?.supportingDocs?.length || 0,
+    );
+    console.log(
+      "   Merged checklist supportingDocs:",
+      mergedChecklist.supportingDocs?.length || 0,
+    );
 
     // Update local state with merged checklist
     setLocalChecklist(mergedChecklist);
@@ -140,7 +166,7 @@ const ReviewChecklistModal = ({
       if (onChecklistUpdate) {
         onChecklistUpdate(checklist);
       }
-    }
+    },
   );
 
   // Wrapper functions that unlock DCL after submission
@@ -184,7 +210,7 @@ const ReviewChecklistModal = ({
     const loanType = checklist?.loanType || localChecklist?.loanType;
     if (loanType && loanTypeDocuments[loanType]) {
       // Get categories from the predefined loan type documents
-      return loanTypeDocuments[loanType].map(cat => cat.title);
+      return loanTypeDocuments[loanType].map((cat) => cat.title);
     }
     // Fallback to existing document categories
     return getUniqueCategories(docs);
@@ -223,12 +249,20 @@ const ReviewChecklistModal = ({
       const savedDoc = {
         ...newDoc,
         docIdx: docs.length,
-        _id: result?.document?._id || result?.document?.id || result?._id || result?.id,
-        id: result?.document?.id || result?.document?._id || result?.id || result?._id,
+        _id:
+          result?.document?._id ||
+          result?.document?.id ||
+          result?._id ||
+          result?.id,
+        id:
+          result?.document?.id ||
+          result?.document?._id ||
+          result?.id ||
+          result?._id,
         status: result?.document?.status || newDoc.status || "pending",
       };
 
-      setDocs(prevDocs => [...prevDocs, savedDoc]);
+      setDocs((prevDocs) => [...prevDocs, savedDoc]);
 
       message.success("Document added successfully!");
 
@@ -239,7 +273,7 @@ const ReviewChecklistModal = ({
     } catch (error) {
       console.error("❌ Error adding document:", error);
       message.error(
-        error?.data?.message || error?.data?.error || "Failed to add document"
+        error?.data?.message || error?.data?.error || "Failed to add document",
       );
 
       // Even if API call fails, add to local state so user can still submit with it
@@ -249,7 +283,7 @@ const ReviewChecklistModal = ({
         docIdx: docs.length,
         isNew: true, // Mark as new so backend knows to create it
       };
-      setDocs(prevDocs => [...prevDocs, fallbackDoc]);
+      setDocs((prevDocs) => [...prevDocs, fallbackDoc]);
     }
   };
 
@@ -257,14 +291,18 @@ const ReviewChecklistModal = ({
   const handleUploadSupportingDoc = async (file) => {
     try {
       setIsUploadingSupportingDoc(true);
-      console.log("📤 Co-Creator Modal - Uploading supporting document:", file.name);
+      console.log(
+        "📤 Co-Creator Modal - Uploading supporting document:",
+        file.name,
+      );
 
       const checklistId = checklist?.id || checklist?._id;
       if (!checklistId) {
         throw new Error("Checklist ID missing");
       }
 
-      const API_BASE_URL = import.meta.env?.VITE_APP_API_URL || 'http://localhost:5000';
+      const API_BASE_URL =
+        import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
       // Upload to backend using the document upload endpoint
       const formData = new FormData();
@@ -311,7 +349,8 @@ const ReviewChecklistModal = ({
         fileSize: uploadedDoc.fileSize,
         fileType: uploadedDoc.fileType,
         uploadedBy: uploadedDoc.uploadedBy,
-        uploadedByRole: uploadedDoc.uploadedByRole || auth?.user?.role || "cocreator",
+        uploadedByRole:
+          uploadedDoc.uploadedByRole || auth?.user?.role || "cocreator",
         uploadedAt: uploadedDoc.createdAt || new Date().toISOString(),
         isSupporting: true,
         uploadData: {
@@ -320,19 +359,25 @@ const ReviewChecklistModal = ({
           createdAt: uploadedDoc.createdAt || new Date().toISOString(),
           fileSize: uploadedDoc.fileSize,
           fileType: uploadedDoc.fileType,
-          uploadedBy: uploadedDoc.uploadedBy || auth?.user?.name || "Co-Creator",
+          uploadedBy:
+            uploadedDoc.uploadedBy || auth?.user?.name || "Co-Creator",
         },
       };
 
-      console.log("✅ Co-Creator Modal - Adding supporting doc to supportingDocs state (NOT to docs array):", newSupportingDoc);
+      console.log(
+        "✅ Co-Creator Modal - Adding supporting doc to supportingDocs state (NOT to docs array):",
+        newSupportingDoc,
+      );
 
       // Add to supportingDocs state (separate from main docs - won't appear in DocumentTable)
       setSupportingDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
 
       message.success(`"${file.name}" uploaded successfully!`);
-
     } catch (error) {
-      console.error("❌ Co-Creator Modal - Error uploading supporting doc:", error);
+      console.error(
+        "❌ Co-Creator Modal - Error uploading supporting doc:",
+        error,
+      );
       message.error(error.message || "Failed to upload supporting document");
       throw error;
     } finally {
@@ -359,8 +404,12 @@ const ReviewChecklistModal = ({
     }
 
     // Try multiple document sources: documents, docList, items
-    const documentArray = sourceChecklist.documents || sourceChecklist.docList || sourceChecklist.items || [];
-    
+    const documentArray =
+      sourceChecklist.documents ||
+      sourceChecklist.docList ||
+      sourceChecklist.items ||
+      [];
+
     if (!Array.isArray(documentArray)) {
       console.warn("⚠️ Document array is not an array:", documentArray);
       setDocs([]);
@@ -369,12 +418,16 @@ const ReviewChecklistModal = ({
 
     console.log("📋 Raw document array from sourceChecklist:", {
       documentsCount: documentArray.length,
-      firstDoc: documentArray[0]
+      firstDoc: documentArray[0],
     });
 
     const flatDocs = documentArray.reduce((acc, item) => {
       // Handle nested structure with docList
-      if (item.docList && Array.isArray(item.docList) && item.docList.length > 0) {
+      if (
+        item.docList &&
+        Array.isArray(item.docList) &&
+        item.docList.length > 0
+      ) {
         const nestedDocs = item.docList.map((doc) => ({
           ...doc,
           category: item.category || doc.category,
@@ -391,7 +444,7 @@ const ReviewChecklistModal = ({
 
     console.log("📋 Flattened documents:", {
       count: flatDocs.length,
-      firstDoc: flatDocs[0]
+      firstDoc: flatDocs[0],
     });
 
     const preparedDocs = flatDocs.map((doc, idx) => ({
@@ -413,7 +466,7 @@ const ReviewChecklistModal = ({
 
     console.log("📋 Documents prepared in ReviewChecklistModal:", {
       count: preparedDocs.length,
-      firstDoc: preparedDocs[0]
+      firstDoc: preparedDocs[0],
     });
 
     // Set main docs WITHOUT supporting docs
@@ -442,9 +495,18 @@ const ReviewChecklistModal = ({
         className="review-checklist-modal"
         closeIcon={null}
         title={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span
+                style={{ color: "#fff", fontSize: "15px", fontWeight: 600 }}
+              >
                 {`Review Checklist  ${checklist?.title || ""}`}
               </span>
               {isLockedByMe && (
@@ -466,27 +528,35 @@ const ReviewChecklistModal = ({
                 </Tag>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Button
-                icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
+                icon={
+                  showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />
+                }
                 onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
                 size="small"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
+                  display: "flex",
+                  alignItems: "center",
                   gap: 6,
-                  backgroundColor: '#164679',
-                  borderColor: '#164679',
-                  color: '#fff',
-                  padding: '4px 12px',
-                  height: '32px',
+                  backgroundColor: "#164679",
+                  borderColor: "#164679",
+                  color: "#fff",
+                  padding: "4px 12px",
+                  height: "32px",
                 }}
               >
                 View Documents
-                {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length >
-                  0 && (
+                {docs.filter(
+                  (d) => d.fileUrl || d.category === "Supporting Documents",
+                ).length > 0 && (
                   <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
-                    {docs.filter((d) => d.fileUrl || d.category === "Supporting Documents").length}
+                    {
+                      docs.filter(
+                        (d) =>
+                          d.fileUrl || d.category === "Supporting Documents",
+                      ).length
+                    }
                   </Tag>
                 )}
               </Button>
@@ -496,14 +566,14 @@ const ReviewChecklistModal = ({
                 size="small"
                 type="default"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  borderColor: 'rgba(255, 255, 255, 0.4)',
-                  color: '#fff',
-                  width: '32px',
-                  height: '32px',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(255, 255, 255, 0.2)",
+                  borderColor: "rgba(255, 255, 255, 0.4)",
+                  color: "#fff",
+                  width: "32px",
+                  height: "32px",
                   padding: 0,
                 }}
               />
@@ -513,9 +583,21 @@ const ReviewChecklistModal = ({
         open={open}
         onCancel={handleClose}
         width={1200}
-        centered={false}
+        centered={true}
         wrapperClassName="modal-centered-in-content"
-        styles={{ body: { padding: "0 8px 24px" } }}
+        styles={{
+          body: { padding: "0 8px 24px" },
+          mask: { backgroundColor: "rgba(0, 0, 0, 0.45)" },
+        }}
+        wrapperStyle={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          paddingLeft: "120px",
+          paddingTop: "80px",
+        }}
         footer={
           <ActionButtons
             readOnly={readOnly}
@@ -541,11 +623,11 @@ const ReviewChecklistModal = ({
         }
       >
         <DocumentSidebar
-        documents={docs}
-        supportingDocs={supportingDocs}
-        open={showDocumentSidebar}
-        onClose={() => setShowDocumentSidebar(false)}
-      />
+          documents={docs}
+          supportingDocs={supportingDocs}
+          open={showDocumentSidebar}
+          onClose={() => setShowDocumentSidebar(false)}
+        />
 
         {checklist && (
           <div
@@ -577,12 +659,20 @@ const ReviewChecklistModal = ({
               >
                 <LockOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />
                 <div>
-                  <div style={{ fontWeight: 600, color: "#cf1322", fontSize: 14, marginBottom: 4 }}>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: "#cf1322",
+                      fontSize: 14,
+                      marginBottom: 4,
+                    }}
+                  >
                     This DCL is currently being edited by {lockedByUserName}
                   </div>
                   <div style={{ color: "#8c8c8c", fontSize: 12 }}>
-                    You cannot make changes while someone else is working on this checklist.
-                    Please try again later or contact them if you need access.
+                    You cannot make changes while someone else is working on
+                    this checklist. Please try again later or contact them if
+                    you need access.
                   </div>
                 </div>
               </div>
@@ -608,6 +698,16 @@ const ReviewChecklistModal = ({
 
             {/* Document Table */}
             <div>
+              <h3
+                style={{
+                  color: PRIMARY_BLUE,
+                  fontWeight: 700,
+                  marginBottom: 12,
+                  fontSize: 14,
+                }}
+              >
+                Required Documents
+              </h3>
               <DocumentTable
                 docs={docs}
                 onActionChange={handleActionChange}
@@ -624,15 +724,16 @@ const ReviewChecklistModal = ({
             {!shouldGrayOut && (
               <div style={{ marginTop: 16, marginBottom: 16 }}>
                 <Button
-                  type="dashed"
                   icon={<PlusOutlined />}
                   onClick={() => setIsAddDocModalOpen(true)}
                   style={{
                     width: "100%",
+                    backgroundColor: PRIMARY_BLUE,
                     borderColor: PRIMARY_BLUE,
-                    color: PRIMARY_BLUE,
+                    color: "#FFFFFF",
                     height: 40,
                     fontWeight: 600,
+                    fontSize: 13,
                   }}
                 >
                   Add New Document

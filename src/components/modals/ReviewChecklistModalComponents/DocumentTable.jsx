@@ -56,10 +56,10 @@ const DocumentTable = ({
               fontSize: 11,
               color: SECONDARY_PURPLE,
               fontWeight: 500,
-              display: 'block',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
+              display: "block",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
             {text || "N/A"}
@@ -96,7 +96,10 @@ const DocumentTable = ({
           <Select
             size="small"
             value={record.action}
-            style={{ width: record.action === "deferred" ? 85 : "100%", fontSize: 11 }}
+            style={{
+              width: record.action === "deferred" ? 85 : "100%",
+              fontSize: 11,
+            }}
             onChange={(val) => onActionChange(record.docIdx, val)}
             disabled={!canActOnDoc(record)}
           >
@@ -135,7 +138,11 @@ const DocumentTable = ({
 
         return (
           <Tooltip title={statusLabel}>
-            <Tag className="status-tag" color={statusColor.tag} style={{ fontSize: 10 }}>
+            <Tag
+              className="status-tag"
+              color={statusColor.tag}
+              style={{ fontSize: 10 }}
+            >
               {statusLabel}
             </Tag>
           </Tooltip>
@@ -175,22 +182,24 @@ const DocumentTable = ({
         let borderColor = "#d9d9d9";
         let label = checkerStatus || "Pending";
 
-        const normalizedStatus = String(checkerStatus || "").toLowerCase().replace(/\s+/g, "");
+        const normalizedStatus = String(checkerStatus || "")
+          .toLowerCase()
+          .replace(/\s+/g, "");
 
         if (normalizedStatus.includes("approved")) {
           bgColor = "#FFF";
-          textColor = "#52C41A";  // Green
+          textColor = "#52C41A"; // Green
           borderColor = "#52C41A";
           label = "approved";
         } else if (normalizedStatus.includes("rejected")) {
           bgColor = "#FFF";
-          textColor = "#FF4D4F";  // Red
+          textColor = "#FF4D4F"; // Red
           borderColor = "#FF4D4F";
           label = "rejected";
         } else {
           // Pending or unknown - RED color (consistent with other pending statuses)
-          bgColor = "#FFEBE6";  // Light red background
-          textColor = "#FF4D4F";  // Red text
+          bgColor = "#FFEBE6"; // Light red background
+          textColor = "#FF4D4F"; // Red text
           borderColor = "#FF4D4F";
           label = "pending";
         }
@@ -299,7 +308,11 @@ const DocumentTable = ({
       width: 210,
       render: (status) => {
         if (!status) {
-          return <Tag color="default" style={{ minWidth: 60 }}>—</Tag>;
+          return (
+            <Tag color="default" style={{ minWidth: 60 }}>
+              —
+            </Tag>
+          );
         }
 
         // Define colors for each status
@@ -310,19 +323,31 @@ const DocumentTable = ({
         let textColor = "#000";
         let borderColor = "#d9d9d9";
 
-        const normalizedStatus = String(status).toLowerCase().replace(/\s+/g, "");
+        const normalizedStatus = String(status)
+          .toLowerCase()
+          .replace(/\s+/g, "");
 
-        if (normalizedStatus.includes("submittedforreview") || normalizedStatus.includes("submitted_for_review")) {
+        if (
+          normalizedStatus.includes("submittedforreview") ||
+          normalizedStatus.includes("submitted_for_review")
+        ) {
           bgColor = "#FFF";
-          textColor = "#52C41A";  // Green
+          textColor = "#52C41A"; // Green
           borderColor = "#52C41A";
-        } else if (normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("defferal_requested")) {
+        } else if (
+          normalizedStatus.includes("deferralrequested") ||
+          normalizedStatus.includes("deferral_requested") ||
+          normalizedStatus.includes("defferal_requested")
+        ) {
           bgColor = "#FFF";
-          textColor = "#FAAD14";  // Amber
+          textColor = "#FAAD14"; // Amber
           borderColor = "#FAAD14";
-        } else if (normalizedStatus.includes("pendingfromcustomer") || normalizedStatus.includes("pending_from_customer")) {
+        } else if (
+          normalizedStatus.includes("pendingfromcustomer") ||
+          normalizedStatus.includes("pending_from_customer")
+        ) {
           bgColor = "#FFEBE6";
-          textColor = "#FF4D4F";  // Red
+          textColor = "#FF4D4F"; // Red
           borderColor = "#FF4D4F";
         }
 
@@ -367,18 +392,21 @@ const DocumentTable = ({
                 onViewFile(record);
               } else {
                 console.error("onViewFile is not a function");
-                // Fallback: open URL directly
+                // Fallback: open URL directly with inline parameter
                 const fileUrl = record.fileUrl || record.uploadData?.fileUrl;
                 if (fileUrl) {
                   const fullUrl = getFullUrl(fileUrl);
-                  window.open(fullUrl, "_blank", "noopener,noreferrer");
+                  const viewUrl = fullUrl.includes("?")
+                    ? `${fullUrl}&inline=true`
+                    : `${fullUrl}?inline=true`;
+                  window.open(viewUrl, "_blank", "noopener,noreferrer");
                 }
               }
             }}
             size="small"
             style={{
-              backgroundColor: '#164679',
-              borderColor: '#164679',
+              backgroundColor: "#164679",
+              borderColor: "#164679",
               borderRadius: 6,
               fontSize: 10,
               height: 22,
@@ -388,7 +416,9 @@ const DocumentTable = ({
             View
           </Button>
         ) : (
-          <Tag color="default" style={{ fontSize: 10 }}>No File</Tag>
+          <Tag color="default" style={{ fontSize: 10 }}>
+            No File
+          </Tag>
         ),
     },
     {

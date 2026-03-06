@@ -24,7 +24,7 @@ const CheckerReviewChecklistModal = ({
   onClose,
   isReadOnly = false,
   readOnly = false,
-  onChecklistUpdate = null, // Callback to update parent with fresh checklist data
+  onChecklistUpdate = null,
 }) => {
   const effectiveReadOnly = isReadOnly || readOnly;
   const auth = useSelector((state) => state.auth);
@@ -52,7 +52,10 @@ const CheckerReviewChecklistModal = ({
   // DEBUG: Log comment fetching
   React.useEffect(() => {
     const checklistId = checklist?.id || checklist?._id;
-    console.log("🛡️ CheckerReviewChecklistModal - Checklist ID for comments:", checklistId);
+    console.log(
+      "🛡️ CheckerReviewChecklistModal - Checklist ID for comments:",
+      checklistId,
+    );
     console.log("🛡️ Comments Loading:", commentsLoading);
     console.log("🛡️ Comments Data:", comments);
     if (comments && Array.isArray(comments)) {
@@ -72,21 +75,28 @@ const CheckerReviewChecklistModal = ({
     documentStats;
 
   const handleChecklistUpdate = (updatedChecklist) => {
-    // Merge the updated checklist with existing localChecklist to preserve fields not returned by submission
     const mergedChecklist = {
       ...localChecklist,
       ...checklist,
       ...updatedChecklist,
-      // Ensure supportingDocs from backend response is preserved
-      supportingDocs: updatedChecklist?.supportingDocs || checklist?.supportingDocs || localChecklist?.supportingDocs || [],
+      supportingDocs:
+        updatedChecklist?.supportingDocs ||
+        checklist?.supportingDocs ||
+        localChecklist?.supportingDocs ||
+        [],
     };
 
     console.log("🔄 Checker handleChecklistUpdate called:");
-    console.log("   Updated checklist supportingDocs:", updatedChecklist?.supportingDocs?.length || 0);
-    console.log("   Merged checklist supportingDocs:", mergedChecklist.supportingDocs?.length || 0);
+    console.log(
+      "   Updated checklist supportingDocs:",
+      updatedChecklist?.supportingDocs?.length || 0,
+    );
+    console.log(
+      "   Merged checklist supportingDocs:",
+      mergedChecklist.supportingDocs?.length || 0,
+    );
 
     setLocalChecklist(mergedChecklist);
-    // Call parent callback if provided
     if (onChecklistUpdate) {
       onChecklistUpdate(mergedChecklist);
     }
@@ -99,22 +109,25 @@ const CheckerReviewChecklistModal = ({
       return;
     }
 
-    // Try multiple document sources
-    const documentArray = checklist.documents || checklist.docList || checklist.items || [];
-    
+    const documentArray =
+      checklist.documents || checklist.docList || checklist.items || [];
+
     if (!Array.isArray(documentArray) || documentArray.length === 0) {
       console.warn("⚠️ No documents found in checklist", {
         hasDocuments: !!checklist.documents,
         hasDocList: !!checklist.docList,
-        hasItems: !!checklist.items
+        hasItems: !!checklist.items,
       });
       setDocs([]);
       return;
     }
 
     const flatDocs = documentArray.reduce((acc, item) => {
-      // Handle nested structure with docList
-      if (item.docList && Array.isArray(item.docList) && item.docList.length > 0) {
+      if (
+        item.docList &&
+        Array.isArray(item.docList) &&
+        item.docList.length > 0
+      ) {
         const nested = item.docList.map((doc) => ({
           ...doc,
           category: item.category || doc.category,
@@ -122,7 +135,6 @@ const CheckerReviewChecklistModal = ({
         }));
         return acc.concat(nested);
       }
-      // Handle flat structure
       if (item.title || item.fileName || item.status) {
         return acc.concat(item);
       }
@@ -134,7 +146,7 @@ const CheckerReviewChecklistModal = ({
 
     console.log("📋 Processing documents for CheckerReviewChecklistModal:", {
       totalDocs: flatDocs.length,
-      shouldForceApproved
+      shouldForceApproved,
     });
 
     const processedDocs = flatDocs.map((doc, idx) => ({
@@ -151,20 +163,29 @@ const CheckerReviewChecklistModal = ({
       deferralNo: doc.deferralNo || null,
     }));
 
-    // ✅ Store supporting docs separately - NOT merged into docs array
-    // This keeps them out of the DocumentTable and visible only in SupportingDocsSection and DocumentSidebar
     const supportingDocsData = checklist.supportingDocs || [];
-    console.log("📎 Checker Modal - Supporting docs from backend:", supportingDocsData.length);
+    console.log(
+      "📎 Checker Modal - Supporting docs from backend:",
+      supportingDocsData.length,
+    );
 
     setSupportingDocs(supportingDocsData);
     setDocs(processedDocs);
-    console.log("📋 Checker Modal - Main docs (excluding supporting):", processedDocs.length);
+    console.log(
+      "📋 Checker Modal - Main docs (excluding supporting):",
+      processedDocs.length,
+    );
   }, [checklist, effectiveReadOnly]);
 
   const handlePdfDownload = async () => {
     setIsGeneratingPDF(true);
     try {
-      generateChecklistPDF(checklist, docs, documentStats, comments?.data || comments || []);
+      generateChecklistPDF(
+        checklist,
+        docs,
+        documentStats,
+        comments?.data || comments || [],
+      );
       message.success("Checklist PDF generated successfully!");
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -183,7 +204,6 @@ const CheckerReviewChecklistModal = ({
         throw new Error("Checklist ID missing");
       }
 
-      // Upload to backend using the document upload endpoint
       const formData = new FormData();
       formData.append("file", file);
       formData.append("checklistId", checklistId);
@@ -212,7 +232,6 @@ const CheckerReviewChecklistModal = ({
 
       const uploadedDoc = result.data;
 
-      // Create document object for the uploaded supporting doc
       const newSupportingDoc = {
         id: uploadedDoc.id || uploadedDoc._id,
         _id: uploadedDoc._id || uploadedDoc.id,
@@ -239,22 +258,25 @@ const CheckerReviewChecklistModal = ({
         },
       };
 
-      console.log("✅ Checker Modal - Adding supporting doc to main docs array:", newSupportingDoc);
+      console.log(
+        "✅ Checker Modal - Adding supporting doc to main docs array:",
+        newSupportingDoc,
+      );
 
-      // Add to main docs array
       setDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
 
       message.success(`"${file.name}" uploaded successfully!`);
-
     } catch (error) {
-      console.error("❌ Checker Modal - Error uploading supporting doc:", error);
+      console.error(
+        "❌ Checker Modal - Error uploading supporting doc:",
+        error,
+      );
       message.error(error.message || "Failed to upload supporting document");
     } finally {
       setUploadingSupportingDoc(false);
     }
   };
 
-  // Simple approve function
   const handleDocApprove = (index) => {
     setDocs((prev) => {
       const updated = [...prev];
@@ -264,7 +286,6 @@ const CheckerReviewChecklistModal = ({
     });
   };
 
-  // Simple reject function
   const handleDocReject = (index) => {
     setDocs((prev) => {
       const updated = [...prev];
@@ -274,7 +295,6 @@ const CheckerReviewChecklistModal = ({
     });
   };
 
-  // Reset function
   const handleDocReset = (index) => {
     setDocs((prev) => {
       const updated = [...prev];
@@ -289,7 +309,6 @@ const CheckerReviewChecklistModal = ({
     if (!checklistId) return alert("Checklist ID missing");
 
     if (action === "approved") {
-      // Direct check on docs array
       const hasRejectedDocuments = docs.some(
         (doc) => doc.checkerStatus === "rejected",
       );
@@ -299,7 +318,6 @@ const CheckerReviewChecklistModal = ({
         return;
       }
 
-      // Check if all documents have been reviewed (no pending or undefined)
       const hasUnreviewedDocuments = docs.some((doc) => {
         const status = doc.checkerStatus;
         return !status || status === "" || status === "pending";
@@ -313,7 +331,6 @@ const CheckerReviewChecklistModal = ({
         return;
       }
 
-      // Check if all reviewed documents are approved
       const hasNonApprovedDocuments = docs.some(
         (doc) => doc.checkerStatus !== "approved",
       );
@@ -333,24 +350,28 @@ const CheckerReviewChecklistModal = ({
         id: checklistId,
         action: action,
         checkerDecisions: docs
-          .filter(doc => !doc.isNew && doc.category !== "Supporting Documents") // Filter out new/temporary documents AND supporting docs
+          .filter(
+            (doc) => !doc.isNew && doc.category !== "Supporting Documents",
+          )
           .map((doc) => ({
-          documentId: doc.id || doc._id || doc.key,
-          checkerStatus: doc.checkerStatus,
-          checkerComment: doc.checkerComment || "",
-        })),
+            documentId: doc.id || doc._id || doc.key,
+            checkerStatus: doc.checkerStatus,
+            checkerComment: doc.checkerComment || "",
+          })),
         checkerComments: checkerComment,
-        checkerComment: checkerComment, // Added this field to ensure compatibility
+        checkerComment: checkerComment,
       };
 
       console.log("📤 CHECKER SUBMISSION:");
       console.log("   Total docs in state:", docs.length);
-      console.log("   Supporting docs:", docs.filter(d => d.category === "Supporting Documents").length);
+      console.log(
+        "   Supporting docs:",
+        docs.filter((d) => d.category === "Supporting Documents").length,
+      );
       console.log("   Checker decisions:", payload.checkerDecisions.length);
 
       await submitCheckerStatus(payload).unwrap();
       setConfirmAction(null);
-      // Call callback with updated checklist status signal
       handleChecklistUpdate({ ...localChecklist, status: action });
       onClose();
     } catch (err) {
@@ -371,7 +392,6 @@ const CheckerReviewChecklistModal = ({
         throw new Error("Checklist ID missing");
       }
 
-      // Prepare draft data for localStorage
       const draftData = {
         checklistId: checklistId,
         dclNo: checklist?.dclNo,
@@ -394,10 +414,11 @@ const CheckerReviewChecklistModal = ({
           deferralNo: doc.deferralNo,
         })),
         creatorComment: checkerComment,
-        supportingDocs: docs.filter(d => d.category === "Supporting Documents"),
+        supportingDocs: docs.filter(
+          (d) => d.category === "Supporting Documents",
+        ),
       };
 
-      // Save to localStorage instead of API
       saveDraftToStorage("checker", draftData, checklistId);
 
       message.success({
@@ -423,37 +444,26 @@ const CheckerReviewChecklistModal = ({
         (checklist?.status || "").toLowerCase() === status.toLowerCase(),
     );
 
-  // Check if all documents are approved
   const canApproveChecklist = () => {
     if (isDisabled) return false;
-
-    // Check if all documents are approved
     for (let doc of docs) {
       if (doc.checkerStatus !== "approved") {
         return false;
       }
     }
-
     return true;
   };
 
-  // NEW: Check if can return to creator (only if there's at least one rejected document)
   const canReturnToCreator = () => {
     if (isDisabled) return false;
-
-    // Check if there's at least one rejected document
     const hasRejectedDocuments = docs.some(
       (doc) => doc.checkerStatus === "rejected",
     );
-
     return hasRejectedDocuments;
   };
 
-  // Tooltip function that checks docs directly
   const getApproveButtonTooltip = () => {
     if (isDisabled) return "Checklist is not in review state";
-
-    // Check actual document statuses from docs array
     const rejectedCount = docs.filter(
       (doc) => doc.checkerStatus === "rejected",
     ).length;
@@ -475,15 +485,11 @@ const CheckerReviewChecklistModal = ({
     return "Approve this checklist";
   };
 
-  // NEW: Tooltip for Return to Creator button
   const getReturnToCreatorTooltip = () => {
     if (isDisabled) return "Checklist is not in review state";
-
-    // Check if there are any rejected documents
     const rejectedCount = docs.filter(
       (doc) => doc.checkerStatus === "rejected",
     ).length;
-
     if (rejectedCount === 0) return "No rejected documents to return";
     return `Return checklist to creator with ${rejectedCount} rejected document(s)`;
   };
@@ -492,7 +498,6 @@ const CheckerReviewChecklistModal = ({
 
   return (
     <>
-      {/* Document Sidebar - Rendered outside modal at body level */}
       <DocumentSidebar
         documents={docs}
         supportingDocs={checklist?.supportingDocs || []}
@@ -500,9 +505,71 @@ const CheckerReviewChecklistModal = ({
         onClose={() => setShowDocumentSidebar(false)}
       />
 
-      <div className="fixed inset-0 z-[60] overflow-auto bg-black/40 flex items-center justify-center" style={{}}>
-        <div className="review-checklist-modal bg-white rounded-xl shadow-2xl overflow-hidden my-6 relative" style={{ width: "1200px", maxWidth: "calc(100vw - 310px)" }}>
-          {/* Header Section with Gradient */}
+      {/* Global styles for responsive modal with dynamic sidebar positioning using CSS variables */}
+      <style>{`
+        /* Desktop: >= 1100px - Use CSS variable for sidebar width */
+        @media (min-width: 1100px) {
+          .checker-modal-overlay {
+            left: var(--sidebar-width, 80px) !important;
+            transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          }
+        }
+        
+        /* Tablet: 768px - 1099px */
+        @media (min-width: 768px) and (max-width: 1099px) {
+          .checker-modal-overlay {
+            left: var(--sidebar-width, 40px) !important;
+            padding-left: 0 !important;
+            transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          }
+        }
+        
+        /* Mobile: < 768px */
+        @media (max-width: 767px) {
+          .checker-modal-overlay {
+            left: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 16px !important;
+          }
+          .checker-modal-container {
+            width: calc(100vw - 32px) !important;
+            max-width: calc(100vw - 32px) !important;
+          }
+        }
+        
+        .checker-modal-overlay {
+          max-height: 100vh;
+          transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+        
+        .checker-modal-container {
+          max-height: calc(100vh - 130px);
+          overflow-y: auto;
+        }
+      `}</style>
+
+      <div
+        className="checker-modal-overlay fixed overflow-auto bg-black/50 flex items-start justify-center"
+        style={{
+          top: "65px",
+          left: "var(--sidebar-width, 80px)",
+          right: 0,
+          bottom: 0,
+          zIndex: 1100,
+          paddingTop: "20px",
+          paddingBottom: "20px",
+        }}
+      >
+        <div
+          className="checker-modal-container review-checklist-modal bg-white rounded-xl overflow-hidden relative"
+          style={{
+            width: "1200px",
+            maxWidth: "calc(100vw - 310px)",
+            boxShadow: "none",
+            border: "1px solid #e5e7eb",
+            margin: "0 16px",
+          }}
+        >
           <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white">
             <HeaderSection
               checklist={checklist}
@@ -513,7 +580,6 @@ const CheckerReviewChecklistModal = ({
             />
           </div>
 
-          {/* Main Content Area */}
           <div
             className="p-6 space-y-6"
             style={{
@@ -522,91 +588,84 @@ const CheckerReviewChecklistModal = ({
               transition: "opacity 0.3s ease",
             }}
           >
-          {effectiveReadOnly && (
-            <div
-              style={{
-                background: "#fff7e6",
-                border: "1px solid #ffd591",
-                borderRadius: 8,
-                padding: "8px 16px",
-                marginBottom: 16,
-                color: "#d46b08",
-                fontWeight: 600,
-                fontSize: 13,
-              }}
-            >
-              This checklist status doesn't allow Checker actions — all fields
-              are read-only.
+            {effectiveReadOnly && (
+              <div
+                style={{
+                  background: "#fff7e6",
+                  border: "1px solid #ffd591",
+                  borderRadius: 8,
+                  padding: "8px 16px",
+                  marginBottom: 16,
+                  color: "#d46b08",
+                  fontWeight: 600,
+                  fontSize: 13,
+                }}
+              >
+                This checklist status doesn't allow Checker actions — all fields
+                are read-only.
+              </div>
+            )}
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+              <ChecklistDetails checklist={checklist} />
             </div>
-          )}
-          {/* Checklist Details */}
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-            <ChecklistDetails
-              checklist={checklist}
+
+            <ProgressSection documentStats={documentStats} total={total} />
+
+            <DocumentTable
+              docs={docs}
+              isDisabled={isDisabled}
+              effectiveReadOnly={effectiveReadOnly}
+              handleDocApprove={handleDocApprove}
+              handleDocReject={handleDocReject}
+              handleDocReset={handleDocReset}
+            />
+
+            <CommentSection
+              comments={comments}
+              commentsLoading={commentsLoading}
+              checkerComment={checkerComment}
+              setCheckerComment={setCheckerComment}
+              isDisabled={isDisabled}
+            />
+
+            <ActionButtons
+              effectiveReadOnly={effectiveReadOnly}
+              isGeneratingPDF={isGeneratingPDF}
+              isSavingDraft={isSavingDraft}
+              uploadingSupportingDoc={uploadingSupportingDoc}
+              isDisabled={isDisabled}
+              canApproveChecklist={canApproveChecklist}
+              canReturnToCreator={canReturnToCreator}
+              handlePdfDownload={handlePdfDownload}
+              handleSaveDraft={handleSaveDraft}
+              handleUploadSupportingDoc={handleUploadSupportingDoc}
+              setConfirmAction={setConfirmAction}
+              onClose={onClose}
+              documentStats={documentStats}
+              total={total}
+              getApproveButtonTooltip={getApproveButtonTooltip}
+              getReturnToCreatorTooltip={getReturnToCreatorTooltip}
             />
           </div>
 
-          {/* Progress Section */}
-          <ProgressSection documentStats={documentStats} total={total} />
-
-          {/* Document Table */}
-          <DocumentTable
-            docs={docs}
-            isDisabled={isDisabled}
-            effectiveReadOnly={effectiveReadOnly}
-            handleDocApprove={handleDocApprove}
-            handleDocReject={handleDocReject}
-            handleDocReset={handleDocReset}
-          />
-
-          <CommentSection
-            comments={comments}
-            commentsLoading={commentsLoading}
-            checkerComment={checkerComment}
-            setCheckerComment={setCheckerComment}
-            isDisabled={isDisabled}
-          />
-
-          <ActionButtons
-            effectiveReadOnly={effectiveReadOnly}
-            isGeneratingPDF={isGeneratingPDF}
-            isSavingDraft={isSavingDraft}
-            uploadingSupportingDoc={uploadingSupportingDoc}
-            isDisabled={isDisabled}
-            canApproveChecklist={canApproveChecklist}
-            canReturnToCreator={canReturnToCreator} // NEW: Pass this prop
-            handlePdfDownload={handlePdfDownload}
-            handleSaveDraft={handleSaveDraft}
-            handleUploadSupportingDoc={handleUploadSupportingDoc}
-            setConfirmAction={setConfirmAction}
-            onClose={onClose}
-            documentStats={documentStats}
-            total={total}
-            // Pass the tooltip functions
-            getApproveButtonTooltip={getApproveButtonTooltip}
-            getReturnToCreatorTooltip={getReturnToCreatorTooltip} // NEW: Pass this prop
-          />
+          {!effectiveReadOnly && confirmAction && (
+            <ConfirmationModal
+              confirmAction={confirmAction}
+              setConfirmAction={setConfirmAction}
+              loading={loading}
+              submitCheckerAction={submitCheckerAction}
+              canApproveChecklist={canApproveChecklist}
+              canReturnToCreator={canReturnToCreator}
+              checkerRejected={checkerRejected}
+              total={total}
+              checkerReviewed={checkerReviewed}
+              checkerApproved={checkerApproved}
+            />
+          )}
         </div>
-
-        {!effectiveReadOnly && confirmAction && (
-          <ConfirmationModal
-            confirmAction={confirmAction}
-            setConfirmAction={setConfirmAction}
-            loading={loading}
-            submitCheckerAction={submitCheckerAction}
-            canApproveChecklist={canApproveChecklist}
-            canReturnToCreator={canReturnToCreator} // NEW: Pass this prop
-            checkerRejected={checkerRejected}
-            total={total}
-            checkerReviewed={checkerReviewed}
-            checkerApproved={checkerApproved}
-          />
-        )}
       </div>
-    </div>
     </>
   );
 };
 
 export default CheckerReviewChecklistModal;
-

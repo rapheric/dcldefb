@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Table,
@@ -82,19 +81,31 @@ const DocumentTable = ({
     let text = key || "Unknown";
     let icon = <SyncOutlined spin />;
 
-    if (lowerKey === "submitted" || lowerKey === "approved" || lowerKey === "sighted") {
+    if (
+      lowerKey === "submitted" ||
+      lowerKey === "approved" ||
+      lowerKey === "sighted"
+    ) {
       bgColor = "#f6ffed";
       textColor = "#52c41a";
       borderColor = "#52c41a";
       text = lowerKey;
       icon = <CheckCircleOutlined />;
-    } else if (lowerKey === "pending" || lowerKey === "pendingrm" || lowerKey === "pendingco") {
+    } else if (
+      lowerKey === "pending" ||
+      lowerKey === "pendingrm" ||
+      lowerKey === "pendingco"
+    ) {
       bgColor = "#ffebe6";
       textColor = "#FF4D4F";
       borderColor = "#FF4D4F";
       text = "pending";
       icon = <ClockCircleOutlined />;
-    } else if (lowerKey === "deferred" || lowerKey === "waived" || lowerKey === "tbo") {
+    } else if (
+      lowerKey === "deferred" ||
+      lowerKey === "waived" ||
+      lowerKey === "tbo"
+    ) {
       bgColor = "#fffbe6";
       textColor = "#FAAD14";
       borderColor = "#FAAD14";
@@ -174,10 +185,10 @@ const DocumentTable = ({
               fontSize: 11,
               color: "#7e6496",
               fontWeight: 500,
-              display: 'block',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              display: "block",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
             {text || "N/A"}
@@ -362,23 +373,48 @@ const DocumentTable = ({
                 <>
                   <Button
                     size="small"
-                    onClick={() =>
-                      window.open(
-                        getFullUrl(
-                          record.fileUrl || record.uploadData?.fileUrl,
-                        ),
-                        "_blank",
-                      )
-                    }
+                    onClick={() => {
+                      const url = getFullUrl(
+                        record.fileUrl || record.uploadData?.fileUrl,
+                      );
+                      // Add inline parameter to force viewing instead of downloading
+                      const viewUrl = url.includes("?")
+                        ? `${url}&inline=true`
+                        : `${url}?inline=true`;
+                      window.open(viewUrl, "_blank", "noopener,noreferrer");
+                    }}
                     style={{
-                      backgroundColor: '#164679',
-                      borderColor: '#164679',
-                      color: '#fff',
+                      backgroundColor: "#164679",
+                      borderColor: "#164679",
+                      color: "#fff",
                       borderRadius: 6,
                     }}
                   >
                     View
                   </Button>
+                  {!readOnly && (
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        const url = getFullUrl(
+                          record.fileUrl || record.uploadData?.fileUrl,
+                        );
+                        // Download by creating an anchor element
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = record.name || "document";
+                        link.click();
+                      }}
+                      style={{
+                        backgroundColor: "#ff4d4f",
+                        borderColor: "#ff4d4f",
+                        color: "#fff",
+                        borderRadius: 6,
+                      }}
+                    >
+                      Download
+                    </Button>
+                  )}
                   {!readOnly && (
                     <Button
                       size="small"
@@ -428,19 +464,31 @@ const DocumentTable = ({
         let textColor = "#000";
         let borderColor = "#d9d9d9";
 
-        const normalizedStatus = String(rmStatus).toLowerCase().replace(/\s+/g, "");
+        const normalizedStatus = String(rmStatus)
+          .toLowerCase()
+          .replace(/\s+/g, "");
 
-        if (normalizedStatus.includes("submittedforreview") || normalizedStatus.includes("submitted_for_review")) {
+        if (
+          normalizedStatus.includes("submittedforreview") ||
+          normalizedStatus.includes("submitted_for_review")
+        ) {
           bgColor = "#FFF";
-          textColor = "#52C41A";  // Green
+          textColor = "#52C41A"; // Green
           borderColor = "#52C41A";
-        } else if (normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("defferal_requested")) {
+        } else if (
+          normalizedStatus.includes("deferralrequested") ||
+          normalizedStatus.includes("deferral_requested") ||
+          normalizedStatus.includes("defferal_requested")
+        ) {
           bgColor = "#FFF";
-          textColor = "#FAAD14";  // Amber
+          textColor = "#FAAD14"; // Amber
           borderColor = "#FAAD14";
-        } else if (normalizedStatus.includes("pendingfromcustomer") || normalizedStatus.includes("pending_from_customer")) {
+        } else if (
+          normalizedStatus.includes("pendingfromcustomer") ||
+          normalizedStatus.includes("pending_from_customer")
+        ) {
           bgColor = "#FFEBE6";
-          textColor = "#FF4D4F";  // Red
+          textColor = "#FF4D4F"; // Red
           borderColor = "#FF4D4F";
         }
 

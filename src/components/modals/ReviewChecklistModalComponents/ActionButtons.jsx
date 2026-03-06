@@ -86,11 +86,11 @@ const ActionButtons = ({
   const handleSubmitToCheckers = async () => {
     // Check for expired documents before submission
     if (hasExpiredDocuments) {
-      const expiredDocs = docs.filter((doc) =>
-        doc.expiryDate && dayjs(doc.expiryDate).isBefore(dayjs())
+      const expiredDocs = docs.filter(
+        (doc) => doc.expiryDate && dayjs(doc.expiryDate).isBefore(dayjs()),
       );
       message.error(
-        `Cannot submit to checker: ${expiredDocs.length} expired document(s) found. Please update expired documents before submission.`
+        `Cannot submit to checker: ${expiredDocs.length} expired document(s) found. Please update expired documents before submission.`,
       );
       return false;
     }
@@ -125,11 +125,11 @@ const ActionButtons = ({
           disabled={shouldGrayOut}
           icon={<SaveOutlined />}
           style={{
-            borderColor: ACCENT_LIME,
-            color: PRIMARY_BLUE,
+            backgroundColor: shouldGrayOut ? "#CCCCCC !important" : "#164679 !important",
+            borderColor: shouldGrayOut ? "#CCCCCC !important" : "#164679 !important",
+            color: "#FFFFFF !important",
             borderRadius: "6px",
             fontWeight: 600,
-            opacity: shouldGrayOut ? 0.5 : 1,
           }}
         >
           Save Draft
@@ -153,8 +153,11 @@ const ActionButtons = ({
             disabled={shouldGrayOut}
             loading={uploadingSupportingDoc}
             style={{
+              backgroundColor: shouldGrayOut ? "#CCCCCC !important" : "#164679 !important",
+              borderColor: shouldGrayOut ? "#CCCCCC !important" : "#164679 !important",
+              color: "#FFFFFF !important",
               borderRadius: "6px",
-              opacity: shouldGrayOut ? 0.5 : 1,
+              fontWeight: 600,
             }}
           >
             Upload Supporting Doc
@@ -167,7 +170,13 @@ const ActionButtons = ({
         key="cancel"
         onClick={onClose}
         icon={<CloseOutlined />}
-        style={{ borderRadius: "6px" }}
+        style={{
+          backgroundColor: "#164679 !important",
+          borderColor: "#164679 !important",
+          color: "#FFFFFF !important",
+          borderRadius: "6px",
+          fontWeight: 600,
+        }}
       >
         Close
       </Button>
@@ -177,18 +186,40 @@ const ActionButtons = ({
         <Button
           key="submit"
           type="primary"
-          disabled={isActionDisabled || !canSubmitToRM || shouldGrayOut || isLockedBySomeoneElse}
+          disabled={
+            isActionDisabled ||
+            !canSubmitToRM ||
+            shouldGrayOut ||
+            isLockedBySomeoneElse
+          }
           loading={isSubmittingToRM}
-          onClick={handleSubmitToRM} // Use the wrapper function
+          onClick={handleSubmitToRM}
           icon={<SendOutlined />}
-          title={isLockedBySomeoneElse ? `Locked by ${lockedByUserName}` : undefined}
+          title={
+            isLockedBySomeoneElse ? `Locked by ${lockedByUserName}` : undefined
+          }
           style={{
+            color: "white !important",
+            backgroundColor:
+              isActionDisabled ||
+              !canSubmitToRM ||
+              shouldGrayOut ||
+              isLockedBySomeoneElse
+                ? "#CCCCCC !important"
+                : "#164679 !important",
+            borderColor:
+              isActionDisabled ||
+              !canSubmitToRM ||
+              shouldGrayOut ||
+              isLockedBySomeoneElse
+                ? "#CCCCCC !important"
+                : "#164679 !important",
             borderRadius: "6px",
             fontWeight: 600,
-            opacity: (shouldGrayOut || isLockedBySomeoneElse) ? 0.5 : 1,
           }}
         >
-          Submit to RM {isLockedBySomeoneElse && `(Locked by ${lockedByUserName})`}
+          Submit to RM{" "}
+          {isLockedBySomeoneElse && `(Locked by ${lockedByUserName})`}
         </Button>
       )}
 
@@ -198,18 +229,30 @@ const ActionButtons = ({
           key="submit-checker"
           type="primary"
           loading={isCheckerSubmitting}
-          onClick={handleSubmitToCheckers} // Use the wrapper function
-          disabled={!canSubmitToCoChecker || shouldGrayOut || isLockedBySomeoneElse}
+          onClick={handleSubmitToCheckers}
+          disabled={
+            !canSubmitToCoChecker || shouldGrayOut || isLockedBySomeoneElse
+          }
           icon={<CheckCircleOutlined />}
-          title={isLockedBySomeoneElse ? `Locked by ${lockedByUserName}` : undefined}
+          title={
+            isLockedBySomeoneElse ? `Locked by ${lockedByUserName}` : undefined
+          }
           style={{
-            backgroundColor: PRIMARY_BLUE,
+            color: "white !important",
+            backgroundColor:
+              !canSubmitToCoChecker || shouldGrayOut || isLockedBySomeoneElse
+                ? "#CCCCCC !important"
+                : "#164679 !important",
+            borderColor:
+              !canSubmitToCoChecker || shouldGrayOut || isLockedBySomeoneElse
+                ? "#CCCCCC !important"
+                : "#164679 !important",
             borderRadius: "6px",
             fontWeight: 600,
-            opacity: (shouldGrayOut || isLockedBySomeoneElse) ? 0.5 : 1,
           }}
         >
-          Submit to Co-Checker {isLockedBySomeoneElse && `(Locked by ${lockedByUserName})`}
+          Submit to Co-Checker{" "}
+          {isLockedBySomeoneElse && `(Locked by ${lockedByUserName})`}
         </Button>
       )}
     </Space>

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Space, message } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
@@ -75,7 +73,7 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
   const loadDraft = (id) => {
     try {
       const drafts = getDrafts("cocreator");
-      const draft = drafts.find(d => d.id === id);
+      const draft = drafts.find((d) => d.id === id);
       if (draft && draft.data) {
         const data = draft.data;
         setLoanType(data.loanType || "");
@@ -92,10 +90,14 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
 
         // If documents have a flat structure (from ReviewChecklistModal),
         // convert them to nested structure with docList
-        if (docsToLoad.length > 0 && docsToLoad[0].category && !docsToLoad[0].docList) {
+        if (
+          docsToLoad.length > 0 &&
+          docsToLoad[0].category &&
+          !docsToLoad[0].docList
+        ) {
           // Group by category
           const groupedDocs = {};
-          docsToLoad.forEach(doc => {
+          docsToLoad.forEach((doc) => {
             const category = doc.category || "Uncategorized";
             if (!groupedDocs[category]) {
               groupedDocs[category] = [];
@@ -110,9 +112,9 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
           });
 
           // Convert to nested structure
-          docsToLoad = Object.keys(groupedDocs).map(category => ({
+          docsToLoad = Object.keys(groupedDocs).map((category) => ({
             category,
-            docList: groupedDocs[category]
+            docList: groupedDocs[category],
           }));
         }
 
@@ -301,13 +303,26 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
       className="create-dcl-modal"
       closeIcon={null}
       title={
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ color: "#fff", fontSize: "15px", fontWeight: 600 }}>
               Create Document Checklist
             </span>
             {lastSaved && (
-              <span style={{ fontSize: '12px', color: '#b5d334', fontWeight: 'normal' }}>
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "#b5d334",
+                  fontWeight: "normal",
+                }}
+              >
                 Auto-saved: {new Date(lastSaved).toLocaleTimeString()}
               </span>
             )}
@@ -320,14 +335,14 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
             }}
             size="small"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'rgba(255, 255, 255, 0.2)',
-              borderColor: 'rgba(255, 255, 255, 0.4)',
-              color: '#fff',
-              width: '32px',
-              height: '32px',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(255, 255, 255, 0.2)",
+              borderColor: "rgba(255, 255, 255, 0.4)",
+              color: "#fff",
+              width: "32px",
+              height: "32px",
               padding: 0,
             }}
           />
@@ -338,16 +353,16 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
         resetForm();
         onClose();
       }}
-      width={1065}
+      width={1200}
       centered={true}
       styles={{
         body: { padding: "0 8px 24px" },
         header: {
-          background: '#164679',
-          padding: '18px 24px',
+          background: "#164679",
+          padding: "18px 24px",
           borderTopLeftRadius: 8,
           borderTopRightRadius: 8,
-        }
+        },
       }}
       footer={null}
     >
@@ -421,9 +436,15 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
           onClick={handleSubmit}
           disabled={!isFormValid}
           style={{
-            backgroundColor: !isFormValid ? "#f5f5f5" : undefined,
-            color: !isFormValid ? "#bfbfbf" : undefined,
+            color: "white !important",
+            backgroundColor: !isFormValid
+              ? "#CCCCCC !important"
+              : "#164679 !important",
+            borderColor: !isFormValid
+              ? "#CCCCCC !important"
+              : "#164679 !important",
             cursor: !isFormValid ? "not-allowed" : undefined,
+            fontWeight: 600,
           }}
         >
           Create DCL
@@ -434,7 +455,17 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
           onClick={handleSaveDraft}
           disabled={!loanType && !assignedToRM && !customerNumber}
           style={{
-            marginTop: '8px',
+            marginTop: "8px",
+            color: "white !important",
+            backgroundColor:
+              !loanType && !assignedToRM && !customerNumber
+                ? "#CCCCCC !important"
+                : "#164679 !important",
+            borderColor:
+              !loanType && !assignedToRM && !customerNumber
+                ? "#CCCCCC !important"
+                : "#164679 !important",
+            fontWeight: 600,
           }}
         >
           Save Draft

@@ -50,7 +50,11 @@ const INFO_BLUE = "#1890ff";
 //   TBO: { color: "#666666", textColor: "white" },
 // };
 
-const MyQueue = ({ userId, draftToRestore = null, setDraftToRestore = null }) => {
+const MyQueue = ({
+  userId,
+  draftToRestore = null,
+  setDraftToRestore = null,
+}) => {
   const [selectedChecklist, setSelectedChecklist] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -79,7 +83,10 @@ const MyQueue = ({ userId, draftToRestore = null, setDraftToRestore = null }) =>
         docList: groupedDocs[category],
       }));
 
-      console.log("📋 RM MyQueue - Reconstructed nested documents:", nestedDocuments);
+      console.log(
+        "📋 RM MyQueue - Reconstructed nested documents:",
+        nestedDocuments,
+      );
 
       // Reconstruct checklist object from draft data
       const draftChecklist = {
@@ -99,7 +106,10 @@ const MyQueue = ({ userId, draftToRestore = null, setDraftToRestore = null }) =>
         _supportingDocs: draftToRestore.data.supportingDocs || [],
       };
 
-      console.log("✅ RM MyQueue - Opening modal with restored checklist:", draftChecklist);
+      console.log(
+        "✅ RM MyQueue - Opening modal with restored checklist:",
+        draftChecklist,
+      );
       setSelectedChecklist(draftChecklist);
       setModalOpen(true);
 
@@ -172,17 +182,20 @@ const MyQueue = ({ userId, draftToRestore = null, setDraftToRestore = null }) =>
 
   const renderStatusTag = (status) => {
     const statusConfig = getStatusColor(status);
+    const normalizedStatus = (status || "").toLowerCase();
+    const isPending = normalizedStatus.includes("pending");
+
     return (
       <Tag
         style={{
           fontWeight: "bold",
-          fontSize: 10,
-          padding: "4px 8px",
+          fontSize: 11,
+          padding: "6px 12px",
           borderRadius: 4,
-          border: `1px solid ${statusConfig.borderColor}`,
-          color: statusConfig.textColor,
+          border: `1.5px solid ${statusConfig.borderColor}`,
+          color: isPending ? "#FF4D4F" : statusConfig.textColor,
           backgroundColor: statusConfig.bgColor,
-          minWidth: 80,
+          minWidth: 85,
           textAlign: "center",
         }}
       >
@@ -234,7 +247,7 @@ const MyQueue = ({ userId, draftToRestore = null, setDraftToRestore = null }) =>
             gap: 6,
           }}
         >
-         <UserOutlined style={{ color: SECONDARY_BLUE, fontSize: 12 }} />
+          <UserOutlined style={{ color: SECONDARY_BLUE, fontSize: 12 }} />
           {text}
         </div>
       ),
@@ -250,7 +263,7 @@ const MyQueue = ({ userId, draftToRestore = null, setDraftToRestore = null }) =>
             fontWeight: 500,
             fontFamily: "monospace",
             borderRadius: 4,
-            fontSize: 12, 
+            fontSize: 12,
             textAlign: "center",
           }}
         >
@@ -535,9 +548,7 @@ const MyQueue = ({ userId, draftToRestore = null, setDraftToRestore = null }) =>
         }}
       >
         <Row justify="space-between" align="middle">
-          <Col>
-            Report generated on: {formatDateTime(new Date())}
-          </Col>
+          <Col>Report generated on: {formatDateTime(new Date())}</Col>
           <Col>
             <Text type="secondary">
               Showing {filteredData.length} items • Data as of latest system

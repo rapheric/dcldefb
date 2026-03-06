@@ -46,7 +46,7 @@ const DocumentTable = ({
       case "pending":
       case "pendingrm":
       case "pendingco":
-        color = "red";  // Changed from gold to red for consistency
+        color = "red"; // Changed from gold to red for consistency
         label = "Pending";
         break;
       case "waived":
@@ -117,12 +117,11 @@ const DocumentTable = ({
       dataIndex: "name",
       width: 130,
       render: (text, record) => {
-        const docName = text || record.documentName || `Document ${record.docIdx + 1}`;
+        const docName =
+          text || record.documentName || `Document ${record.docIdx + 1}`;
         return (
           <Tooltip title={docName}>
-            <span style={{ fontSize: "11px", color: "#333" }}>
-              {docName}
-            </span>
+            <span style={{ fontSize: "11px", color: "#333" }}>{docName}</span>
           </Tooltip>
         );
       },
@@ -225,7 +224,7 @@ const DocumentTable = ({
         );
       },
     },
-      {
+    {
       title: "CO Comment",
       dataIndex: "comment",
       width: 110,
@@ -265,14 +264,18 @@ const DocumentTable = ({
         </Tooltip>
       ),
     },
-   
+
     {
       title: "RM Status",
       dataIndex: "rmStatus",
       width: 185,
       render: (status) => {
         if (!status) {
-          return <Tag color="default" style={{ minWidth: 60 }}>—</Tag>;
+          return (
+            <Tag color="default" style={{ minWidth: 60 }}>
+              —
+            </Tag>
+          );
         }
 
         // Define colors for each status
@@ -283,19 +286,31 @@ const DocumentTable = ({
         let textColor = "#000";
         let borderColor = "#d9d9d9";
 
-        const normalizedStatus = String(status).toLowerCase().replace(/\s+/g, "");
+        const normalizedStatus = String(status)
+          .toLowerCase()
+          .replace(/\s+/g, "");
 
-        if (normalizedStatus.includes("submittedforreview") || normalizedStatus.includes("submitted_for_review")) {
+        if (
+          normalizedStatus.includes("submittedforreview") ||
+          normalizedStatus.includes("submitted_for_review")
+        ) {
           bgColor = "#FFF";
-          textColor = "#52C41A";  // Green
+          textColor = "#52C41A"; // Green
           borderColor = "#52C41A";
-        } else if (normalizedStatus.includes("deferralrequested") || normalizedStatus.includes("deferral_requested") || normalizedStatus.includes("defferal_requested")) {
+        } else if (
+          normalizedStatus.includes("deferralrequested") ||
+          normalizedStatus.includes("deferral_requested") ||
+          normalizedStatus.includes("defferal_requested")
+        ) {
           bgColor = "#FFF";
-          textColor = "#FAAD14";  // Amber
+          textColor = "#FAAD14"; // Amber
           borderColor = "#FAAD14";
-        } else if (normalizedStatus.includes("pendingfromcustomer") || normalizedStatus.includes("pending_from_customer")) {
+        } else if (
+          normalizedStatus.includes("pendingfromcustomer") ||
+          normalizedStatus.includes("pending_from_customer")
+        ) {
           bgColor = "#FFEBE6";
-          textColor = "#FF4D4F";  // Red
+          textColor = "#FF4D4F"; // Red
           borderColor = "#FF4D4F";
         }
 
@@ -326,7 +341,7 @@ const DocumentTable = ({
         );
       },
     },
-   {
+    {
       title: "Checker Status",
       dataIndex: "checkerStatus",
       width: 100,
@@ -455,20 +470,19 @@ const DocumentTable = ({
                 onViewFile(record);
               } else {
                 console.error("onViewFile is not a function");
-                // Fallback: open URL directly
+                // Fallback: open URL directly with inline parameter
                 const fileUrl = record.fileUrl || record.uploadData?.fileUrl;
                 if (fileUrl) {
                   const fullUrl = getFullUrl(fileUrl);
-                  window.open(fullUrl, "_blank", "noopener,noreferrer");
+                  const viewUrl = fullUrl.includes("?")
+                    ? `${fullUrl}&inline=true`
+                    : `${fullUrl}?inline=true`;
+                  window.open(viewUrl, "_blank", "noopener,noreferrer");
                 }
               }
             }}
             size="small"
-            style={{
-              backgroundColor: PRIMARY_BLUE,
-              borderColor: PRIMARY_BLUE,
-              borderRadius: 6,
-            }}
+            className="checker-modal-action"
           >
             View
           </Button>

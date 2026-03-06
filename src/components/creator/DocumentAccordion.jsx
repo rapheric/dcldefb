@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Select, Input, Button, Collapse } from "antd";
+import { Table, Select, Input, Button, Collapse, Tag, Typography } from "antd";
 
 const { Panel } = Collapse;
 const { Option } = Select;
@@ -13,6 +13,29 @@ const actionToStatus = {
   sighted: "sighted",
   waived: "waived",
   deferred: "deferred",
+};
+
+// Status color mapping
+const getStatusColor = (status) => {
+  const statusLower = (status || "").toLowerCase();
+  switch (statusLower) {
+    case "submitted":
+      return { bg: "#52c41a", text: "#fff" }; // Green
+    case "pendingrm":
+      return { bg: "#ff4d4f", text: "#fff" }; // Red
+    case "pendingco":
+      return { bg: "#ff4d4f", text: "#fff" }; // Red
+    case "tbo":
+      return { bg: "#faad14", text: "#fff" }; // Amber
+    case "sighted":
+      return { bg: "#52c41a", text: "#fff" }; // Green
+    case "waived":
+      return { bg: "#b5d334", text: "#333" }; // Lime
+    case "deferred":
+      return { bg: "#faad14", text: "#fff" }; // Amber
+    default:
+      return { bg: "#d9d9d9", text: "#333" }; // Gray default
+  }
 };
 
 // Template for a new document
@@ -116,7 +139,24 @@ const DocumentAccordion = ({ documents, setDocuments }) => {
     {
       title: "Status From Co",
       dataIndex: "status",
-      render: (s) => <strong>{s}</strong>,
+      render: (s) => {
+        if (!s) return <span style={{ color: "#999" }}>—</span>;
+        const colors = getStatusColor(s);
+        return (
+          <Tag
+            style={{
+              backgroundColor: colors.bg,
+              color: colors.text,
+              border: "none",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              fontWeight: 600,
+            }}
+          >
+            {s}
+          </Tag>
+        );
+      },
     },
 
     {
@@ -131,7 +171,7 @@ const DocumentAccordion = ({ documents, setDocuments }) => {
               catIdx,
               record.docIdx,
               "comment",
-              e.target.value
+              e.target.value,
             )
           }
         />
@@ -142,8 +182,13 @@ const DocumentAccordion = ({ documents, setDocuments }) => {
       title: "Remove",
       render: (_, record) => (
         <Button
-          danger
           onClick={() => handleRemoveDocument(catIdx, record.docIdx)}
+          style={{
+            color: "white !important",
+            backgroundColor: "#ff4d4f !important",
+            borderColor: "#ff4d4f !important",
+            fontWeight: 600,
+          }}
         >
           Remove
         </Button>
@@ -157,13 +202,33 @@ const DocumentAccordion = ({ documents, setDocuments }) => {
         const safeDocList = Array.isArray(cat.docList) ? cat.docList : [];
         return (
           <Panel header={cat.category || `Category ${catIdx + 1}`} key={catIdx}>
-            <Button
-              type="primary"
-              style={{ marginBottom: 15 }}
+            <div
+              style={{
+                marginBottom: "16px",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#1a1a1a",
+              }}
+            >
+              Add More Documents
+            </div>
+            <div
               onClick={() => handleAddDocument(catIdx)}
+              style={{
+                marginBottom: 15,
+                backgroundColor: "#1890ff",
+                color: "#FFFFFF",
+                fontWeight: 700,
+                fontSize: 13,
+                padding: "10px 16px",
+                borderRadius: "4px",
+                cursor: "pointer",
+                textAlign: "center",
+                border: "none",
+              }}
             >
               + Add Document
-            </Button>
+            </div>
 
             <Table
               pagination={false}

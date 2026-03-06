@@ -1,26 +1,21 @@
 // export default Myqueue;
 import { useMemo, useState, useEffect } from "react";
-import {
-  Table,
-  Tag,
-  Spin,
-  Empty,
-  Tabs,
-  Card,
-  Row,
-  Col,
-  Input,
-} from "antd";
+import { Table, Tag, Spin, Empty, Tabs, Card, Row, Col, Input } from "antd";
 import {
   SearchOutlined,
   FileTextOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { useGetChecklistsByCreatorQuery, useGetAllChecklistsQuery, useLockDclMutation } from "../../api/checklistApi";
+import {
+  useGetChecklistsByCreatorQuery,
+  useGetAllChecklistsQuery,
+  useLockDclMutation,
+} from "../../api/checklistApi";
 import dayjs from "dayjs";
 import ReviewChecklistModal from "../../components/modals/ReviewChecklistModalComponents/ReviewChecklistModal";
 import { useSelector } from "react-redux";
 import { LockOutlined, UnlockOutlined } from "@ant-design/icons";
+import { getStatusColor } from "../../utils/statusColors";
 
 /* ---------------- THEME COLORS ---------------- */
 const PRIMARY_BLUE = "#164679";
@@ -36,7 +31,7 @@ const { TabPane } = Tabs;
 
 const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
   const [selectedChecklist, setSelectedChecklist] = useState(null);
-  const [activeTab, setActiveTab] = useState("unassigned"); // Default to unassigned tab
+  const [activeTab, setActiveTab] = useState("co_creator_review"); // Default to CO Creator Review tab
   const [searchText, setSearchText] = useState("");
 
   const { user } = useSelector((state) => state.auth);
@@ -45,23 +40,29 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
   const creatorId = user?.id || user?._id;
 
   // Fetch creator's checklists (with polling to keep lock status fresh)
-  const { data: allChecklists = [], isLoading: isLoadingCreator, refetch: refetchCreatorChecklists } =
-    useGetChecklistsByCreatorQuery(creatorId, {
-      skip: !creatorId,
-      // Poll every 10 seconds to get latest lock status
-      pollingInterval: 10000,
-      refetchOnMountOrArgChange: true,
-      refetchOnFocus: true,
-    });
+  const {
+    data: allChecklists = [],
+    isLoading: isLoadingCreator,
+    refetch: refetchCreatorChecklists,
+  } = useGetChecklistsByCreatorQuery(creatorId, {
+    skip: !creatorId,
+    // Poll every 10 seconds to get latest lock status
+    pollingInterval: 10000,
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
 
   // Fetch ALL DCLs in the system (for Active DCLs tab)
-  const { data: allSystemDcls = [], isLoading: isLoadingUnassigned, refetch: refetchSystemDcls } =
-    useGetAllChecklistsQuery(undefined, {
-      refetchOnMountOrArgChange: true,
-      // Poll every 10 seconds to get latest lock status
-      pollingInterval: 10000,
-      refetchOnFocus: true,
-    });
+  const {
+    data: allSystemDcls = [],
+    isLoading: isLoadingUnassigned,
+    refetch: refetchSystemDcls,
+  } = useGetAllChecklistsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+    // Poll every 10 seconds to get latest lock status
+    pollingInterval: 10000,
+    refetchOnFocus: true,
+  });
 
   console.log("Fetched all system DCLs:", allSystemDcls);
 
@@ -96,7 +97,6 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
       }
     }
   }, [draftToRestore, setDraftToRestore]);
-
 
   // Function to handle DCL selection with locking
   const handleSelectChecklist = async (checklist) => {
@@ -225,9 +225,7 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
       dataIndex: "dclNo",
       width: 140,
       render: (text) => (
-        <div style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
-          {text}
-        </div>
+        <div style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>{text}</div>
       ),
     },
     {
@@ -244,7 +242,7 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
       width: 180,
       render: (text) => (
         <span style={{ fontWeight: 600, color: PRIMARY_BLUE }}>
-           <UserOutlined style={{ marginRight: 6 }} />
+          <UserOutlined style={{ marginRight: 6 }} />
           {text}
         </span>
       ),
@@ -372,19 +370,27 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
     {
       title: "Status",
       width: 120,
-      render: (_, record) => (
-        <Tag
-          color={
-            record.status === "coCreatorReview"
-              ? "orange"
-              : record.status === "rmReview"
-                ? "blue"
-                : "green"
-          }
-        >
-          {record.status || "Unknown"}
-        </Tag>
-      ),
+      render: (_, record) => {
+        const statusConfig = getStatusColor(record.status);
+
+        return (
+          <Tag
+            style={{
+              fontWeight: "bold",
+              fontSize: 11,
+              padding: "6px 12px",
+              borderRadius: 4,
+              border: `1.5px solid ${statusConfig.borderColor}`,
+              color: statusConfig.textColor,
+              backgroundColor: statusConfig.bgColor,
+              minWidth: 85,
+              textAlign: "center",
+            }}
+          >
+            {record.status || "Unknown"}
+          </Tag>
+        );
+      },
     },
   ];
 
@@ -410,7 +416,7 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
 
   /* ---------------- RENDER ---------------- */
   // Responsive padding
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 375;
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 375;
   const padding = isMobile ? "8px 2px" : "24px";
   const cardMargin = isMobile ? 8 : 16;
 
@@ -435,7 +441,6 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
       {/* TABS */}
       <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
         {/* NEW TAB: Unassigned DCLs */}
-      
 
         <TabPane tab="CO Creator Review" key="co_creator_review">
           {isLoadingCreator ? (
@@ -497,10 +502,9 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
           )}
         </TabPane>
 
-          <TabPane
+        <TabPane
           tab={
             <span>
-             
               Active DCLs
               {unassignedQueue.length > 0 && (
                 <Tag color="blue" style={{ marginLeft: 8 }}>
