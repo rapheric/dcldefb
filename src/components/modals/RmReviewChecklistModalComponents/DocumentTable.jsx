@@ -384,8 +384,7 @@ const DocumentTable = ({
                       window.open(viewUrl, "_blank", "noopener,noreferrer");
                     }}
                     style={{
-                      backgroundColor: "#164679",
-                      borderColor: "#164679",
+                      // borderColor: "#164679",
                       color: "#fff",
                       borderRadius: 6,
                     }}
@@ -406,8 +405,6 @@ const DocumentTable = ({
                         link.click();
                       }}
                       style={{
-                        backgroundColor: "#ff4d4f",
-                        borderColor: "#ff4d4f",
                         color: "#fff",
                         borderRadius: 6,
                       }}
@@ -589,7 +586,7 @@ const DocumentTable = ({
 
             <div className="flex justify-end gap-2">
               <button
-                className="px-4 py-2 text-sm rounded bg-gray-200 hover:bg-gray-300"
+                className="px-4 py-2 text-sm rounded bg-gray-200 hover:bg-gray-300 deferral-cancel-btn"
                 onClick={() => {
                   setShowDeferralModal(false);
                   setDeferralDocIdx(null);
@@ -599,7 +596,7 @@ const DocumentTable = ({
               </button>
 
               <button
-                className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+                className="px-4 py-2 text-sm rounded bg-blue-600 hover:bg-blue-700 deferral-confirm-btn"
                 onClick={() => {
                   if (!deferralNumber.trim()) {
                     message.error("Deferral number is required");

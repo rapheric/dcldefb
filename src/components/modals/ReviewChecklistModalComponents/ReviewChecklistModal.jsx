@@ -505,11 +505,9 @@ const ReviewChecklistModal = ({
         .review-modal-container {
           background: white;
           border-radius: 12px;
-          overflow: hidden;
+          overflow: visible;
           width: 1200px;
           max-width: calc(100vw - 310px);
-          max-height: calc(100vh - 130px);
-          overflow-y: auto;
           box-shadow: none;
           border: 1px solid #e5e7eb;
           margin: 0 16px 0 116px;

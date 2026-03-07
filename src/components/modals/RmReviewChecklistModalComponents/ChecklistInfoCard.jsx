@@ -30,7 +30,7 @@ const ChecklistInfoCard = ({ checklist }) => {
     >
       <Descriptions size="middle" column={{ xs: 1, sm: 2, lg: 3 }}>
         <Descriptions.Item label="DCL No">
-          <strong>{checklist.dclNo || "N/A"}</strong>
+          <span>{checklist.dclNo || "N/A"}</span>
         </Descriptions.Item>
         <Descriptions.Item label="IBPS No">
           {checklist.ibpsNo || "Not provided"}
@@ -39,29 +39,39 @@ const ChecklistInfoCard = ({ checklist }) => {
           {formatDate(checklist.createdAt)}
         </Descriptions.Item>
         <Descriptions.Item label="Loan Type">
-          <Tag color="blue">{checklist.loanType || "N/A"}</Tag>
+          <Tag>{checklist.loanType || "N/A"}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Created By">
-          <span style={{ fontWeight: 600 }}>
+          <span>
             {checklist.createdBy?.name || checklist.createdBy || "N/A"}
           </span>
         </Descriptions.Item>
         <Descriptions.Item label="RM">
-          <span style={{ fontWeight: 600 }}>
-            {checklist.assignedToRM?.name || "N/A"}
-          </span>
+          <span>{checklist.assignedToRM?.name || "N/A"}</span>
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Current Status">
+          <Tag
+            color={
+              checklist.status === "co_creator_review"
+                ? "processing"
+                : checklist.status === "pending"
+                  ? "warning"
+                  : "default"
+            }
+          >
+            {checklist.status?.replace(/_/g, " ").toUpperCase()}
+          </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Co-Checker">
           {checklist.assignedToCoChecker?.name ? (
-            <Tag color="green">{checklist.assignedToCoChecker.name}</Tag>
+            <Tag>{checklist.assignedToCoChecker.name}</Tag>
           ) : (
-            <Tag color="orange">Pending Assignment</Tag>
+            <Tag>Pending Assignment</Tag>
           )}
         </Descriptions.Item>
         <Descriptions.Item label="Customer Number">
-          <span style={{ fontWeight: 600 }}>
-            {checklist.customerNumber || "N/A"}
-          </span>
+          <span>{checklist.customerNumber || "N/A"}</span>
         </Descriptions.Item>
       </Descriptions>
     </Card>

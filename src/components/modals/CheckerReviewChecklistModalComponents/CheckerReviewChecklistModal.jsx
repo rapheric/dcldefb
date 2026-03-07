@@ -507,69 +507,71 @@ const CheckerReviewChecklistModal = ({
 
       {/* Global styles for responsive modal with dynamic sidebar positioning using CSS variables */}
       <style>{`
-        /* Desktop: >= 1100px - Use CSS variable for sidebar width */
-        @media (min-width: 1100px) {
-          .checker-modal-overlay {
-            left: var(--sidebar-width, 80px) !important;
-            transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
-          }
+        /* Overlay styling - full screen with proper z-index */
+        .checker-modal-overlay {
+          position: fixed;
+          top: 65px;
+          left: var(--sidebar-width, 150px);
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          z-index: 990;
+          overflow: auto;
+          padding-top: 20px;
+          padding-bottom: 20px;
+          transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          max-height: 100vh;
         }
         
-        /* Tablet: 768px - 1099px */
+        /* Modal container - centered */
+        .checker-modal-container {
+          background: white;
+          border-radius: 12px;
+          overflow: visible;
+          width: 1200px;
+          max-width: calc(100vw - 310px);
+          box-shadow: none;
+          border: 1px solid #e5e7eb;
+          margin: 0 16px 0 116px;
+          position: relative;
+          z-index: 1001;
+        }
+        
+        /* Responsive adjustments */
         @media (min-width: 768px) and (max-width: 1099px) {
           .checker-modal-overlay {
-            left: var(--sidebar-width, 40px) !important;
-            padding-left: 0 !important;
+            left: var(--sidebar-width, 40px);
             transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
           }
         }
         
-        /* Mobile: < 768px */
         @media (max-width: 767px) {
           .checker-modal-overlay {
-            left: 0 !important; 
-            padding-left: 0 !important;
-            padding-right: 16px !important;
+            left: 0;
+            padding-left: 0;
+            padding-right: 16px;
           }
           .checker-modal-container {
             width: calc(100vw - 32px) !important;
             max-width: calc(100vw - 32px) !important;
+            margin: 0 !important;
           }
-        }
-        
-        .checker-modal-overlay {
-          max-height: 100vh;
-          transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
-        }
-        
-        .checker-modal-container {
-          max-height: calc(100vh - 130px);
-          overflow-y: auto;
         }
       `}</style>
 
       <div
-        className="checker-modal-overlay fixed overflow-auto bg-black/50 flex items-start justify-center"
+        className="checker-modal-overlay"
         style={{
-          top: "65px",
-          left: "var(--sidebar-width, 80px)",
-          right: 0,
-          bottom: 0,
-          zIndex: 990,
-          paddingTop: "20px",
-          paddingBottom: "20px",
+          display: open ? "flex" : "none",
         }}
+        onClick={onClose}
       >
         <div
-          className="checker-modal-container review-checklist-modal bg-white rounded-xl overflow-hidden relative"
-          style={{
-            width: "1200px",
-            maxWidth: "calc(100vw - 310px)",
-            boxShadow: "none",
-            border: "1px solid #e5e7eb",
-            margin: "0 16px 0 66px",
-            zIndex: 1001,
-          }}
+          className="checker-modal-container"
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white">
             <HeaderSection

@@ -1,27 +1,13 @@
 import React from "react";
-// Inject global style override for Ant Design buttons in this modal
-if (typeof window !== "undefined") {
-  const style = document.createElement("style");
-  style.innerHTML = `
-    .ant-btn.checker-modal-action {
-      background: #164679 !important;
-      color: #ffffff !important;
-      border: none !important;
-      font-weight: 600 !important;
-    }
-    .ant-btn.checker-modal-action[disabled],
-    .ant-btn.checker-modal-action.ant-btn-disabled {
-      background: #d9d9d9 !important;
-      color: #a1a1a1 !important;
-      border: none !important;
-    }
-  `;
-  document.head.appendChild(style);
-}
 import { Button, Space, Tooltip, message, Upload } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+  SaveOutlined,
+  UploadOutlined,
+  SendOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
 import PDFGenerator from "./PDFGenerator";
-import { ACCENT_LIME, PRIMARY_BLUE } from "../../../utils/constants";
+import { PRIMARY_BLUE } from "../../../utils/constants";
 
 const ActionButtons = ({
   checklist,
@@ -69,39 +55,124 @@ const ActionButtons = ({
         return `Return checklist to creator with ${checkerRejected} rejected document(s)`;
       })();
 
-  // Base button styles
-  const getButtonStyles = (isButtonDisabled, bgColor = "#164679") => ({
-    backgroundColor: isButtonDisabled ? "#f5f5f5" : bgColor,
-    borderColor: isButtonDisabled ? "#d9d9d9" : bgColor,
-    color: isButtonDisabled ? "#rgba(0, 0, 0, 0.25)" : "#FFFFFF",
-    fontWeight: 600,
+  const buttonGradientStyle = {
+    background: "linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important",
+    borderColor: "transparent !important",
+    color: "#FFFFFF !important",
     borderRadius: "6px",
-    height: "32px",
-    padding: "4px 15px",
-    fontSize: "14px",
-    boxShadow: isButtonDisabled ? "none" : "0 2px 0 rgba(0, 0, 0, 0.045)",
-  });
+    fontWeight: 600,
+    border: "none !important",
+  };
+
+  const buttonDisabledStyle = {
+    background: "#CCCCCC !important",
+    borderColor: "#CCCCCC !important",
+    color: "#FFFFFF !important",
+    borderRadius: "6px",
+    fontWeight: 600,
+    border: "none !important",
+  };
 
   return (
-    <div
-      className="action-buttons"
-      style={{
-        marginTop: "24px",
-        padding: "16px 20px",
-        backgroundColor: "#f9fafb",
-        borderRadius: "8px",
-        border: "1px solid #e5e7eb",
-      }}
-    >
+    <>
+      <style>{`
+        .checker-action-buttons button {
+          background: linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important;
+          border-color: transparent !important;
+          color: #FFFFFF !important;
+          border: none !important;
+        }
+        .checker-action-buttons button:hover,
+        .checker-action-buttons button:focus,
+        .checker-action-buttons button:active {
+          background: linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important;
+          border-color: transparent !important;
+          color: #FFFFFF !important;
+          border: none !important;
+        }
+        .checker-action-buttons button span {
+          color: #FFFFFF !important;
+        }
+        .checker-action-buttons button:disabled,
+        .checker-action-buttons button[disabled] {
+          background: #CCCCCC !important;
+          border-color: #CCCCCC !important;
+          color: #FFFFFF !important;
+          border: none !important;
+        }
+        .checker-action-buttons .ant-btn {
+          background: linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important;
+          border-color: transparent !important;
+          color: #FFFFFF !important;
+        }
+        .checker-action-buttons .ant-btn:hover,
+        .checker-action-buttons .ant-btn:focus {
+          background: linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important;
+          border-color: transparent !important;
+          color: #FFFFFF !important;
+        }
+        .checker-action-buttons .ant-btn-primary {
+          background: linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important;
+          border-color: transparent !important;
+          color: #FFFFFF !important;
+        }
+        .checker-action-buttons .ant-btn-primary:hover,
+        .checker-action-buttons .ant-btn-primary:focus {
+          background: linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important;
+          border-color: transparent !important;
+          color: #FFFFFF !important;
+        }
+      `}</style>
       <div
+        className="checker-action-buttons"
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          width: "100%",
+          padding: "16px",
+          gap: "16px",
         }}
       >
-        <Space size="middle">
+        {/* Left Buttons - 3 buttons */}
+        <Space wrap>
+          {/* Save Draft */}
+          {!effectiveReadOnly && (
+            <Button
+              key="save-draft"
+              onClick={handleSaveDraft}
+              loading={isSavingDraft}
+              disabled={isDisabled}
+              icon={<SaveOutlined />}
+              style={isDisabled ? buttonDisabledStyle : buttonGradientStyle}
+            >
+              Save Draft
+            </Button>
+          )}
+
+          {/* Upload Supporting Doc */}
+          {!effectiveReadOnly && (
+            <Upload
+              key="upload-support"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                handleUploadSupportingDoc(file);
+                return false;
+              }}
+              disabled={isDisabled || uploadingSupportingDoc}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+            >
+              <Button
+                icon={<UploadOutlined />}
+                disabled={isDisabled}
+                loading={uploadingSupportingDoc}
+                style={isDisabled ? buttonDisabledStyle : buttonGradientStyle}
+              >
+                Upload Supporting Doc
+              </Button>
+            </Upload>
+          )}
+
+          {/* PDF Generator */}
           <PDFGenerator
             checklist={{
               ...checklist,
@@ -111,82 +182,58 @@ const ActionButtons = ({
             supportingDocs={[]}
             creatorComment=""
             comments={comments}
-            buttonText="Download PDF"
-            variant="primary"
           />
-
-          <Button
-            onClick={handleSaveDraft}
-            loading={isSavingDraft}
-            disabled={isDisabled || effectiveReadOnly}
-            className="checker-modal-action"
-          >
-            Save Draft
-          </Button>
-
-          <Upload
-            showUploadList={false}
-            beforeUpload={(file) => {
-              if (handleUploadSupportingDoc) {
-                handleUploadSupportingDoc(file);
-              }
-              return false;
-            }}
-            disabled={isDisabled || effectiveReadOnly}
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
-          >
-            <Button
-              icon={<UploadOutlined />}
-              loading={uploadingSupportingDoc}
-              disabled={isDisabled || effectiveReadOnly}
-              className="checker-modal-action"
-            >
-              Upload Supporting Doc
-            </Button>
-          </Upload>
         </Space>
 
-        <Space size="middle">
-          <Button
-            key="cancel"
-            onClick={onClose}
-            className="checker-modal-action"
-          >
-            Close
-          </Button>
-
+        {/* Right Buttons - 2 buttons */}
+        <Space wrap>
+          {/* Return to Creator */}
           {!effectiveReadOnly && (
-            <>
-              <Tooltip title={returnToCreatorTooltipText}>
-                <Button
-                  onClick={() => setConfirmAction("co_creator_review")}
-                  disabled={!canReturnToCreator() || effectiveReadOnly}
-                  className="checker-modal-action"
-                >
-                  Return to Creator
-                </Button>
-              </Tooltip>
+            <Tooltip title={returnToCreatorTooltipText}>
+              <Button
+                key="return"
+                onClick={() => setConfirmAction("co_creator_review")}
+                disabled={!canReturnToCreator() || effectiveReadOnly}
+                icon={<SendOutlined />}
+                style={
+                  !canReturnToCreator() || effectiveReadOnly
+                    ? buttonDisabledStyle
+                    : buttonGradientStyle
+                }
+              >
+                Return to Creator
+              </Button>
+            </Tooltip>
+          )}
 
-              <Tooltip title={approveTooltipText}>
-                <Button
-                  disabled={!canApproveChecklist() || effectiveReadOnly}
-                  onClick={() => {
-                    if (!canApproveChecklist()) {
-                      message.error(approveTooltipText);
-                      return;
-                    }
-                    setConfirmAction("approved");
-                  }}
-                  className="checker-modal-action"
-                >
-                  Approve Checklist
-                </Button>
-              </Tooltip>
-            </>
+          {/* Approve Checklist */}
+          {!effectiveReadOnly && (
+            <Tooltip title={approveTooltipText}>
+              <Button
+                key="approve"
+                type="primary"
+                disabled={!canApproveChecklist() || effectiveReadOnly}
+                onClick={() => {
+                  if (!canApproveChecklist()) {
+                    message.error(approveTooltipText);
+                    return;
+                  }
+                  setConfirmAction("approved");
+                }}
+                icon={<CheckCircleOutlined />}
+                style={
+                  !canApproveChecklist() || effectiveReadOnly
+                    ? buttonDisabledStyle
+                    : buttonGradientStyle
+                }
+              >
+                Approve Checklist
+              </Button>
+            </Tooltip>
           )}
         </Space>
       </div>
-    </div>
+    </>
   );
 };
 

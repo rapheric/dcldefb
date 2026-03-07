@@ -1002,72 +1002,112 @@ const RmReviewChecklistModal = ({
   return (
     <>
       <style>{`
-        /* Desktop: >= 1100px - Use CSS variable for sidebar width */
-        @media (min-width: 1100px) {
-          .rm-modal-overlay {
-            left: var(--sidebar-width, 80px) !important;
-            transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
-          }
+        /* Deferral modal buttons - explicit color overrides */
+        .deferral-confirm-btn {
+          color: #FFFFFF !important;
+        }
+        .deferral-cancel-btn {
+          color: #000000 !important;
         }
         
-        /* Tablet: 768px - 1099px */
+        .rm-action-buttons button,
+        .rm-action-buttons .ant-btn {
+          background: linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important;
+          border-color: transparent !important;
+          color: #FFFFFF !important;
+          border: none !important;
+        }
+        .rm-action-buttons button:hover,
+        .rm-action-buttons button:focus,
+        .rm-action-buttons button:active,
+        .rm-action-buttons .ant-btn:hover,
+        .rm-action-buttons .ant-btn:focus {
+          background: linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important;
+          border-color: transparent !important;
+          color: #FFFFFF !important;
+          border: none !important;
+        }
+        .rm-action-buttons button span,
+        .rm-action-buttons .ant-btn span {
+          color: #FFFFFF !important;
+        }
+        .rm-action-buttons button:disabled,
+        .rm-action-buttons button[disabled],
+        .rm-action-buttons .ant-btn:disabled,
+        .rm-action-buttons .ant-btn[disabled],
+        .rm-action-buttons .ant-btn-disabled {
+          background: #CCCCCC !important;
+          border-color: #CCCCCC !important;
+          color: #FFFFFF !important;
+          border: none !important;
+        }
+      `}</style>
+      <style>{`
+        /* Overlay styling - full screen with proper z-index */
+        .rm-modal-overlay {
+          position: fixed;
+          top: 65px;
+          left: var(--sidebar-width, 150px);
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          z-index: 990;
+          overflow: auto;
+          padding-top: 20px;
+          padding-bottom: 20px;
+          transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          max-height: 100vh;
+        }
+        
+        /* Modal container - centered */
+        .rm-modal-container {
+          background: white;
+          border-radius: 12px;
+          overflow: visible;
+          width: 1200px;
+          max-width: calc(100vw - 310px);
+          box-shadow: none;
+          border: 1px solid #e5e7eb;
+          margin: 0 16px 0 116px;
+          position: relative;
+          z-index: 1001;
+        }
+        
+        /* Responsive adjustments */
         @media (min-width: 768px) and (max-width: 1099px) {
           .rm-modal-overlay {
-            left: var(--sidebar-width, 40px) !important;
-            padding-left: 0 !important;
+            left: var(--sidebar-width, 40px);
             transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
           }
         }
         
-        /* Mobile: < 768px */
         @media (max-width: 767px) {
           .rm-modal-overlay {
-            left: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 16px !important;
+            left: 0;
+            padding-left: 0;
+            padding-right: 16px;
           }
           .rm-modal-container {
             width: calc(100vw - 32px) !important;
             max-width: calc(100vw - 32px) !important;
+            margin: 0 !important;
           }
-        }
-        
-        .rm-modal-overlay {
-          max-height: 100vh;
-          transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
-        }
-        
-        .rm-modal-container {
-          max-height: calc(100vh - 130px);
-          overflow-y: auto;
         }
       `}</style>
 
       <div
-        className="rm-modal-overlay fixed overflow-auto bg-black/50 flex items-start justify-center"
+        className="rm-modal-overlay"
         style={{
-          top: "65px",
-          left: "var(--sidebar-width, 80px)",
-          right: 0,
-          bottom: 0,
-          zIndex: 990,
-          paddingTop: "20px",
-          paddingBottom: "20px",
           display: open ? "flex" : "none",
         }}
         onClick={onClose}
       >
         {open && (
           <div
-            className="rm-modal-container rm-review-checklist-modal bg-white rounded-xl overflow-hidden relative"
-            style={{
-              width: "1200px",
-              maxWidth: "calc(100vw - 310px)",
-              boxShadow: "none",
-              border: "1px solid #e5e7eb",
-              margin: "0 16px 0 116px",
-              zIndex: 1001,
-            }}
+            className="rm-modal-container"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1101,12 +1141,16 @@ const RmReviewChecklistModal = ({
                       gap: 6,
                       backgroundColor: "#164679",
                       borderColor: "#164679",
-                      color: "#fff",
                       padding: "4px 12px",
                       height: "32px",
                     }}
+                    className="custom-white-text-button" // Add custom class
                   >
-                    View Documents
+                    <span style={{ color: "#fff" }}>
+                      {" "}
+                      {/* Wrap text in span with white color */}
+                      View Documents
+                    </span>
                     {docs.filter((d) => d.fileUrl).length +
                       supportingDocs.length >
                       0 && (
@@ -1119,8 +1163,9 @@ const RmReviewChecklistModal = ({
                       </Tag>
                     )}
                   </Button>
+
                   <Button
-                    icon={<CloseOutlined />}
+                    icon={<CloseOutlined style={{ color: "#fff" }} />}
                     onClick={onClose}
                     size="small"
                     type="default"
@@ -1128,13 +1173,13 @@ const RmReviewChecklistModal = ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      background: "rgba(255, 255, 255, 0.2)",
-                      borderColor: "rgba(255, 255, 255, 0.4)",
-                      color: "#fff",
+                      background: "#164679",
+                      borderColor: "#164679",
                       width: "32px",
                       height: "32px",
                       padding: 0,
                     }}
+                    className="custom-white-text-button"
                   />
                 </div>
               </div>
@@ -1192,6 +1237,7 @@ const RmReviewChecklistModal = ({
 
             {/* Footer */}
             <div
+              className="rm-action-buttons"
               style={{
                 borderTop: "1px solid #e5e7eb",
                 padding: "16px 24px",
@@ -1230,10 +1276,12 @@ const RmReviewChecklistModal = ({
                 key="close"
                 onClick={onClose}
                 style={{
-                  backgroundColor: "#f5f5f5",
-                  borderColor: "#d9d9d9",
+                  background: "#CCCCCC !important",
+                  borderColor: "#CCCCCC !important",
+                  color: "#FFFFFF !important",
                   borderRadius: "6px",
                   fontWeight: 600,
+                  border: "none !important",
                 }}
               >
                 Close
@@ -1246,15 +1294,14 @@ const RmReviewChecklistModal = ({
                   onClick={submitRM}
                   disabled={!isActionAllowed}
                   style={{
-                    color: "white !important",
-                    backgroundColor: !isActionAllowed
+                    background: !isActionAllowed
                       ? "#CCCCCC !important"
-                      : "#164679 !important",
-                    borderColor: !isActionAllowed
-                      ? "#CCCCCC !important"
-                      : "#164679 !important",
+                      : "linear-gradient(135deg, #164679 0%, #0f3a56 100%) !important",
+                    borderColor: "transparent !important",
+                    color: "#FFFFFF !important",
                     borderRadius: "6px",
                     fontWeight: 600,
+                    border: "none !important",
                   }}
                 >
                   Submit to CO

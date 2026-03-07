@@ -2,9 +2,7 @@ import React from "react";
 import { Card, Descriptions, Tag } from "antd";
 import { PRIMARY_BLUE } from "../../../utils/constants";
 
-const ChecklistDetails = ({
-  checklist,
-}) => {
+const ChecklistDetails = ({ checklist }) => {
   return (
     <Card
       className="checklist-info-card"
@@ -27,7 +25,7 @@ const ChecklistDetails = ({
     >
       <Descriptions size="middle" column={{ xs: 1, sm: 2, lg: 3 }}>
         <Descriptions.Item label="DCL No">
-          <strong>{checklist?.dclNo || "N/A"}</strong>
+          <span>{checklist?.dclNo || "N/A"}</span>
         </Descriptions.Item>
         <Descriptions.Item label="IBPS No">
           {checklist?.ibpsNo || "Not provided"}
@@ -38,23 +36,19 @@ const ChecklistDetails = ({
             : "N/A"}
         </Descriptions.Item>
         <Descriptions.Item label="Loan Type">
-          <Tag color="blue">{checklist?.loanType || "N/A"}</Tag>
+          <Tag>{checklist?.loanType || "N/A"}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Created By">
-          <span style={{ fontWeight: 600 }}>
-            {checklist?.createdBy?.name || "N/A"}
-          </span>
+          <span>{checklist?.createdBy?.name || "N/A"}</span>
         </Descriptions.Item>
         <Descriptions.Item label="RM">
-          <span style={{ fontWeight: 600 }}>
-            {checklist?.assignedToRM?.name || "N/A"}
-          </span>
+          <span>{checklist?.assignedToRM?.name || "N/A"}</span>
         </Descriptions.Item>
         <Descriptions.Item label="Co-Checker">
           {checklist?.assignedToCoChecker?.name ? (
-            <Tag color="green">{checklist.assignedToCoChecker.name}</Tag>
+            <Tag>{checklist.assignedToCoChecker.name}</Tag>
           ) : (
-            <Tag color="orange">Pending Assignment</Tag>
+            <Tag>Pending Assignment</Tag>
           )}
         </Descriptions.Item>
         <Descriptions.Item label="Current Status">

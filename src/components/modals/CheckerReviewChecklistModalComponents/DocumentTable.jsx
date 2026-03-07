@@ -407,29 +407,28 @@ const DocumentTable = ({
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <Button
               size="small"
-              type={isApproved ? "primary" : "default"}
+              type="default" // Always default type
               icon={<CheckOutlined />}
               onClick={() => handleDocApprove(index)}
               style={{
                 minWidth: 80,
-                backgroundColor: isApproved ? "#52c41a" : "#f5f5f5",
-                borderColor: isApproved ? "#52c41a" : "#d9d9d9",
-                color: isApproved ? "#fff" : "#333",
+                backgroundColor: "#ffffff", // Always white background
+                borderColor: "#d9d9d9", // Consistent border color
+                color: "#333333", // Consistent text color
               }}
             >
               {isApproved ? "Approved" : "Approve"}
             </Button>
             <Button
               size="small"
-              type={isRejected ? "primary" : "default"}
-              danger={isRejected}
+              type="default" // Always default type
               icon={<CloseOutlined />}
               onClick={() => handleDocReject(index)}
               style={{
                 minWidth: 80,
-                backgroundColor: isRejected ? "#ff4d4f" : "#f5f5f5",
-                borderColor: isRejected ? "#ff4d4f" : "#d9d9d9",
-                color: isRejected ? "#fff" : "#333",
+                backgroundColor: "#ffffff", // Always white background
+                borderColor: "#d9d9d9", // Consistent border color
+                color: "#333333", // Consistent text color
               }}
             >
               {isRejected ? "Rejected" : "Reject"}

@@ -15,7 +15,7 @@ const CommentSection = ({
   return (
     <>
       {/* Display all comments from all users (CoCreator, RM, Checker) */}
-      <div style={{ marginBottom: 12}}>
+      <div style={{ marginBottom: 12, marginTop: 24 }}>
         <h4 style={{ color: PRIMARY_BLUE, fontWeight: 700, marginBottom: 12 }}>
           Comment Trail & History
         </h4>
