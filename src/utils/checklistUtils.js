@@ -326,7 +326,7 @@ export const getModalStyles = () => `
   .status-tag {
     font-weight: 700 !important;
     border-radius: 999px !important;
-    padding: 3px 8px !important;
+    padding: 3px 4px !important;
     text-transform: capitalize;
     display: inline-flex;
     align-items: center;

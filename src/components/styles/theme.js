@@ -51,7 +51,7 @@ export const customStyles = `
   .status-tag { 
     font-weight: 700 !important; 
     border-radius: 999px !important; 
-    padding: 3px 8px !important; 
+    padding: 3px 4px !important; 
     text-transform: capitalize; 
     min-width: 80px; 
     text-align: center; 

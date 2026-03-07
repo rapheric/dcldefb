@@ -1,6 +1,6 @@
-import React from 'react';
-import { Card, Descriptions, Tag } from 'antd';
-import { PRIMARY_BLUE } from '../../../utils/constants';
+import React from "react";
+import { Card, Descriptions, Tag } from "antd";
+import { PRIMARY_BLUE } from "../../../utils/constants";
 // import { PRIMARY_BLUE, ACCENT_LIME, SECONDARY_PURPLE } from '../../../utils/';
 
 const ChecklistHeader = ({ checklist }) => {
@@ -31,26 +31,31 @@ const ChecklistHeader = ({ checklist }) => {
           {new Date(checklist.createdAt).toLocaleDateString()}
         </Descriptions.Item>
         <Descriptions.Item label="Loan Type">
-          <Tag color="blue">{checklist.loanType}</Tag>
+          <Tag>{checklist.loanType}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Created By">
           <span style={{ fontWeight: 600 }}>{checklist.createdBy?.name}</span>
         </Descriptions.Item>
         <Descriptions.Item label="RM">
-          <span style={{ fontWeight: 600 }}>{checklist.assignedToRM?.name}</span>
+          <span style={{ fontWeight: 600 }}>
+            {checklist.assignedToRM?.name}
+          </span>
         </Descriptions.Item>
         <Descriptions.Item label="Co-Checker">
           {checklist.assignedToCoChecker?.name ? (
-            <Tag color="green">{checklist.assignedToCoChecker.name}</Tag>
+            <Tag>{checklist.assignedToCoChecker.name}</Tag>
           ) : (
-            <Tag color="orange">Pending Assignment</Tag>
+            <Tag>Pending Assignment</Tag>
           )}
         </Descriptions.Item>
         <Descriptions.Item label="Current Status">
-          <Tag 
+          <Tag
             color={
-              checklist.status === "co_creator_review" ? "processing" :
-              checklist.status === "pending" ? "warning" : "default"
+              checklist.status === "co_creator_review"
+                ? "processing"
+                : checklist.status === "pending"
+                  ? "warning"
+                  : "default"
             }
           >
             {checklist.status?.replace(/_/g, " ").toUpperCase()}

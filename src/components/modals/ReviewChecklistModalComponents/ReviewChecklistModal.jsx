@@ -23,7 +23,6 @@ import { RightOutlined } from "@ant-design/icons";
 import DocumentTable from "./DocumentTable";
 import { customStyles } from "../../styles/Theme";
 import { useSelector } from "react-redux";
-import { useDocumentStats } from "../../../hooks/useDocumentStats";
 import ProgressStats from "./ProgressStats";
 import AddDocumentModal from "../../common/AddDocumentModal";
 import { getUniqueCategories } from "../../../utils/checklistUtils";
@@ -483,303 +482,372 @@ const ReviewChecklistModal = ({
     <>
       <style>{customStyles}</style>
       <style>{`
-        .review-checklist-modal .ant-modal-header {
-          background: ${PRIMARY_BLUE} !important;
-          border-bottom: none !important;
+        /* Overlay styling - full screen with proper z-index */
+        .review-modal-overlay {
+          position: fixed;
+          top: 65px;
+          left: var(--sidebar-width, 150px);
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          z-index: 990;
+          overflow: auto;
+          padding-top: 20px;
+          padding-bottom: 20px;
+          transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          max-height: 100vh;
         }
-        .review-checklist-modal .ant-modal-title {
-          color: #fff !important;
+        
+        /* Modal container - centered */
+        .review-modal-container {
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          width: 1200px;
+          max-width: calc(100vw - 310px);
+          max-height: calc(100vh - 130px);
+          overflow-y: auto;
+          box-shadow: none;
+          border: 1px solid #e5e7eb;
+          margin: 0 16px 0 116px;
+          position: relative;
+          z-index: 1001;
+        }
+        
+        /* Responsive adjustments */
+        @media (min-width: 768px) and (max-width: 1099px) {
+          .review-modal-overlay {
+            left: var(--sidebar-width, 40px);
+            transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          }
+        }
+        
+        @media (max-width: 767px) {
+          .review-modal-overlay {
+            left: 0;
+            padding-left: 0;
+            padding-right: 16px;
+          }
+          .review-modal-container {
+            width: calc(100vw - 32px) !important;
+            max-width: calc(100vw - 32px) !important;
+            margin: 0 !important;
+          }
         }
       `}</style>
-      <Modal
-        className="review-checklist-modal"
-        closeIcon={null}
-        title={
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <span
-                style={{ color: "#fff", fontSize: "15px", fontWeight: 600 }}
-              >
-                {`Review Checklist  ${checklist?.title || ""}`}
-              </span>
-              {isLockedByMe && (
-                <Tag
-                  icon={<LockOutlined />}
-                  color="green"
-                  style={{ marginBottom: 0, fontWeight: 600 }}
-                >
-                  Locked by you
-                </Tag>
-              )}
-              {isLockedBySomeoneElse && (
-                <Tag
-                  icon={<LockOutlined />}
-                  color="orange"
-                  style={{ marginBottom: 0, fontWeight: 600 }}
-                >
-                  Locked by {lockedByUserName}
-                </Tag>
-              )}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Button
-                icon={
-                  showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />
-                }
-                onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
-                size="small"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  backgroundColor: "#164679",
-                  borderColor: "#164679",
-                  color: "#fff",
-                  padding: "4px 12px",
-                  height: "32px",
-                }}
-              >
-                View Documents
-                {docs.filter(
-                  (d) => d.fileUrl || d.category === "Supporting Documents",
-                ).length > 0 && (
-                  <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
-                    {
-                      docs.filter(
-                        (d) =>
-                          d.fileUrl || d.category === "Supporting Documents",
-                      ).length
-                    }
-                  </Tag>
-                )}
-              </Button>
-              <Button
-                icon={<CloseOutlined />}
-                onClick={handleClose}
-                size="small"
-                type="default"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(255, 255, 255, 0.2)",
-                  borderColor: "rgba(255, 255, 255, 0.4)",
-                  color: "#fff",
-                  width: "32px",
-                  height: "32px",
-                  padding: 0,
-                }}
-              />
-            </div>
-          </div>
-        }
-        open={open}
-        onCancel={handleClose}
-        width={1200}
-        centered={true}
-        wrapperClassName="modal-centered-in-content"
-        styles={{
-          body: { padding: "0 8px 24px" },
-          mask: { backgroundColor: "rgba(0, 0, 0, 0.45)" },
+
+      <div
+        className="review-modal-overlay"
+        style={{
+          display: open ? "flex" : "none",
         }}
-        wrapperStyle={{
-          position: "fixed",
-          inset: 0,
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "center",
-          paddingLeft: "120px",
-          paddingTop: "80px",
-        }}
-        footer={
-          <ActionButtons
-            readOnly={readOnly}
-            isActionDisabled={isActionDisabled || shouldGrayOut}
-            shouldGrayOut={shouldGrayOut}
-            isSubmittingToRM={isSubmittingToRM}
-            isCheckerSubmitting={isCheckerSubmitting}
-            isSavingDraft={isSavingDraft}
-            checklist={checklist}
-            docs={docs}
-            supportingDocs={[]} // Empty array - supporting docs are now in main docs array
-            creatorComment={creatorComment}
-            onSaveDraft={saveDraft}
-            onSubmitToRM={submitToRMWithUnlock}
-            onSubmitToCheckers={submitToCheckersWithUnlock}
-            onUploadSupportingDoc={handleUploadSupportingDoc}
-            uploadingSupportingDoc={isUploadingSupportingDoc}
-            onClose={handleClose}
-            comments={comments}
-            isLockedBySomeoneElse={isLockedBySomeoneElse}
-            lockedByUserName={lockedByUserName}
-          />
-        }
+        onClick={handleClose}
       >
-        <DocumentSidebar
-          documents={docs}
-          supportingDocs={supportingDocs}
-          open={showDocumentSidebar}
-          onClose={() => setShowDocumentSidebar(false)}
-        />
-
-        {checklist && (
+        {open && (
           <div
-            style={{
-              opacity: shouldGrayOut ? 0.5 : 1,
-              pointerEvents: shouldGrayOut ? "none" : "auto",
-              transition: "opacity 0.3s ease",
-            }}
+            className="review-modal-container"
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Checklist Header */}
-            <ChecklistHeader checklist={checklist} />
+            {/* Document Sidebar - Rendered inside modal */}
+            <DocumentSidebar
+              documents={docs}
+              supportingDocs={supportingDocs}
+              open={showDocumentSidebar}
+              onClose={() => setShowDocumentSidebar(false)}
+            />
 
-            {/* Progress Stats */}
-            <ProgressStats docs={docs} />
-
-            {/* Locked by someone else warning */}
-            {isLockedBySomeoneElse && (
+            {/* Header */}
+            <div
+              className="bg-linear-to-r from-blue-600 to-blue-800 text-white"
+              style={{ background: PRIMARY_BLUE }}
+            >
               <div
                 style={{
-                  background: "#fff1f0",
-                  border: "1px solid #ffccc7",
-                  borderRadius: 8,
-                  padding: "12px 16px",
-                  marginBottom: 16,
                   display: "flex",
                   alignItems: "center",
-                  gap: 12,
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: "18px 24px",
                 }}
               >
-                <LockOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />
-                <div>
-                  <div
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                >
+                  <span
+                    style={{ color: "#fff", fontSize: "15px", fontWeight: 600 }}
+                  >
+                    {`Review Checklist  ${checklist?.title || ""}`}
+                  </span>
+                  {isLockedByMe && (
+                    <Tag
+                      icon={<LockOutlined />}
+                      color="green"
+                      style={{ marginBottom: 0, fontWeight: 600 }}
+                    >
+                      Locked by you
+                    </Tag>
+                  )}
+                  {isLockedBySomeoneElse && (
+                    <Tag
+                      icon={<LockOutlined />}
+                      color="orange"
+                      style={{ marginBottom: 0, fontWeight: 600 }}
+                    >
+                      Locked by {lockedByUserName}
+                    </Tag>
+                  )}
+                </div>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <Button
+                    icon={
+                      showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />
+                    }
+                    onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
+                    size="small"
                     style={{
-                      fontWeight: 600,
-                      color: "#cf1322",
-                      fontSize: 14,
-                      marginBottom: 4,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      backgroundColor: "#164679",
+                      borderColor: "#164679",
+                      color: "#fff",
+                      padding: "4px 12px",
+                      height: "32px",
                     }}
                   >
-                    This DCL is currently being edited by {lockedByUserName}
-                  </div>
-                  <div style={{ color: "#8c8c8c", fontSize: 12 }}>
-                    You cannot make changes while someone else is working on
-                    this checklist. Please try again later or contact them if
-                    you need access.
-                  </div>
+                    View Documents
+                    {docs.filter(
+                      (d) => d.fileUrl || d.category === "Supporting Documents",
+                    ).length > 0 && (
+                      <Tag
+                        color="green"
+                        style={{ marginLeft: 6, marginBottom: 0 }}
+                      >
+                        {
+                          docs.filter(
+                            (d) =>
+                              d.fileUrl ||
+                              d.category === "Supporting Documents",
+                          ).length
+                        }
+                      </Tag>
+                    )}
+                  </Button>
+                  <Button
+                    icon={<CloseOutlined />}
+                    onClick={handleClose}
+                    size="small"
+                    type="default"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(255, 255, 255, 0.2)",
+                      borderColor: "rgba(255, 255, 255, 0.4)",
+                      color: "#fff",
+                      width: "32px",
+                      height: "32px",
+                      padding: 0,
+                    }}
+                  />
                 </div>
               </div>
-            )}
-
-            {shouldGrayOut && !isActionDisabled && !isLockedBySomeoneElse && (
-              <div
-                style={{
-                  background: "#fff7e6",
-                  border: "1px solid #ffd591",
-                  borderRadius: 8,
-                  padding: "8px 16px",
-                  marginBottom: 16,
-                  color: "#d46b08",
-                  fontWeight: 600,
-                  fontSize: 13,
-                }}
-              >
-                This checklist status doesn't allow Creator actions — all fields
-                are read-only.
-              </div>
-            )}
-
-            {/* Document Table */}
-            <div>
-              <h3
-                style={{
-                  color: PRIMARY_BLUE,
-                  fontWeight: 700,
-                  marginBottom: 12,
-                  fontSize: 14,
-                }}
-              >
-                Required Documents
-              </h3>
-              <DocumentTable
-                docs={docs}
-                onActionChange={handleActionChange}
-                onCommentChange={handleCommentChange}
-                onDeferralNoChange={handleDeferralNoChange}
-                onDelete={handleDelete}
-                onExpiryDateChange={handleExpiryDateChange}
-                isActionDisabled={isActionDisabled || shouldGrayOut}
-                checklistStatus={checklist?.status}
-              />
             </div>
 
-            {/* Add Document Button - Only show when actions are allowed */}
-            {!shouldGrayOut && (
-              <div style={{ marginTop: 16, marginBottom: 16 }}>
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={() => setIsAddDocModalOpen(true)}
+            {/* Body */}
+            <div className="p-6 space-y-6" style={{ padding: "24px" }}>
+              {checklist && (
+                <div
                   style={{
-                    width: "100%",
-                    backgroundColor: PRIMARY_BLUE,
-                    borderColor: PRIMARY_BLUE,
-                    color: "#FFFFFF",
-                    height: 40,
-                    fontWeight: 600,
-                    fontSize: 13,
+                    opacity: shouldGrayOut ? 0.5 : 1,
+                    pointerEvents: shouldGrayOut ? "none" : "auto",
+                    transition: "opacity 0.3s ease",
                   }}
                 >
-                  Add New Document
-                </Button>
-              </div>
-            )}
+                  {/* Checklist Header */}
+                  <ChecklistHeader checklist={checklist} />
 
-            {/* Creator Comment */}
-            <div style={{ marginTop: 16 }}>
-              <h4
-                style={{
-                  color: PRIMARY_BLUE,
-                  fontWeight: 700,
-                  marginBottom: 4,
-                  fontSize: 13,
-                }}
-              >
-                Creator Comment
-              </h4>
-              <Input.TextArea
-                rows={2}
-                value={creatorComment}
-                onChange={(e) => setCreatorComment(e.target.value)}
-                disabled={isActionDisabled || shouldGrayOut}
-                placeholder="Add a comment for RM / Co-Checker"
-                style={{ borderRadius: 6 }}
-              />
+                  {/* Progress Stats */}
+                  <ProgressStats docs={docs} />
+
+                  {/* Locked by someone else warning */}
+                  {isLockedBySomeoneElse && (
+                    <div
+                      style={{
+                        background: "#fff1f0",
+                        border: "1px solid #ffccc7",
+                        borderRadius: 8,
+                        padding: "12px 16px",
+                        marginBottom: 16,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                      }}
+                    >
+                      <LockOutlined
+                        style={{ fontSize: 20, color: "#ff4d4f" }}
+                      />
+                      <div>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: "#cf1322",
+                            fontSize: 14,
+                            marginBottom: 4,
+                          }}
+                        >
+                          This DCL is currently being edited by{" "}
+                          {lockedByUserName}
+                        </div>
+                        <div style={{ color: "#8c8c8c", fontSize: 12 }}>
+                          You cannot make changes while someone else is working
+                          on this checklist. Please try again later or contact
+                          them if you need access.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {shouldGrayOut &&
+                    !isActionDisabled &&
+                    !isLockedBySomeoneElse && (
+                      <div
+                        style={{
+                          background: "#fff7e6",
+                          border: "1px solid #ffd591",
+                          borderRadius: 8,
+                          padding: "8px 16px",
+                          marginBottom: 16,
+                          color: "#d46b08",
+                          fontWeight: 600,
+                          fontSize: 13,
+                        }}
+                      >
+                        This checklist status doesn't allow Creator actions —
+                        all fields are read-only.
+                      </div>
+                    )}
+
+                  {/* Document Table */}
+                  <div>
+                    <h3
+                      style={{
+                        color: PRIMARY_BLUE,
+                        fontWeight: 700,
+                        marginBottom: 12,
+                        fontSize: 14,
+                      }}
+                    >
+                      Required Documents
+                    </h3>
+                    <DocumentTable
+                      docs={docs}
+                      onActionChange={handleActionChange}
+                      onCommentChange={handleCommentChange}
+                      onDeferralNoChange={handleDeferralNoChange}
+                      onDelete={handleDelete}
+                      onExpiryDateChange={handleExpiryDateChange}
+                      isActionDisabled={isActionDisabled || shouldGrayOut}
+                      checklistStatus={checklist?.status}
+                    />
+                  </div>
+
+                  {/* Add Document Button - Only show when actions are allowed */}
+                  {!shouldGrayOut && (
+                    <div style={{ marginTop: 16, marginBottom: 16 }}>
+                      <Button
+                        icon={<PlusOutlined />}
+                        onClick={() => setIsAddDocModalOpen(true)}
+                        style={{
+                          width: "100%",
+                          color: PRIMARY_BLUE,
+                          height: 40,
+                          fontWeight: 600,
+                          fontSize: 13,
+                          border: `1px solid ${PRIMARY_BLUE}`,
+                          background: "transparent",
+                        }}
+                      >
+                        Add New Document
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Creator Comment */}
+                  <div style={{ marginTop: 16 }}>
+                    <h4
+                      style={{
+                        color: PRIMARY_BLUE,
+                        fontWeight: 700,
+                        marginBottom: 4,
+                        fontSize: 13,
+                      }}
+                    >
+                      Creator Comment
+                    </h4>
+                    <Input.TextArea
+                      rows={2}
+                      value={creatorComment}
+                      onChange={(e) => setCreatorComment(e.target.value)}
+                      disabled={isActionDisabled || shouldGrayOut}
+                      placeholder="Add a comment for RM / Co-Checker"
+                      style={{ borderRadius: 6 }}
+                    />
+                  </div>
+
+                  {/* Comment History */}
+                  <div style={{ marginTop: 16 }}>
+                    <h4
+                      style={{
+                        color: PRIMARY_BLUE,
+                        fontWeight: 700,
+                        marginBottom: 4,
+                        fontSize: 13,
+                      }}
+                    >
+                      Comment Trail & History
+                    </h4>
+                    <CommentHistory
+                      comments={comments}
+                      isLoading={commentsLoading}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Comment History */}
-            <div style={{ marginTop: 16 }}>
-              <h4
-                style={{
-                  color: PRIMARY_BLUE,
-                  fontWeight: 700,
-                  marginBottom: 4,
-                  fontSize: 13,
-                }}
-              >
-                Comment Trail & History
-              </h4>
-              <CommentHistory comments={comments} isLoading={commentsLoading} />
+            {/* Footer */}
+            <div style={{ borderTop: "1px solid #e5e7eb" }}>
+              <ActionButtons
+                readOnly={readOnly}
+                isActionDisabled={isActionDisabled || shouldGrayOut}
+                shouldGrayOut={shouldGrayOut}
+                isSubmittingToRM={isSubmittingToRM}
+                isCheckerSubmitting={isCheckerSubmitting}
+                isSavingDraft={isSavingDraft}
+                checklist={checklist}
+                docs={docs}
+                supportingDocs={[]}
+                creatorComment={creatorComment}
+                onSaveDraft={saveDraft}
+                onSubmitToRM={submitToRMWithUnlock}
+                onSubmitToCheckers={submitToCheckersWithUnlock}
+                onUploadSupportingDoc={handleUploadSupportingDoc}
+                uploadingSupportingDoc={isUploadingSupportingDoc}
+                onClose={handleClose}
+                comments={comments}
+                isLockedBySomeoneElse={isLockedBySomeoneElse}
+                lockedByUserName={lockedByUserName}
+              />
             </div>
           </div>
         )}
-      </Modal>
+      </div>
 
       {/* Add Document Modal */}
       <AddDocumentModal

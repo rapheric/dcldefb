@@ -108,7 +108,7 @@ const customStyles = `
   .ant-input, .ant-select-selector { border-radius: 6px !important; border-color: #e0e0e0 !important; }
   .ant-input:focus, .ant-select-focused .ant-select-selector { box-shadow: 0 0 0 2px rgba(22, 70, 121, 0.2) !important; border-color: ${PRIMARY_BLUE} !important; }
 
-  .status-tag { font-weight: 700 !important; border-radius: 999px !important; padding: 3px 8px !important; text-transform: capitalize; min-width: 80px; text-align: center; display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
+  .status-tag { font-weight: 700 !important; border-radius: 999px !important; padding: 3px 4px !important; text-transform: capitalize; min-width: 80px; text-align: center; display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
 `;
 
 const getFileIcon = (type) => {

@@ -33,7 +33,7 @@ const CheckerReviewChecklistModal = ({
     import.meta.env?.VITE_APP_API_URL || "http://localhost:5000";
 
   const [docs, setDocs] = useState([]);
-  const [supportingDocs, setSupportingDocs] = useState([]);
+  // const [supportingDocs, setSupportingDocs] = useState([]); // Unused - using checklist.supportingDocs instead
   const [checkerComment, setCheckerComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
@@ -169,7 +169,7 @@ const CheckerReviewChecklistModal = ({
       supportingDocsData.length,
     );
 
-    setSupportingDocs(supportingDocsData);
+    // setSupportingDocs(supportingDocsData); // Unused
     setDocs(processedDocs);
     console.log(
       "📋 Checker Modal - Main docs (excluding supporting):",
@@ -527,7 +527,7 @@ const CheckerReviewChecklistModal = ({
         /* Mobile: < 768px */
         @media (max-width: 767px) {
           .checker-modal-overlay {
-            left: 0 !important;
+            left: 0 !important; 
             padding-left: 0 !important;
             padding-right: 16px !important;
           }
@@ -555,7 +555,7 @@ const CheckerReviewChecklistModal = ({
           left: "var(--sidebar-width, 80px)",
           right: 0,
           bottom: 0,
-          zIndex: 1100,
+          zIndex: 990,
           paddingTop: "20px",
           paddingBottom: "20px",
         }}
@@ -567,7 +567,8 @@ const CheckerReviewChecklistModal = ({
             maxWidth: "calc(100vw - 310px)",
             boxShadow: "none",
             border: "1px solid #e5e7eb",
-            margin: "0 16px",
+            margin: "0 16px 0 66px",
+            zIndex: 1001,
           }}
         >
           <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white">

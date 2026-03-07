@@ -600,7 +600,7 @@ const RmReviewChecklistModal = ({
   const [supportingDocs, setSupportingDocs] = useState([]);
   const [showDocumentSidebar, setShowDocumentSidebar] = useState(false);
   const [rmGeneralComment, setRmGeneralComment] = useState("");
-  const [uploadingSupportingDoc, setUploadingSupportingDoc] = useState(false);
+  // const [uploadingSupportingDoc, setUploadingSupportingDoc] = useState(false);
   const [uploadingDocs, setUploadingDocs] = useState({});
   const [localChecklist, setLocalChecklist] = useState(checklist);
 
@@ -727,89 +727,90 @@ const RmReviewChecklistModal = ({
   }, [checklist]);
 
   // Wrapper for uploading supporting docs - uploads to backend and adds to main docs array
-  const handleUploadSupportingDoc = async (file) => {
-    try {
-      setUploadingSupportingDoc(true);
-      console.log("📤 RM Modal - Uploading supporting document:", file.name);
+  // Commented out - unused function
+  // const handleUploadSupportingDoc = async (file) => {
+  //   try {
+  //     setUploadingSupportingDoc(true);
+  //     console.log("📤 RM Modal - Uploading supporting document:", file.name);
 
-      const checklistId = checklist?.id || checklist?._id;
-      if (!checklistId) {
-        throw new Error("Checklist ID missing");
-      }
+  //     const checklistId = checklist?.id || checklist?._id;
+  //     if (!checklistId) {
+  //       throw new Error("Checklist ID missing");
+  //     }
 
-      // Upload to backend using the document upload endpoint
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("checklistId", checklistId);
-      formData.append("documentName", file.name);
-      formData.append("category", "Supporting Documents");
+  //     // Upload to backend using the document upload endpoint
+  //     const formData = new FormData();
+  //     formData.append("file", file);
+  //     formData.append("checklistId", checklistId);
+  //     formData.append("documentName", file.name);
+  //     formData.append("category", "Supporting Documents");
 
-      const response = await fetch(`${API_BASE_URL}/api/uploads`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+  //     const response = await fetch(`${API_BASE_URL}/api/uploads`, {
+  //       method: "POST",
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: formData,
+  //     });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Upload failed: ${response.status} ${errorText}`);
-      }
+  //     if (!response.ok) {
+  //       const errorText = await response.text();
+  //       throw new Error(`Upload failed: ${response.status} ${errorText}`);
+  //     }
 
-      const result = await response.json();
-      console.log("✅ RM Modal - Upload response:", result);
+  //     const result = await response.json();
+  //     console.log("✅ RM Modal - Upload response:", result);
 
-      if (!result.success || !result.data) {
-        throw new Error("Invalid upload response");
-      }
+  //     if (!result.success || !result.data) {
+  //       throw new Error("Invalid upload response");
+  //     }
 
-      const uploadedDoc = result.data;
+  //     const uploadedDoc = result.data;
 
-      // Create document object for the uploaded supporting doc
-      const newSupportingDoc = {
-        id: uploadedDoc.id || uploadedDoc._id,
-        _id: uploadedDoc._id || uploadedDoc.id,
-        name: uploadedDoc.name || uploadedDoc.fileName || file.name,
-        fileName: uploadedDoc.fileName || file.name,
-        category: "Supporting Documents",
-        status: "submitted",
-        action: "submitted",
-        comment: "",
-        fileUrl: uploadedDoc.fileUrl,
-        fileSize: uploadedDoc.fileSize,
-        fileType: uploadedDoc.fileType,
-        uploadedBy: uploadedDoc.uploadedBy,
-        uploadedByRole: uploadedDoc.uploadedByRole || auth?.user?.role || "RM",
-        uploadedAt: uploadedDoc.createdAt || new Date().toISOString(),
-        isSupporting: true,
-        uploadData: {
-          fileName: uploadedDoc.fileName || file.name,
-          fileUrl: uploadedDoc.fileUrl,
-          createdAt: uploadedDoc.createdAt || new Date().toISOString(),
-          fileSize: uploadedDoc.fileSize,
-          fileType: uploadedDoc.fileType,
-          uploadedBy: uploadedDoc.uploadedBy || auth?.user?.name || "RM",
-        },
-      };
+  //     // Create document object for the uploaded supporting doc
+  //     const newSupportingDoc = {
+  //       id: uploadedDoc.id || uploadedDoc._id,
+  //       _id: uploadedDoc._id || uploadedDoc.id,
+  //       name: uploadedDoc.name || uploadedDoc.fileName || file.name,
+  //       fileName: uploadedDoc.fileName || file.name,
+  //       category: "Supporting Documents",
+  //       status: "submitted",
+  //       action: "submitted",
+  //       comment: "",
+  //       fileUrl: uploadedDoc.fileUrl,
+  //       fileSize: uploadedDoc.fileSize,
+  //       fileType: uploadedDoc.fileType,
+  //       uploadedBy: uploadedDoc.uploadedBy,
+  //       uploadedByRole: uploadedDoc.uploadedByRole || auth?.user?.role || "RM",
+  //       uploadedAt: uploadedDoc.createdAt || new Date().toISOString(),
+  //       isSupporting: true,
+  //       uploadData: {
+  //         fileName: uploadedDoc.fileName || file.name,
+  //         fileUrl: uploadedDoc.fileUrl,
+  //         createdAt: uploadedDoc.createdAt || new Date().toISOString(),
+  //         fileSize: uploadedDoc.fileSize,
+  //         fileType: uploadedDoc.fileType,
+  //         uploadedBy: uploadedDoc.uploadedBy || auth?.user?.name || "RM",
+  //       },
+  //     };
 
-      console.log(
-        "✅ RM Modal - Adding supporting doc to supportingDocs state (NOT to docs array):",
-        newSupportingDoc,
-      );
+  //     console.log(
+  //       "✅ RM Modal - Adding supporting doc to supportingDocs state (NOT to docs array):",
+  //       newSupportingDoc,
+  //     );
 
-      // Add to supportingDocs state (separate from main docs - won't appear in DocumentTable)
-      setSupportingDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
+  //     // Add to supportingDocs state (separate from main docs - won't appear in DocumentTable)
+  //     setSupportingDocs((prevDocs) => [...prevDocs, newSupportingDoc]);
 
-      message.success(`"${file.name}" uploaded successfully!`);
-    } catch (error) {
-      console.error("❌ RM Modal - Error uploading supporting doc:", error);
-      message.error(error.message || "Failed to upload supporting document");
-      throw error;
-    } finally {
-      setUploadingSupportingDoc(false);
-    }
-  };
+  //     message.success(`"${file.name}" uploaded successfully!`);
+  //   } catch (error) {
+  //     console.error("❌ RM Modal - Error uploading supporting doc:", error);
+  //     message.error(error.message || "Failed to upload supporting document");
+  //     throw error;
+  //   } finally {
+  //     setUploadingSupportingDoc(false);
+  //   }
+  // };
 
   const isActionAllowed =
     !readOnly && checklist?.status?.toLowerCase() === "rmreview";
@@ -999,237 +1000,271 @@ const RmReviewChecklistModal = ({
   };
 
   return (
-    <Modal
-      title={
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
-          }}
-        >
-          <span style={{ color: "#fff", fontSize: "15px", fontWeight: 600 }}>
-            {`Review Checklist  ${checklist?.customerNumber || ""}`}
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Button
-              icon={showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />}
-              onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
-              size="small"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                backgroundColor: "#164679",
-                borderColor: "#164679",
-                color: "#fff",
-                padding: "4px 12px",
-                height: "32px",
-              }}
-            >
-              View Documents
-              {docs.filter((d) => d.fileUrl).length + supportingDocs.length >
-                0 && (
-                <Tag color="green" style={{ marginLeft: 6, marginBottom: 0 }}>
-                  {docs.filter((d) => d.fileUrl).length + supportingDocs.length}
-                </Tag>
-              )}
-            </Button>
-            <Button
-              icon={<CloseOutlined />}
-              onClick={onClose}
-              size="small"
-              type="default"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(255, 255, 255, 0.2)",
-                borderColor: "rgba(255, 255, 255, 0.4)",
-                color: "#fff",
-                width: "32px",
-                height: "32px",
-                padding: 0,
-              }}
-            />
-          </div>
-        </div>
-      }
-      open={open}
-      onCancel={onClose}
-      width={1200}
-      centered={true}
-      wrapperClassName="modal-centered-in-content"
-      closeIcon={null}
-      styles={{
-        body: { padding: "0 8px 24px" },
-        header: {
-          background: "#164679",
-          padding: "18px 24px",
-          borderTopLeftRadius: 8,
-          borderTopRightRadius: 8,
-        },
-        mask: { backgroundColor: "rgba(0, 0, 0, 0.45)" },
-      }}
-      wrapperStyle={{
-        position: "fixed",
-        inset: 0,
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        paddingLeft: "120px",
-        paddingTop: "80px",
-      }}
-      footer={
-        <Space
-          size="middle"
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            width: "100%",
-            gap: "12px",
-          }}
-        >
-          <PDFGenerator
-            key="download"
-            checklist={{
-              ...checklist,
-              dclNo: checklist?.dclNo || checklist?._id,
+    <>
+      <style>{`
+        /* Desktop: >= 1100px - Use CSS variable for sidebar width */
+        @media (min-width: 1100px) {
+          .rm-modal-overlay {
+            left: var(--sidebar-width, 80px) !important;
+            transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          }
+        }
+        
+        /* Tablet: 768px - 1099px */
+        @media (min-width: 768px) and (max-width: 1099px) {
+          .rm-modal-overlay {
+            left: var(--sidebar-width, 40px) !important;
+            padding-left: 0 !important;
+            transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          }
+        }
+        
+        /* Mobile: < 768px */
+        @media (max-width: 767px) {
+          .rm-modal-overlay {
+            left: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 16px !important;
+          }
+          .rm-modal-container {
+            width: calc(100vw - 32px) !important;
+            max-width: calc(100vw - 32px) !important;
+          }
+        }
+        
+        .rm-modal-overlay {
+          max-height: 100vh;
+          transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+        
+        .rm-modal-container {
+          max-height: calc(100vh - 130px);
+          overflow-y: auto;
+        }
+      `}</style>
+
+      <div
+        className="rm-modal-overlay fixed overflow-auto bg-black/50 flex items-start justify-center"
+        style={{
+          top: "65px",
+          left: "var(--sidebar-width, 80px)",
+          right: 0,
+          bottom: 0,
+          zIndex: 990,
+          paddingTop: "20px",
+          paddingBottom: "20px",
+          display: open ? "flex" : "none",
+        }}
+        onClick={onClose}
+      >
+        {open && (
+          <div
+            className="rm-modal-container rm-review-checklist-modal bg-white rounded-xl overflow-hidden relative"
+            style={{
+              width: "1200px",
+              maxWidth: "calc(100vw - 310px)",
+              boxShadow: "none",
+              border: "1px solid #e5e7eb",
+              margin: "0 16px 0 116px",
+              zIndex: 1001,
             }}
-            docs={docs}
-            supportingDocs={supportingDocs || []}
-            creatorComment=""
-            rmGeneralComment={rmGeneralComment || ""}
-            comments={comments || []}
-            buttonText="Download PDF"
-            variant="primary"
-          />
-          {!readOnly && (
-            <SaveDraftButton
-              key="save-draft"
-              checklist={checklist}
-              docs={docs}
-              rmGeneralComment={rmGeneralComment}
-              supportingDocs={supportingDocs}
-              isActionAllowed={isActionAllowed}
-            />
-          )}
-          {!readOnly && (
-            <Upload
-              key="upload-support"
-              showUploadList={false}
-              beforeUpload={(file) => {
-                handleUploadSupportingDoc(file);
-                return false;
-              }}
-              disabled={!isActionAllowed || uploadingSupportingDoc}
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
-            >
-              <Button
-                icon={<UploadOutlined />}
-                loading={uploadingSupportingDoc}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ background: "#164679", marginBottom: 0 }}>
+              <div
                 style={{
-                  color: "white !important",
-                  backgroundColor:
-                    !isActionAllowed || uploadingSupportingDoc
-                      ? "#CCCCCC !important"
-                      : "#164679 !important",
-                  borderColor:
-                    !isActionAllowed || uploadingSupportingDoc
-                      ? "#CCCCCC !important"
-                      : "#164679 !important",
-                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: "18px 24px",
                 }}
               >
-                Upload Supporting Doc
-              </Button>
-            </Upload>
-          )}
-          <Button
-            key="cancel"
-            onClick={onClose}
-            style={{
-              color: "white !important",
-              backgroundColor: "#164679 !important",
-              borderColor: "#164679 !important",
-              borderRadius: "6px",
-            }}
-          >
-            Close
-          </Button>
-          {!readOnly && (
-            <Button
-              key="submit"
-              type="primary"
-              loading={isLoading}
-              onClick={submitRM}
-              disabled={!isActionAllowed}
+                <span
+                  style={{ color: "#fff", fontSize: "15px", fontWeight: 600 }}
+                >
+                  {`Review Checklist  ${checklist?.customerNumber || ""}`}
+                </span>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <Button
+                    icon={
+                      showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />
+                    }
+                    onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
+                    size="small"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      backgroundColor: "#164679",
+                      borderColor: "#164679",
+                      color: "#fff",
+                      padding: "4px 12px",
+                      height: "32px",
+                    }}
+                  >
+                    View Documents
+                    {docs.filter((d) => d.fileUrl).length +
+                      supportingDocs.length >
+                      0 && (
+                      <Tag
+                        color="green"
+                        style={{ marginLeft: 6, marginBottom: 0 }}
+                      >
+                        {docs.filter((d) => d.fileUrl).length +
+                          supportingDocs.length}
+                      </Tag>
+                    )}
+                  </Button>
+                  <Button
+                    icon={<CloseOutlined />}
+                    onClick={onClose}
+                    size="small"
+                    type="default"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(255, 255, 255, 0.2)",
+                      borderColor: "rgba(255, 255, 255, 0.4)",
+                      color: "#fff",
+                      width: "32px",
+                      height: "32px",
+                      padding: 0,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: "24px" }}>
+              {console.log(
+                "🔍 RM Modal - Rendering DocumentSidebar with docs:",
+                docs.length,
+                docs,
+              )}
+              <DocumentSidebar
+                documents={docs}
+                supportingDocs={supportingDocs}
+                open={showDocumentSidebar}
+                onClose={() => setShowDocumentSidebar(false)}
+              />
+
+              {checklist && (
+                <>
+                  <ChecklistInfoCard checklist={checklist} />
+
+                  <ProgressSummary documentStats={documentStats} />
+
+                  <h3 style={{ color: PRIMARY_BLUE, fontWeight: "bold" }}>
+                    Required Documents
+                  </h3>
+
+                  <div>
+                    <DocumentTable
+                      docs={docs}
+                      setDocs={setDocs}
+                      checklist={checklist}
+                      isActionAllowed={isActionAllowed}
+                      handleFileUpload={handleFileUpload}
+                      uploadingDocs={uploadingDocs}
+                      getFullUrl={getFullUrl}
+                      readOnly={!isActionAllowed}
+                      checklistStatus={checklist?.status}
+                    />
+                  </div>
+
+                  <CommentSection
+                    checklist={checklist}
+                    rmGeneralComment={rmGeneralComment}
+                    setRmGeneralComment={setRmGeneralComment}
+                    isActionAllowed={isActionAllowed}
+                    comments={comments}
+                    commentsLoading={commentsLoading}
+                  />
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div
               style={{
-                color: "white !important",
-                backgroundColor: !isActionAllowed
-                  ? "#CCCCCC !important"
-                  : "#164679 !important",
-                borderColor: !isActionAllowed
-                  ? "#CCCCCC !important"
-                  : "#164679 !important",
-                borderRadius: "6px",
-                fontWeight: 600,
+                borderTop: "1px solid #e5e7eb",
+                padding: "16px 24px",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
               }}
             >
-              Submit to CO
-            </Button>
-          )}
-        </Space>
-      }
-    >
-      {console.log(
-        "🔍 RM Modal - Rendering DocumentSidebar with docs:",
-        docs.length,
-        docs,
-      )}
-      <DocumentSidebar
-        documents={docs}
-        supportingDocs={supportingDocs}
-        open={showDocumentSidebar}
-        onClose={() => setShowDocumentSidebar(false)}
-      />
-
-      {checklist && (
-        <>
-          <ChecklistInfoCard checklist={checklist} />
-
-          <ProgressSummary documentStats={documentStats} />
-
-          <h3 style={{ color: PRIMARY_BLUE, fontWeight: "bold" }}>
-            Required Documents
-          </h3>
-
-          <div>
-            <DocumentTable
-              docs={docs}
-              setDocs={setDocs}
-              checklist={checklist}
-              isActionAllowed={isActionAllowed}
-              handleFileUpload={handleFileUpload}
-              uploadingDocs={uploadingDocs}
-              getFullUrl={getFullUrl}
-              readOnly={!isActionAllowed}
-              checklistStatus={checklist?.status}
-            />
+              <PDFGenerator
+                key="download"
+                checklist={{
+                  ...checklist,
+                  dclNo: checklist?.dclNo || checklist?._id,
+                }}
+                docs={docs}
+                supportingDocs={supportingDocs || []}
+                creatorComment=""
+                rmGeneralComment={rmGeneralComment || ""}
+                comments={comments || []}
+                buttonText="Download PDF"
+                variant="primary"
+              />
+              <SaveDraftButton
+                key="save"
+                checklist={{
+                  ...checklist,
+                  dclNo: checklist?.dclNo || checklist?._id,
+                }}
+                docs={docs}
+                rmGeneralComment={rmGeneralComment}
+                supportingDocs={supportingDocs || []}
+                buttonText="Save Draft"
+                variant="default"
+              />
+              <Button
+                key="close"
+                onClick={onClose}
+                style={{
+                  backgroundColor: "#f5f5f5",
+                  borderColor: "#d9d9d9",
+                  borderRadius: "6px",
+                  fontWeight: 600,
+                }}
+              >
+                Close
+              </Button>
+              {!readOnly && (
+                <Button
+                  key="submit"
+                  type="primary"
+                  loading={isLoading}
+                  onClick={submitRM}
+                  disabled={!isActionAllowed}
+                  style={{
+                    color: "white !important",
+                    backgroundColor: !isActionAllowed
+                      ? "#CCCCCC !important"
+                      : "#164679 !important",
+                    borderColor: !isActionAllowed
+                      ? "#CCCCCC !important"
+                      : "#164679 !important",
+                    borderRadius: "6px",
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit to CO
+                </Button>
+              )}
+            </div>
           </div>
-
-          <CommentSection
-            checklist={checklist}
-            rmGeneralComment={rmGeneralComment}
-            setRmGeneralComment={setRmGeneralComment}
-            isActionAllowed={isActionAllowed}
-            comments={comments}
-            commentsLoading={commentsLoading}
-          />
-        </>
-      )}
-    </Modal>
+        )}
+      </div>
+    </>
   );
 };
 
