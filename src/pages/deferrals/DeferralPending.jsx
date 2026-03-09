@@ -108,7 +108,7 @@ const customStyles = `
   .ant-input, .ant-select-selector { border-radius: 6px !important; border-color: #e0e0e0 !important; }
   .ant-input:focus, .ant-select-focused .ant-select-selector { box-shadow: 0 0 0 2px rgba(22, 70, 121, 0.2) !important; border-color: ${PRIMARY_BLUE} !important; }
 
-  .status-tag { font-weight: 700 !important; border-radius: 999px !important; padding: 3px 4px !important; text-transform: capitalize; min-width: 80px; text-align: center; display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
+  .status-tag { font-weight: 700 !important; border-radius: 999px !important; padding: 3px 8px !important; text-transform: capitalize; min-width: 80px; text-align: center; display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
 `;
 
 const getFileIcon = (type) => {
@@ -639,6 +639,49 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
         }
 
         const docName = doc.name || doc.label || "Document";
+        // Try to merge persisted per-document days (if present on deferral.selectedDocuments)
+        // Use explicit undefined checks so 0 values are preserved
+        let days =
+          typeof doc.daysSought !== "undefined"
+            ? doc.daysSought
+            : typeof doc.requestedDaysSought !== "undefined"
+              ? doc.requestedDaysSought
+              : undefined;
+        let nextDate =
+          typeof doc.nextDocumentDueDate !== "undefined"
+            ? doc.nextDocumentDueDate
+            : typeof doc.nextDueDate !== "undefined"
+              ? doc.nextDueDate
+              : undefined;
+        if (
+          (typeof days === "undefined" || typeof nextDate === "undefined") &&
+          Array.isArray(deferralData.selectedDocuments)
+        ) {
+          const match = deferralData.selectedDocuments.find((sd) => {
+            const sdName = (sd && (sd.name || sd.label)) || String(sd || "");
+            return (
+              sdName &&
+              sdName.toLowerCase().trim() === docName.toLowerCase().trim()
+            );
+          });
+          if (match) {
+            if (typeof days === "undefined")
+              days =
+                typeof match.daysSought !== "undefined"
+                  ? match.daysSought
+                  : typeof match.requestedDaysSought !== "undefined"
+                    ? match.requestedDaysSought
+                    : undefined;
+            if (typeof nextDate === "undefined")
+              nextDate =
+                typeof match.nextDocumentDueDate !== "undefined"
+                  ? match.nextDocumentDueDate
+                  : typeof match.nextDueDate !== "undefined"
+                    ? match.nextDueDate
+                    : undefined;
+          }
+        }
+
         return {
           ...doc,
           name: docName,
@@ -648,6 +691,9 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
           category:
             doc.category || doc.documentCategory || doc.classification || "",
           allowability: doc.allowability || doc.allowableType || "",
+          daysSought: typeof days !== "undefined" ? days : undefined,
+          nextDocumentDueDate:
+            typeof nextDate !== "undefined" ? nextDate : undefined,
         };
       });
     }
@@ -840,6 +886,38 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
       message.error("Failed to resubmit deferral for review");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Remove a requested document from the list (persist immediately)
+  const handleRemoveRequestedDocument = async (indexToRemove) => {
+    try {
+      const newSelected = selectedDocuments.filter(
+        (_, i) => i !== indexToRemove,
+      );
+      setSelectedDocuments(newSelected);
+
+      // Persist change to backend so other modals reflect removal
+      if (deferral && deferral._id) {
+        try {
+          await deferralApi.updateDeferral(deferral._id, {
+            selectedDocuments: newSelected,
+          });
+          const refreshed = await deferralApi.getDeferralById(deferral._id);
+          // Notify other components (do NOT call parent onUpdate to avoid closing this modal)
+          window.dispatchEvent(
+            new CustomEvent("deferral:updated", { detail: refreshed }),
+          );
+          message.success("Document removed from deferral");
+          // Intentionally do not call onUpdate(refreshed) here so the modal stays open
+        } catch (err) {
+          console.error("Failed to persist removed document", err);
+          message.error("Failed to persist removed document");
+        }
+      }
+    } catch (err) {
+      console.error("Error removing requested document", err);
+      message.error("Failed to remove document");
     }
   };
 
@@ -1195,6 +1273,26 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       Type: {docType}
                     </Text>
+                  </div>
+
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <Popconfirm
+                      title={`Remove "${docName}" from deferral?`}
+                      onConfirm={() => handleRemoveRequestedDocument(index)}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        size="small"
+                      >
+                        Remove
+                      </Button>
+                    </Popconfirm>
                   </div>
                 </div>
               );
@@ -1588,10 +1686,18 @@ const DeferralDetailsModal = ({
     };
 
     if (deferral) {
+      console.log("DeferralDetailsModal - raw deferral prop:", deferral);
       const resolved = { ...deferral };
       const lt = resolveLoanType(deferral);
       if (lt) resolved.loanType = lt;
       setLocalDeferral(resolved);
+      // Expose for easy copying from the browser console during debugging
+      try {
+        window.__lastDeferral = resolved;
+      } catch (e) {
+        /* ignore */
+      }
+      console.log("DeferralDetailsModal - resolved localDeferral:", resolved);
     } else {
       setLocalDeferral(deferral);
     }
@@ -3041,6 +3147,24 @@ const DeferralDetailsModal = ({
             : "",
         allowability:
           typeof d === "object" ? d.allowability || d.allowableType || "" : "",
+        // Preserve per-document days and computed next due date when present
+        // Use explicit undefined checks to preserve 0 values
+        daysSought:
+          typeof d === "object"
+            ? typeof d.daysSought !== "undefined"
+              ? d.daysSought
+              : typeof d.requestedDaysSought !== "undefined"
+                ? d.requestedDaysSought
+                : undefined
+            : undefined,
+        nextDocumentDueDate:
+          typeof d === "object"
+            ? typeof d.nextDocumentDueDate !== "undefined"
+              ? d.nextDocumentDueDate
+              : typeof d.nextDueDate !== "undefined"
+                ? d.nextDueDate
+                : undefined
+            : undefined,
         isRequested: true,
         isSelected: true,
         source: "selected",
@@ -3071,6 +3195,24 @@ const DeferralDetailsModal = ({
       const hasUrl = !!String(cleanUrl || "").trim();
       const isUploadedFlag = hasUrl;
       const isRequestedFromPersistedSelection = !hasUrl && !isDCLFlag;
+      // Try to read per-document days and next due date from multiple possible property names
+      const docDays =
+        typeof d.daysSought !== "undefined"
+          ? d.daysSought
+          : typeof d.requestedDaysSought !== "undefined"
+            ? d.requestedDaysSought
+            : typeof d.DaysSought !== "undefined"
+              ? d.DaysSought
+              : undefined;
+
+      const docNextDate =
+        typeof d.nextDocumentDueDate !== "undefined"
+          ? d.nextDocumentDueDate
+          : typeof d.nextDueDate !== "undefined"
+            ? d.nextDueDate
+            : typeof d.NextDocumentDueDate !== "undefined"
+              ? d.NextDocumentDueDate
+              : undefined;
 
       all.push({
         id: d._id || d.id || `doc_${i}`,
@@ -3085,6 +3227,10 @@ const DeferralDetailsModal = ({
         isUploaded: isUploadedFlag,
         isRequested: isRequestedFromPersistedSelection,
         isSelected: isRequestedFromPersistedSelection,
+        // preserve per-document metadata from persisted documents when available
+        daysSought: typeof docDays !== "undefined" ? docDays : undefined,
+        nextDocumentDueDate:
+          typeof docNextDate !== "undefined" ? docNextDate : undefined,
         source: "documents",
         isDCL: !!isDCLFlag,
         isAdditional: !!isAdditionalFlag,
@@ -3135,6 +3281,61 @@ const DeferralDetailsModal = ({
     (d) => d.isRequested || d.isSelected,
   );
   const requestedDocs = explicitlyRequestedDocs;
+
+  // Helper to resolve days and next due date from a document object
+  const resolveDocDaysAndDate = (doc) => {
+    if (!doc) return { days: undefined, nextDate: undefined };
+
+    const tryValues = (obj, keys) => {
+      for (const k of keys) {
+        if (typeof obj[k] !== "undefined" && obj[k] !== null) return obj[k];
+      }
+      return undefined;
+    };
+
+    // Candidate keys to try for days and next date
+    const dayKeys = [
+      "daysSought",
+      "requestedDaysSought",
+      "requestedDays",
+      "days",
+      "requested_days",
+      "requested_days_sought",
+    ];
+    const dateKeys = [
+      "nextDocumentDueDate",
+      "nextDueDate",
+      "next_document_due_date",
+      "next_due_date",
+      "nextDocumentDue",
+      "next_due",
+    ];
+
+    let days = tryValues(doc, dayKeys);
+    let nextDate = tryValues(doc, dateKeys);
+
+    // If still missing, try to match against localDeferral.selectedDocuments for persisted metadata
+    if (
+      (typeof days === "undefined" || typeof nextDate === "undefined") &&
+      Array.isArray(localDeferral?.selectedDocuments)
+    ) {
+      const docName = (doc && (doc.name || doc.label)) || String(doc || "");
+      const match = localDeferral.selectedDocuments.find((sd) => {
+        const sdName = (sd && (sd.name || sd.label)) || String(sd || "");
+        return (
+          sdName &&
+          sdName.toLowerCase().trim() === String(docName).toLowerCase().trim()
+        );
+      });
+      if (match) {
+        if (typeof days === "undefined") days = tryValues(match, dayKeys);
+        if (typeof nextDate === "undefined")
+          nextDate = tryValues(match, dateKeys);
+      }
+    }
+
+    return { days, nextDate };
+  };
 
   const facilityColumns = getFacilityColumns();
 
@@ -3284,6 +3485,7 @@ const DeferralDetailsModal = ({
                     marginRight: "auto",
                     backgroundColor: "#164679",
                     borderColor: "#164679",
+                    color: "#fff !important",
                   }}
                 >
                   Download as PDF
@@ -3304,6 +3506,7 @@ const DeferralDetailsModal = ({
                     marginRight: "auto",
                     backgroundColor: "#164679",
                     borderColor: "#164679",
+                    color: "#fff !important",
                   }}
                 >
                   Download as PDF
@@ -3663,42 +3866,7 @@ const DeferralDetailsModal = ({
               </div>
             </Descriptions.Item>
 
-            <Descriptions.Item label="Days Sought">
-              <div
-                style={{
-                  fontWeight: "bold",
-                  color:
-                    daysSoughtValue > 45
-                      ? ERROR_RED
-                      : daysSoughtValue > 30
-                        ? WARNING_ORANGE
-                        : PRIMARY_BLUE,
-                }}
-              >
-                {daysSoughtValue} days
-              </div>
-            </Descriptions.Item>
-
-            {/* Deferral Due Date */}
-            <Descriptions.Item label="Deferral Due Date">
-              {(() => {
-                const fallbackDueDate =
-                  localDeferral.createdAt &&
-                  Number(localDeferral.daysSought || 0) > 0
-                    ? dayjs(localDeferral.createdAt)
-                        .add(Number(localDeferral.daysSought || 0), "day")
-                        .toISOString()
-                    : null;
-                const finalDueDate = nextDueDateValue || fallbackDueDate;
-                return (
-                  <div style={{ color: PRIMARY_BLUE }}>
-                    {finalDueDate
-                      ? `${dayjs(finalDueDate).format("DD MMM YYYY")}`
-                      : "Not calculated"}
-                  </div>
-                );
-              })()}
-            </Descriptions.Item>
+            {/* Days Sought and Deferral Due Date removed as requested */}
 
             {/* Created At */}
             <Descriptions.Item label="Created At">
@@ -3810,11 +3978,41 @@ const DeferralDetailsModal = ({
                               gap: 8,
                             }}
                           >
-                            {doc.name}
-                            <UniformTag
-                              color={isUploaded ? "green" : "orange"}
-                              text={isUploaded ? "Uploaded" : "Requested"}
-                            />
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                              }}
+                            >
+                              <div>{doc.name}</div>
+                              <UniformTag
+                                color={isUploaded ? "green" : "orange"}
+                                text={isUploaded ? "Uploaded" : "Requested"}
+                              />
+                            </div>
+                            {/* Show requested days as a small tag when available (including 0) */}
+                            {(typeof doc.daysSought !== "undefined" ||
+                              typeof doc.requestedDaysSought !==
+                                "undefined") && (
+                              <div style={{ marginLeft: "auto" }}>
+                                <Tag
+                                  style={{
+                                    background: "#fff7e6",
+                                    border: "1px solid #ffd591",
+                                    color: "#ad6800",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {String(
+                                    typeof doc.daysSought !== "undefined"
+                                      ? doc.daysSought
+                                      : doc.requestedDaysSought,
+                                  )}{" "}
+                                  days
+                                </Tag>
+                              </div>
+                            )}
                           </div>
                           <div
                             style={{
@@ -3839,6 +4037,35 @@ const DeferralDetailsModal = ({
                                 : ""}
                             </div>
                           )}
+                          {/* Show per-document days and computed next due date (show '-' when not present) */}
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#444",
+                              marginTop: 6,
+                            }}
+                          >
+                            {(() => {
+                              const { days, nextDate } =
+                                resolveDocDaysAndDate(doc);
+                              const daysDisplay =
+                                typeof days !== "undefined" &&
+                                days !== null &&
+                                String(days).trim() !== ""
+                                  ? String(days)
+                                  : "-";
+                              const dateDisplay = nextDate
+                                ? dayjs(nextDate).format("DD MMM YYYY")
+                                : "-";
+                              return (
+                                <>
+                                  <strong>Requested days:</strong> {daysDisplay}{" "}
+                                  &nbsp; • &nbsp; <strong>New due date:</strong>{" "}
+                                  {dateDisplay}
+                                </>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </div>
                       <Space>
@@ -5842,6 +6069,7 @@ const DeferralPending = ({ userId = "rm_current" }) => {
               style={{
                 backgroundColor: PRIMARY_BLUE,
                 borderColor: PRIMARY_BLUE,
+                color: "#fff !important",
               }}
             >
               + New Deferral Request

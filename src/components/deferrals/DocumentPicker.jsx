@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import dayjs from "dayjs";
 import {
   Card,
   Input,
@@ -31,7 +32,11 @@ const SECONDARY_BLUE = "#164679";
 const ERROR_RED = "#ff4d4f";
 const WARNING_ORANGE = "#faad14"; // Added this constant
 
-function DocumentPicker({ selectedDocuments, setSelectedDocuments }) {
+function DocumentPicker({
+  selectedDocuments,
+  setSelectedDocuments,
+  perDocumentDays = {},
+}) {
   const [search, setSearch] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingValue, setEditingValue] = useState("");
@@ -332,7 +337,7 @@ function DocumentPicker({ selectedDocuments, setSelectedDocuments }) {
   };
 
   const filteredDocs = allDocuments.filter((doc) =>
-    doc.name.toLowerCase().includes(search.toLowerCase())
+    doc.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const getCategoryColor = (category) => {
@@ -432,6 +437,36 @@ function DocumentPicker({ selectedDocuments, setSelectedDocuments }) {
           {type}
         </div>
       ),
+    },
+    {
+      title: "Requested",
+      key: "requested",
+      width: 180,
+      align: "center",
+      render: (_, record, index) => {
+        const docKey = record._id || record.name || String(index);
+        const days = perDocumentDays[docKey] ?? null;
+        const nextDate = days
+          ? dayjs().add(Number(days), "day").format("DD MMM YYYY")
+          : null;
+        return (
+          <div
+            style={{
+              fontSize: 13,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            <div style={{ fontWeight: 600 }}>
+              {days ?? "-"}
+              {days ? " days" : ""}
+            </div>
+            <div style={{ color: "#666", fontSize: 12 }}>{nextDate ?? "-"}</div>
+          </div>
+        );
+      },
     },
     {
       title: "Category",
@@ -600,7 +635,7 @@ function DocumentPicker({ selectedDocuments, setSelectedDocuments }) {
           >
             {filteredDocs.map((doc, i) => {
               const isSelected = selectedDocuments.some(
-                (selected) => selected.name === doc.name
+                (selected) => selected.name === doc.name,
               );
               const isMaxReached = selectedDocuments.length >= MAX_DOCUMENTS;
               const canSelect = !isSelected && !isMaxReached;
@@ -619,8 +654,8 @@ function DocumentPicker({ selectedDocuments, setSelectedDocuments }) {
                     backgroundColor: isSelected
                       ? `${SUCCESS_GREEN}08`
                       : isMaxReached
-                      ? "#fafafa"
-                      : "white",
+                        ? "#fafafa"
+                        : "white",
                     transition: "all 0.2s",
                     opacity: isMaxReached && !isSelected ? 0.6 : 1,
                   }}
@@ -667,8 +702,8 @@ function DocumentPicker({ selectedDocuments, setSelectedDocuments }) {
                             color: isSelected
                               ? "#666"
                               : isMaxReached
-                              ? "#999"
-                              : "#262626",
+                                ? "#999"
+                                : "#262626",
                             flex: 1,
                           }}
                         >

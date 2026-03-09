@@ -64,7 +64,6 @@ import { formatDeferralDocumentType } from "../../utils/deferralDocumentType";
 import { getDeferralDocumentBuckets } from "../../utils/deferralDocuments";
 import { getLoanDisplay } from "../../utils/loanUtils";
 import UniformTag from "../../components/common/UniformTag";
-import "./Deferral.css";
 // Extension components removed — starting fresh per request
 
 // Extend dayjs
@@ -93,7 +92,7 @@ const customStyles = `
   .ant-input, .ant-select-selector { border-radius: 6px !important; border-color: #e0e0e0 !important; }
   .ant-input:focus, .ant-select-focused .ant-select-selector { box-shadow: 0 0 0 2px rgba(22, 70, 121, 0.2) !important; border-color: ${PRIMARY_BLUE} !important; }
 
-  .status-tag { font-weight: 700 !important; border-radius: 999px !important; padding: 3px 4px !important; text-transform: capitalize; min-width: 80px; text-align: center; display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
+  .status-tag { font-weight: 700 !important; border-radius: 999px !important; padding: 3px 8px !important; text-transform: capitalize; min-width: 80px; text-align: center; display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
  
   .approved-status {
     background-color: ${SUCCESS_GREEN}15 !important;
@@ -844,6 +843,9 @@ const Deferrals = ({ userId }) => {
   const [deferrals, setDeferrals] = useState([]);
   const [filteredDeferrals, setFilteredDeferrals] = useState([]);
   // Extensions removed — fresh implementation planned
+  // Placeholder state for extension applications (to be implemented)
+  const [myExtensions, setMyExtensions] = useState([]);
+  const [extensionsLoading, setExtensionsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const q = new URLSearchParams(window.location.search);
@@ -2589,11 +2591,6 @@ const Deferrals = ({ userId }) => {
             setSelectedDeferral(null);
             setCreatorComment("");
           }}
-          style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
-          }}
         >
           Close
         </Button>,
@@ -2604,10 +2601,9 @@ const Deferrals = ({ userId }) => {
           loading={actionLoading}
           icon={<FilePdfOutlined />}
           style={{
-            color: "white !important",
             marginLeft: "auto",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
+            backgroundColor: "#164679",
+            borderColor: "#164679",
           }}
         >
           Download as PDF
@@ -2656,11 +2652,6 @@ const Deferrals = ({ userId }) => {
             setSelectedDeferral(null);
             setCreatorComment("");
           }}
-          style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
-          }}
         >
           Close
         </Button>,
@@ -2671,10 +2662,10 @@ const Deferrals = ({ userId }) => {
           loading={actionLoading}
           icon={<FilePdfOutlined />}
           style={{
-            color: "white !important",
             marginLeft: "auto",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
+            backgroundColor: "#164679",
+            borderColor: "#164679",
+            color: "#fff !important",
           }}
         >
           Download as PDF
@@ -2691,11 +2682,6 @@ const Deferrals = ({ userId }) => {
             setSelectedDeferral(null);
             setCreatorComment("");
           }}
-          style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
-          }}
         >
           Close
         </Button>,
@@ -2706,34 +2692,19 @@ const Deferrals = ({ userId }) => {
           loading={actionLoading}
           icon={<FilePdfOutlined />}
           style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
+            marginLeft: "auto",
+            backgroundColor: "#164679",
+            borderColor: "#164679",
+            color: "#fff !important",
           }}
         >
           Download as PDF
         </Button>,
         <Button
-          key="approve_request"
-          type="primary"
-          onClick={handleApproveCloseRequestByChecker}
-          style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
-          }}
-        >
-          Approve Request
-        </Button>,
-        <Button
           key="approve_close_request"
           type="primary"
           onClick={handleApproveCloseRequestByChecker}
-          style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
-          }}
+          style={{ color: "white" }}
         >
           Approve Close Request
         </Button>,
@@ -2749,11 +2720,6 @@ const Deferrals = ({ userId }) => {
             setModalVisible(false);
             setSelectedDeferral(null);
             setCreatorComment("");
-          }}
-          style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
           }}
         >
           Close
@@ -2771,11 +2737,6 @@ const Deferrals = ({ userId }) => {
             setSelectedDeferral(null);
             setCreatorComment("");
           }}
-          style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
-          }}
         >
           Close
         </Button>,
@@ -2786,9 +2747,9 @@ const Deferrals = ({ userId }) => {
           loading={actionLoading}
           icon={<FilePdfOutlined />}
           style={{
-            color: "white !important",
-            backgroundColor: "#164679 !important",
-            borderColor: "#164679 !important",
+            backgroundColor: "#164679",
+            borderColor: "#164679",
+            color: "#fff !important",
           }}
         >
           Download as PDF
@@ -2820,10 +2781,10 @@ const Deferrals = ({ userId }) => {
         onClick={downloadDeferralAsPDF}
         icon={<FilePdfOutlined />}
         style={{
-          color: "white !important",
           marginRight: "auto",
-          backgroundColor: "#164679 !important",
-          borderColor: "#164679 !important",
+          backgroundColor: "#164679",
+          borderColor: "#164679",
+          color: "#fff !important",
         }}
       >
         Download as PDF
@@ -2837,13 +2798,9 @@ const Deferrals = ({ userId }) => {
         icon={<ReloadOutlined />}
         disabled={!allApproversApproved}
         style={{
-          color: "white !important",
-          backgroundColor: !allApproversApproved
-            ? "#CCCCCC !important"
-            : "#164679 !important",
-          borderColor: !allApproversApproved
-            ? "#CCCCCC !important"
-            : "#164679 !important",
+          backgroundColor: PRIMARY_BLUE,
+          borderColor: PRIMARY_BLUE,
+          color: "#fff !important",
         }}
       >
         Return for Re-work
@@ -2856,13 +2813,9 @@ const Deferrals = ({ userId }) => {
         onClick={handleApproveDeferral}
         disabled={!canApprove}
         style={{
-          color: "white !important",
-          backgroundColor: !canApprove
-            ? "#CCCCCC !important"
-            : "#164679 !important",
-          borderColor: !canApprove
-            ? "#CCCCCC !important"
-            : "#164679 !important",
+          color: "white",
+          backgroundColor: canApprove ? ACCENT_LIME : "#d9d9d9",
+          borderColor: canApprove ? ACCENT_LIME : "#d9d9d9",
         }}
       >
         Approve Deferral
@@ -3150,7 +3103,10 @@ const Deferrals = ({ userId }) => {
             tab={`Completed Deferrals (${deferrals.filter((d) => ["closed", "deferral_closed", "closed_by_co", "closed_by_creator"].includes((d.status || "").toString().toLowerCase())).length})`}
             key="completed"
           />
-          {/* Extensions tab removed */}
+          <Tabs.TabPane
+            tab={`Extension Applications (${myExtensions.length})`}
+            key="extensions"
+          />
         </Tabs>
         <div style={{ marginTop: 8, fontWeight: 700, color: PRIMARY_BLUE }}>
           {activeTab === "pending"
@@ -3159,12 +3115,58 @@ const Deferrals = ({ userId }) => {
               ? `Close Requests (${filteredDeferrals.length} items)`
               : activeTab === "approved"
                 ? `Approved Deferrals (${filteredDeferrals.length} items)`
-                : `Completed Deferrals (${filteredDeferrals.length} items)`}
+                : activeTab === "extensions"
+                  ? `Extension Applications (${myExtensions.length} items)`
+                  : `Completed Deferrals (${filteredDeferrals.length} items)`}
         </div>
       </div>
 
       {/* Deferrals Table or Extensions */}
-      {loading ? (
+      {activeTab === "extensions" ? (
+        extensionsLoading ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 40,
+            }}
+          >
+            <Spin tip={`Loading extension applications...`} />
+          </div>
+        ) : myExtensions.length === 0 ? (
+          <Empty
+            description={
+              <div>
+                <p style={{ fontSize: 16, marginBottom: 8 }}>
+                  No extension applications found
+                </p>
+                <p style={{ color: "#999" }}>
+                  No extension applications are currently available.
+                </p>
+              </div>
+            }
+            style={{ padding: 40 }}
+          />
+        ) : (
+          <div className="deferrals-table">
+            <Table
+              columns={columns}
+              dataSource={myExtensions}
+              rowKey={(record) => record._id || record.id}
+              size="large"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                pageSizeOptions: ["10", "20", "50"],
+                position: ["bottomCenter"],
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} extension applications`,
+              }}
+            />
+          </div>
+        )
+      ) : loading ? (
         <div
           style={{
             display: "flex",
@@ -5228,9 +5230,9 @@ const Deferrals = ({ userId }) => {
         okButtonProps={{
           loading: actionLoading,
           style: {
-            background: "#b5d334 !important",
-            borderColor: "#b5d334 !important",
-            color: "#ffffff !important",
+            background: ACCENT_LIME,
+            borderColor: ACCENT_LIME,
+            color: "#ffffff",
           },
         }}
         onOk={handleConfirmApproval}
@@ -5384,25 +5386,12 @@ const Deferrals = ({ userId }) => {
               marginTop: 8,
             }}
           >
-            <Button
-              onClick={() => setShowReworkConfirm(false)}
-              style={{
-                color: "white !important",
-                backgroundColor: "#164679 !important",
-                borderColor: "#164679 !important",
-              }}
-            >
-              Cancel
-            </Button>
+            <Button onClick={() => setShowReworkConfirm(false)}>Cancel</Button>
             <Button
               type="primary"
               loading={returnReworkLoading}
               onClick={doReturnForRework}
-              style={{
-                color: "white !important",
-                backgroundColor: "#f0ad4e !important",
-                borderColor: "#f0ad4e !important",
-              }}
+              style={{ backgroundColor: "#f0ad4e", borderColor: "#f0ad4e" }}
             >
               Yes, Return for Rework
             </Button>

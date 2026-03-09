@@ -139,6 +139,9 @@ export const getDeferralDocumentBuckets = (deferral) => {
       isRequested: true,
       isSelected: true,
       source: "selected",
+      // preserve per-document deferral metadata when present
+      daysSought: (typeof document === 'object' && (document.daysSought || document.requestedDaysSought)) || undefined,
+      nextDocumentDueDate: (typeof document === 'object' && (document.nextDocumentDueDate || document.nextDueDate)) || undefined,
     });
   });
 
@@ -181,6 +184,9 @@ export const getDeferralDocumentBuckets = (deferral) => {
       isAdditional: !!isAdditionalFlag,
       uploadDate: document.uploadDate || document.uploadedAt || null,
       size: document.size || null,
+      // preserve any per-document deferral metadata
+      daysSought: (document && (document.daysSought || document.requestedDaysSought)) || undefined,
+      nextDocumentDueDate: (document && (document.nextDocumentDueDate || document.nextDueDate)) || undefined,
     });
   });
 

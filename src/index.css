@@ -90,6 +90,33 @@ button[class*="bg-[#0A1929]"] {
   color: #fff !important;
 }
 
+/* ✅ DEFERRAL FORM BUTTONS - White text override for all states */
+.deferral-btn {
+  color: #fff !important;
+}
+
+.deferral-btn,
+.deferral-btn *,
+.deferral-btn span {
+  color: #fff !important;
+  fill: #fff !important;
+}
+
+.deferral-btn:hover,
+.deferral-btn:focus,
+.deferral-btn:active {
+  color: #fff !important;
+}
+
+.deferral-btn.ant-btn {
+  color: #fff !important;
+}
+
+.deferral-btn.ant-btn:not(:disabled):not(.ant-btn-disabled):hover,
+.deferral-btn.ant-btn:not(:disabled):not(.ant-btn-disabled):focus {
+  color: #fff !important;
+}
+
 /* ✅ UNIFORM TABLE STYLING - Applied to all tables for professional appearance */
 .ant-table-wrapper {
   border-radius: 12px;

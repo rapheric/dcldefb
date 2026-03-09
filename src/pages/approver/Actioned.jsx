@@ -46,12 +46,12 @@ import {
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import deferralApi from "../../service/deferralApi";
+import { getLoanDisplay } from "../../utils/loanUtils";
 import getFacilityColumns from "../../utils/facilityColumns";
 import { formatDeferralDocumentType } from "../../utils/deferralDocumentType";
 import { getDeferralDocumentBuckets } from "../../utils/deferralDocuments";
 import UniformTag from "../../components/common/UniformTag";
-import ApproverExtensionTab from "../../components/ApproverExtensionTab";
-import { useGetApproverActionedExtensionsQuery } from "../../api/extensionApi";
+// Extension components removed — starting fresh per request
 
 const { Text } = Typography;
 
@@ -134,15 +134,15 @@ const Actioned = () => {
   const token = useSelector((s) => s.auth.token);
   const [deferrals, setDeferrals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [actionedExtensions, setActionedExtensions] = useState([]);
+  const [extensionsLoading, setExtensionsLoading] = useState(false);
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [postingComment, setPostingComment] = useState(false);
   const [activeTab, setActiveTab] = useState("deferrals");
 
-  // Extension hooks
-  const { data: actionedExtensions = [], isLoading: extensionsLoading } =
-    useGetApproverActionedExtensionsQuery();
+  // Extension hooks removed — fresh implementation planned
 
   const { dclDocs, uploadedDocs, requestedDocs } =
     getDeferralDocumentBuckets(selected);
@@ -674,18 +674,11 @@ const Actioned = () => {
       ];
       yPosition = addCardSection("Deferral Details", deferralDetailsItems);
 
-      const loanAmount = Number(selected.loanAmount || 0);
-      const formattedLoanAmount = loanAmount
-        ? `KSh ${loanAmount.toLocaleString()}`
-        : "Not specified";
-      const isUnder75M = loanAmount > 0 && loanAmount < 75000000;
+      const { amountNumber, formattedAmount, classification } =
+        getLoanDisplay(selected);
+      const classificationText = classification ? ` (${classification})` : "";
       const loanItems = [
-        {
-          label: "Loan Amount",
-          value:
-            formattedLoanAmount +
-            (isUnder75M ? " (Under 75M)" : " (Above 75M)"),
-        },
+        { label: "Loan Amount", value: formattedAmount + classificationText },
         { label: "Days Sought", value: `${selected.daysSought || 0} days` },
         {
           label: "Deferral Due Date",
@@ -1094,10 +1087,11 @@ const Actioned = () => {
 
   // Poll the deferral while the modal is open so the approval flow stays live
   useEffect(() => {
-    if (!selected || !modalOpen) return;
+    if (!selected || !selected._id || !modalOpen) return;
     let cancelled = false;
     const fetchLatest = async () => {
       try {
+        if (!selected._id) return;
         const fresh = await deferralApi.getDeferralById(selected._id);
         if (!cancelled && fresh) setSelected(fresh);
       } catch (err) {
@@ -1174,7 +1168,22 @@ const Actioned = () => {
       dataIndex: "status",
       key: "status",
       width: 120,
-      render: (status) => {
+      render: (status, record) => {
+        // If closed by RM metadata exists, show Withdrawn
+        const withdrawnBy =
+          record?.closedByName ||
+          record?.ClosedByName ||
+          record?.closedBy ||
+          record?.closedByUser ||
+          null;
+        if (withdrawnBy) {
+          return (
+            <div style={{ fontSize: 12, fontWeight: "bold", color: ERROR_RED }}>
+              Withdrawn
+            </div>
+          );
+        }
+
         const statusConfig = {
           pending_approval: {
             color: WARNING_ORANGE,
@@ -1312,6 +1321,57 @@ const Actioned = () => {
       ),
     },
   ];
+
+  // Lightweight placeholder for Extension applications tab to avoid runtime errors
+  const ExtensionApplicationsTab = ({
+    extensions = [],
+    loading = false,
+    tableClassName = "",
+    useTableCard = true,
+    onOpenExtensionDetails = () => {},
+  }) => {
+    if (loading)
+      return (
+        <Card>
+          <div
+            style={{ display: "flex", justifyContent: "center", padding: 24 }}
+          >
+            <Spin />
+          </div>
+        </Card>
+      );
+
+    if (!extensions || extensions.length === 0)
+      return (
+        <Card>
+          <Empty description={<div>No actioned extension applications</div>} />
+        </Card>
+      );
+
+    return (
+      <Card>
+        <List
+          dataSource={extensions}
+          renderItem={(ext) => (
+            <List.Item
+              onClick={() => onOpenExtensionDetails(ext)}
+              style={{ cursor: "pointer" }}
+            >
+              <List.Item.Meta
+                title={
+                  ext.extensionNumber ||
+                  ext.deferralNumber ||
+                  ext._id ||
+                  "Extension"
+                }
+                description={ext.customerName || ""}
+              />
+            </List.Item>
+          )}
+        />
+      </Card>
+    );
+  };
 
   return (
     <div style={{ padding: 24 }}>
@@ -1464,12 +1524,16 @@ const Actioned = () => {
       )}
 
       {activeTab === "extensions" && (
-        <ApproverExtensionTab
+        <ExtensionApplicationsTab
           extensions={actionedExtensions}
           loading={extensionsLoading}
-          onApprove={() => {}}
-          onReject={() => {}}
-          tabType="actioned"
+          tableClassName="deferral-pending-table"
+          useTableCard={true}
+          onOpenExtensionDetails={(ext) => {
+            // Open the same modal used elsewhere when a row is clicked
+            setSelected(ext);
+            setModalOpen(true);
+          }}
         />
       )}
 
@@ -1555,87 +1619,104 @@ const Actioned = () => {
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Status">
-                  {selectedStatus === "deferral_requested" ||
-                  selectedStatus === "pending_approval" ? (
-                    <UniformTag color="processing" text="Pending" />
-                  ) : selectedStatus === "deferral_approved" ||
-                    selectedStatus === "approved" ? (
-                    <UniformTag color="success" text="Approved" />
-                  ) : selectedStatus === "deferral_rejected" ||
-                    selectedStatus === "rejected" ? (
-                    <UniformTag color="error" text="Rejected" />
-                  ) : (
-                    <div style={{ fontWeight: 500 }}>{selectedStatus}</div>
-                  )}
+                  {(() => {
+                    const raw = (
+                      selected.status ||
+                      selectedStatus ||
+                      "pending"
+                    ).toString();
+                    const key = raw.toLowerCase();
+                    const display = key
+                      .replace(/_/g, " ")
+                      .split(" ")
+                      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                      .join(" ");
+                    let color = PRIMARY_BLUE;
+                    if (key.includes("approved")) color = SUCCESS_GREEN;
+                    else if (key.includes("rejected")) color = ERROR_RED;
+                    else if (key.includes("returned") || key.includes("rework"))
+                      color = WARNING_ORANGE;
+                    return (
+                      <Text strong style={{ color }}>
+                        {display}
+                      </Text>
+                    );
+                  })()}
                 </Descriptions.Item>
 
                 <Descriptions.Item label="Creator Status">
-                  <UniformTag
-                    color={
-                      selected.creatorApprovalStatus === "approved"
-                        ? "success"
-                        : selected.creatorApprovalStatus === "rejected"
-                          ? "error"
-                          : "processing"
-                    }
-                    text={
-                      selected.creatorApprovalStatus === "approved"
-                        ? "Approved"
-                        : selected.creatorApprovalStatus === "rejected"
-                          ? "Rejected"
-                          : "Pending"
-                    }
-                  />
+                  {(() => {
+                    const cs = (selected.creatorApprovalStatus || "pending")
+                      .toString()
+                      .toLowerCase();
+                    if (cs === "approved")
+                      return (
+                        <Text strong style={{ color: SUCCESS_GREEN }}>
+                          Approved
+                        </Text>
+                      );
+                    if (cs === "rejected")
+                      return (
+                        <Text strong style={{ color: ERROR_RED }}>
+                          Rejected
+                        </Text>
+                      );
+                    return (
+                      <Text strong style={{ color: PRIMARY_BLUE }}>
+                        Pending
+                      </Text>
+                    );
+                  })()}
                 </Descriptions.Item>
 
                 <Descriptions.Item label="Checker Status">
-                  <UniformTag
-                    color={
-                      selected.checkerApprovalStatus === "approved"
-                        ? "success"
-                        : selected.checkerApprovalStatus === "rejected"
-                          ? "error"
-                          : "processing"
-                    }
-                    text={
-                      selected.checkerApprovalStatus === "approved"
-                        ? "Approved"
-                        : selected.checkerApprovalStatus === "rejected"
-                          ? "Rejected"
-                          : "Pending"
-                    }
-                  />
+                  {(() => {
+                    const cs = (selected.checkerApprovalStatus || "pending")
+                      .toString()
+                      .toLowerCase();
+                    if (cs === "approved")
+                      return (
+                        <Text strong style={{ color: SUCCESS_GREEN }}>
+                          Approved
+                        </Text>
+                      );
+                    if (cs === "rejected")
+                      return (
+                        <Text strong style={{ color: ERROR_RED }}>
+                          Rejected
+                        </Text>
+                      );
+                    return (
+                      <Text strong style={{ color: PRIMARY_BLUE }}>
+                        Pending
+                      </Text>
+                    );
+                  })()}
                 </Descriptions.Item>
 
                 <Descriptions.Item label="Approvers Status">
                   {(() => {
                     if (selectedStats.total === 0) {
                       return (
-                        <UniformTag
-                          color="processing"
-                          text="No approvers"
-                          maxChars={12}
-                        />
+                        <Text strong style={{ color: PRIMARY_BLUE }}>
+                          No approvers
+                        </Text>
                       );
                     }
 
                     if (selectedStats.approved === selectedStats.total) {
                       return (
-                        <UniformTag
-                          color="success"
-                          icon={<CheckCircleOutlined />}
-                          text="All Approved"
-                          maxChars={12}
-                        />
+                        <Text strong style={{ color: SUCCESS_GREEN }}>
+                          All Approved
+                        </Text>
                       );
                     }
 
                     return (
-                      <UniformTag
-                        color="processing"
-                        text={`${selectedStats.approved} of ${selectedStats.total} Approved`}
-                        maxChars={14}
-                      />
+                      <Text
+                        strong
+                        style={{ color: PRIMARY_BLUE }}
+                      >{`${selectedStats.approved} of ${selectedStats.total} Approved`}</Text>
                     );
                   })()}
                 </Descriptions.Item>

@@ -223,8 +223,31 @@ export default function DeferralForm({ userId, onSuccess }) {
     }
   }, [selectedDocuments.length, loanAmount, LOAN_THRESHOLD]);
 
-  const [daysSought, setDaysSought] = useState("");
-  const [nextDueDate, setNextDueDate] = useState("");
+  // Initialize per-document days when selected documents change
+  useEffect(() => {
+    if (!selectedDocuments || selectedDocuments.length === 0) {
+      setPerDocumentDays({});
+      return;
+    }
+
+    setPerDocumentDays((prev) => {
+      const next = {};
+      selectedDocuments.forEach((doc, idx) => {
+        const key =
+          doc && (doc._id || doc.name) ? doc._id || doc.name : String(idx);
+        next[key] = prev[key] ?? 0;
+      });
+      return next;
+    });
+  }, [selectedDocuments]);
+
+  // Per-document days mapping: { [docKey]: number }
+  const [perDocumentDays, setPerDocumentDays] = useState({});
+
+  const handlePerDocumentDaysChange = (docKey, value) => {
+    const v = Number(value) || 0;
+    setPerDocumentDays((prev) => ({ ...prev, [docKey]: v }));
+  };
   const [dclNumber, setDclNumber] = useState("");
   const [deferralDescription, setDeferralDescription] = useState("");
 
@@ -621,7 +644,28 @@ export default function DeferralForm({ userId, onSuccess }) {
         });
       }
 
-      // If an uploaded DCL file exists, use it
+      // Prefer generating a fresh checklist PDF (same file the My Queue download uses).
+      // If generation succeeds we attach it; otherwise fall back to any existing uploaded file.
+      try {
+        const blob = await generateChecklistPDFBlob(
+          checklist,
+          allDocs,
+          checklist.comments || [],
+        );
+        if (blob) {
+          const fileName = `${dclNumber || checklist.dclNo || "DCL"}.pdf`;
+          const generatedFile = new File([blob], fileName, {
+            type: "application/pdf",
+          });
+          setDclFile(generatedFile);
+          message.success(`${fileName} auto-generated and attached`);
+          return;
+        }
+      } catch (genErr) {
+        console.error("Failed to auto-generate DCL PDF:", genErr);
+      }
+
+      // If generation failed or produced no blob, fall back to an existing uploaded DCL file (if present)
       if (allDocs.length > 0) {
         allDocs.sort(
           (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
@@ -639,25 +683,6 @@ export default function DeferralForm({ userId, onSuccess }) {
           });
           return;
         }
-      }
-
-      // No existing upload found — try to auto-generate a PDF from checklist data
-      try {
-        const blob = await generateChecklistPDFBlob(
-          checklist,
-          allDocs,
-          checklist.comments || [],
-        );
-        if (blob) {
-          const fileName = `${dclNumber || checklist.dclNo || "DCL"}.pdf`;
-          const generatedFile = new File([blob], fileName, {
-            type: "application/pdf",
-          });
-          setDclFile(generatedFile);
-          message.success(`${fileName} auto-generated and attached`);
-        }
-      } catch (genErr) {
-        console.error("Failed to auto-generate DCL PDF:", genErr);
       }
     } catch (err) {
       console.error("Failed to fetch DCL file:", err);
@@ -1065,43 +1090,109 @@ export default function DeferralForm({ userId, onSuccess }) {
           </Select>
         </Col>
 
-        <Col span={12}>
-          <Text strong>No. of Days Sought</Text>
-          <Select
-            value={daysSought}
-            onChange={(val) => {
-              setDaysSought(val);
-              if (val) {
-                const days = Number(val);
-                const next = dayjs().add(days, "day").format("YYYY-MM-DD");
-                setNextDueDate(next);
-              } else {
-                setNextDueDate("");
-              }
-            }}
-            style={{ width: "100%" }}
-            size="large"
-            placeholder="Select days"
-          >
-            <Option value="10">10 days</Option>
-            <Option value="20">20 days</Option>
-            <Option value="30">30 days</Option>
-            <Option value="45">45 days</Option>
-          </Select>
-        </Col>
+        {/* Per-document days sought: improved layout with column labels and helper text */}
+        <Col span={24}>
+          <Card size="small" style={{ marginBottom: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <div>
+                <Text strong style={{ display: "block" }}>
+                  Days Sought (per document)
+                </Text>
+              </div>
+            </div>
 
-        <Col span={12}>
-          <Text strong>Next Document Due Date</Text>
-          <DatePicker
-            value={nextDueDate ? dayjs(nextDueDate) : null}
-            onChange={(date) =>
-              setNextDueDate(date ? date.format("YYYY-MM-DD") : "")
-            }
-            style={{ width: "100%" }}
-            size="large"
-            format="DD/MM/YYYY"
-            disabled
-          />
+            {/* Column labels */}
+            <Row
+              gutter={12}
+              style={{
+                padding: "8px 0",
+                borderBottom: "1px solid #f0f0f0",
+                marginBottom: 12,
+              }}
+            >
+              <Col xs={12} sm={12} md={10}>
+                <Text strong>Document</Text>
+              </Col>
+              <Col xs={6} sm={6} md={4}>
+                <Text strong style={{ display: "inline-block" }}>
+                  Days
+                </Text>
+              </Col>
+              <Col xs={6} sm={6} md={6}>
+                <Text strong>New Due Date</Text>
+              </Col>
+            </Row>
+
+            {selectedDocuments && selectedDocuments.length > 0 ? (
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
+                {selectedDocuments.map((doc, idx) => {
+                  const docKey = doc._id || doc.name || String(idx);
+                  const days = perDocumentDays[docKey] ?? 0;
+                  const computedDate = days
+                    ? dayjs().add(Number(days), "day").format("YYYY-MM-DD")
+                    : "";
+                  return (
+                    <Row
+                      key={docKey}
+                      align="middle"
+                      gutter={12}
+                      style={{ padding: "8px 0", borderRadius: 4 }}
+                    >
+                      <Col xs={24} sm={12} md={10}>
+                        <div
+                          style={{ display: "flex", flexDirection: "column" }}
+                        >
+                          <Text strong style={{ marginBottom: 4 }}>
+                            {doc.name}
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            {doc.type || ""}
+                          </Text>
+                        </div>
+                      </Col>
+
+                      <Col xs={12} sm={6} md={4}>
+                        <InputNumber
+                          min={0}
+                          value={days}
+                          onChange={(v) =>
+                            handlePerDocumentDaysChange(docKey, v)
+                          }
+                          style={{ width: "100%" }}
+                          size="middle"
+                          placeholder="Days"
+                          aria-label={`Days sought for ${doc.name}`}
+                        />
+                      </Col>
+
+                      <Col xs={12} sm={6} md={6}>
+                        <DatePicker
+                          value={computedDate ? dayjs(computedDate) : null}
+                          format="DD/MM/YYYY"
+                          disabled
+                          style={{ width: "100%" }}
+                          size="middle"
+                        />
+                      </Col>
+                    </Row>
+                  );
+                })}
+              </div>
+            ) : (
+              <Text type="secondary">
+                Select documents to set days sought per document.
+              </Text>
+            )}
+          </Card>
         </Col>
 
         {/* Document Picker Component - Imported with custom title */}
@@ -1131,6 +1222,7 @@ export default function DeferralForm({ userId, onSuccess }) {
           <DocumentPicker
             selectedDocuments={selectedDocuments}
             setSelectedDocuments={setSelectedDocuments}
+            perDocumentDays={perDocumentDays}
           />
         </Col>
 
@@ -1581,25 +1673,33 @@ export default function DeferralForm({ userId, onSuccess }) {
 
         loanType,
         loanAmount: parsedLoanAmount(),
-        daysSought: Number(daysSought) || undefined,
-        nextDocumentDueDate: nextDueDate
-          ? dayjs(nextDueDate).toISOString()
-          : undefined,
+        // Per-document days and computed due dates are stored per selected document
         dclNumber,
         deferralDescription,
         facilities: normalizedFacilities,
         approvers: resolvedApprovers,
         // Preserve selected document names/metadata so they appear in pending modal
-        selectedDocuments: (selectedDocuments || []).map((doc) => {
+        selectedDocuments: (selectedDocuments || []).map((doc, idx) => {
+          const docKey = (doc && (doc._id || doc.name)) || String(idx);
+          const days = Number(perDocumentDays[docKey]) || 0;
+          const nextDateIso = days
+            ? dayjs().add(days, "day").toISOString()
+            : undefined;
+
           if (typeof doc === "string") {
             return {
               name: doc,
               type: documentCategory === "Primary" ? "Primary" : "Secondary",
+              daysSought: days || undefined,
+              nextDocumentDueDate: nextDateIso,
             };
           }
+
           return {
             ...doc,
             type: normalizeDocumentType(doc),
+            daysSought: days || undefined,
+            nextDocumentDueDate: nextDateIso,
           };
         }),
         // Include posted comments so they appear in the comment trail
@@ -1807,10 +1907,7 @@ export default function DeferralForm({ userId, onSuccess }) {
         : "Not specified";
     const isAboveThreshold = Number(numericLoan) > LOAN_THRESHOLD;
 
-    // Format deferred due date consistently
-    const formattedDeferredDueDate = nextDueDate
-      ? dayjs(nextDueDate).format("DD MMM YYYY")
-      : "-";
+    // Deferred due dates shown per document in the list below
 
     return (
       <Modal
@@ -1862,12 +1959,6 @@ export default function DeferralForm({ userId, onSuccess }) {
               )}
             </div>
           </Descriptions.Item>
-          <Descriptions.Item label="Days Sought">
-            {daysSought || "-"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Deferred due date">
-            {formattedDeferredDueDate}
-          </Descriptions.Item>
 
           <Descriptions.Item label="Document(s) to be deferred">
             {selectedDocuments && selectedDocuments.length > 0 ? (
@@ -1906,6 +1997,12 @@ export default function DeferralForm({ userId, onSuccess }) {
                       docName &&
                       u.name.toLowerCase().includes(docName.toLowerCase()),
                   );
+                  const docKey = (doc && (doc._id || doc.name)) || docName;
+                  const docDays = Number(perDocumentDays[docKey]) || 0;
+                  const docNextDate = docDays
+                    ? dayjs().add(docDays, "day").format("DD MMM YYYY")
+                    : "-";
+
                   return (
                     <List.Item>
                       <div
@@ -1932,6 +2029,17 @@ export default function DeferralForm({ userId, onSuccess }) {
                               Uploaded as: {uploaded.name}
                             </div>
                           )}
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#444",
+                              marginTop: 6,
+                            }}
+                          >
+                            <strong>Requested days:</strong> {docDays || "-"}{" "}
+                            &nbsp; • &nbsp; <strong>New due date:</strong>{" "}
+                            {docNextDate}
+                          </div>
                         </div>
                         <div
                           style={{
@@ -2245,6 +2353,7 @@ export default function DeferralForm({ userId, onSuccess }) {
               >
                 <Button
                   type={searchMode === "customer" ? "primary" : "default"}
+                  className="deferral-btn"
                   onClick={() => {
                     setSearchMode("customer");
                     setSearchDclNumber("");
@@ -2252,11 +2361,12 @@ export default function DeferralForm({ userId, onSuccess }) {
                   }}
                   style={{
                     backgroundColor:
+                      searchMode === "customer" ? PRIMARY_BLUE : "transparent",
+                    borderColor: PRIMARY_BLUE,
+                    color:
                       searchMode === "customer"
-                        ? PRIMARY_PURPLE
-                        : "transparent",
-                    borderColor: PRIMARY_PURPLE,
-                    color: searchMode === "customer" ? "#fff" : PRIMARY_PURPLE,
+                        ? "#fff !important"
+                        : PRIMARY_BLUE,
                     fontWeight: 600,
                   }}
                 >
@@ -2264,6 +2374,7 @@ export default function DeferralForm({ userId, onSuccess }) {
                 </Button>
                 <Button
                   type={searchMode === "dcl" ? "primary" : "default"}
+                  className="deferral-btn"
                   onClick={() => {
                     setSearchMode("dcl");
                     setSearchCustomerNumber("");
@@ -2272,9 +2383,10 @@ export default function DeferralForm({ userId, onSuccess }) {
                   }}
                   style={{
                     backgroundColor:
-                      searchMode === "dcl" ? PRIMARY_PURPLE : "transparent",
-                    borderColor: PRIMARY_PURPLE,
-                    color: searchMode === "dcl" ? "#fff" : PRIMARY_PURPLE,
+                      searchMode === "dcl" ? PRIMARY_BLUE : "transparent",
+                    borderColor: PRIMARY_BLUE,
+                    color:
+                      searchMode === "dcl" ? "#fff !important" : PRIMARY_BLUE,
                     fontWeight: 600,
                   }}
                 >
@@ -2400,12 +2512,14 @@ export default function DeferralForm({ userId, onSuccess }) {
                       </Button>
                       <Button
                         type="primary"
+                        className="deferral-btn"
                         htmlType="submit"
                         loading={isFetching}
                         size="large"
                         style={{
-                          backgroundColor: PRIMARY_PURPLE,
-                          borderColor: PRIMARY_PURPLE,
+                          backgroundColor: PRIMARY_BLUE,
+                          borderColor: PRIMARY_BLUE,
+                          color: "#fff !important",
                         }}
                       >
                         {isFetching ? "Fetching..." : "Fetch Customer"}
@@ -2513,12 +2627,14 @@ export default function DeferralForm({ userId, onSuccess }) {
             <Button
               type="primary"
               size="large"
+              className="deferral-btn"
               icon={<SearchOutlined />}
               onClick={() => setShowSearchForm(true)}
               loading={isFetching}
               style={{
-                backgroundColor: PRIMARY_PURPLE,
-                borderColor: PRIMARY_PURPLE,
+                backgroundColor: PRIMARY_BLUE,
+                borderColor: PRIMARY_BLUE,
+                color: "#fff !important",
                 height: 48,
                 fontSize: 16,
                 padding: "0 32px",
