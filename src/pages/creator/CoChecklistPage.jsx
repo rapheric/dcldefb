@@ -611,7 +611,11 @@ const SECONDARY_PURPLE = "#7e6496";
 /* -------------------------------------------------------------------
    ⭐ MAIN PAGE: CoChecklistPage
 ------------------------------------------------------------------- */
-const CoChecklistPage = ({ userId, draftToRestore = null, setDraftToRestore = null }) => {
+const CoChecklistPage = ({
+  userId,
+  draftToRestore = null,
+  setDraftToRestore = null,
+}) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedChecklist, setSelectedChecklist] = useState(null);
 
@@ -837,19 +841,44 @@ const CoChecklistPage = ({ userId, draftToRestore = null, setDraftToRestore = nu
   ];
 
   return (
-    <div style={{ padding: typeof window !== 'undefined' && window.innerWidth <= 375 ? "8px 2px" : "16px", boxSizing: "border-box" }} className="cochecklist-table">
+    <div
+      style={{
+        padding:
+          typeof window !== "undefined" && window.innerWidth <= 375
+            ? "8px 2px"
+            : "16px",
+        boxSizing: "border-box",
+      }}
+      className="cochecklist-table"
+    >
       {/* <Button type="primary" size="small" className="p-1.5" onClick={() => setDrawerOpen(true)}>
         Create New DCL
       </Button> */}
 
-      <Button 
-  type="primary" 
-  size="small" 
-  className="px-5 py-2.5 bg-[#0A1929] text-white font-semibold text-sm rounded-md hover:bg-[#0A2647] transition-colors duration-200 tracking-wide"
-  onClick={() => setDrawerOpen(true)}
->
-  + Create New DCL
-</Button>
+      <Button
+        type="primary"
+        onClick={() => setDrawerOpen(true)}
+        className="create-dcl-btn"
+        style={{
+          background: "linear-gradient(180deg, #164679 0%, #0f3a56 100%)",
+          borderColor: "transparent",
+          color: "#fff !important",
+          fontWeight: 600,
+          fontSize: "14px",
+          padding: "8px 24px",
+          height: "auto",
+          borderRadius: "6px",
+          transition: "all 0.3s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.boxShadow = "0 4px 12px rgba(22, 70, 121, 0.3)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.boxShadow = "none";
+        }}
+      >
+        + Create New DCL
+      </Button>
 
       {drawerOpen && (
         <ChecklistsPage

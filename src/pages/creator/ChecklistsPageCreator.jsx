@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, Space, message } from "antd";
+import { Button, Space, message } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import DocumentAccordion from "../../components/creator/DocumentAccordion";
 import { useGetUsersQuery } from "../../api/userApi";
@@ -299,194 +299,282 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
     ibpsNo;
 
   return (
-    <Modal
-      className="create-dcl-modal"
-      closeIcon={null}
-      title={
+    <>
+      <style>{`
+        /* Create DCL Modal Overlay - full screen with proper z-index */
+        .create-dcl-modal-overlay {
+          position: fixed;
+          top: 65px;
+          left: var(--sidebar-width, 80px);
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          z-index: 990;
+          overflow: auto;
+          padding-top: 20px;
+          padding-bottom: 20px;
+          transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          max-height: 100vh;
+        }
+        
+        /* Create DCL Modal Container - centered */
+        .create-dcl-modal-container {
+          background: white;
+          border-radius: 12px;
+          overflow: visible;
+          width: 1200px;
+          max-width: calc(100vw - 310px);
+          box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.15), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+          border: 1px solid #e5e7eb;
+          margin: 0 16px 0 46px;
+          position: relative;
+          z-index: 1001;
+        }
+        
+        .create-dcl-modal-header {
+          background: #164679;
+          padding: 18px 24px;
+          border-radius: 12px 12px 0 0;
+          margin-bottom: 0;
+        }
+        
+        .create-dcl-modal-body {
+          padding: 24px;
+          max-height: calc(100vh - 250px);
+          overflow-y: auto;
+        }
+        
+        /* Responsive adjustments */
+        @media (min-width: 768px) and (max-width: 1099px) {
+          .create-dcl-modal-overlay {
+            left: var(--sidebar-width, 40px);
+            transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+          }
+          .create-dcl-modal-container {
+            width: calc(100vw - 120px) !important;
+            max-width: calc(100vw - 120px) !important;
+            margin: 0 16px 0 16px !important;
+          }
+        }
+        
+        @media (max-width: 767px) {
+          .create-dcl-modal-overlay {
+            left: 0;
+            padding-left: 0;
+            padding-right: 16px;
+          }
+          .create-dcl-modal-container {
+            width: calc(100vw - 32px) !important;
+            max-width: calc(100vw - 32px) !important;
+            margin: 0 16px 0 0px !important;
+          }
+        }
+      `}</style>
+
+      {open && (
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
+          className="create-dcl-modal-overlay"
+          onClick={() => {
+            resetForm();
+            onClose();
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span style={{ color: "#fff", fontSize: "15px", fontWeight: 600 }}>
-              Create Document Checklist
-            </span>
-            {lastSaved && (
-              <span
+          <div
+            className="create-dcl-modal-container"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="create-dcl-modal-header">
+              <div
                 style={{
-                  fontSize: "12px",
-                  color: "#b5d334",
-                  fontWeight: "normal",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
                 }}
               >
-                Auto-saved: {new Date(lastSaved).toLocaleTimeString()}
-              </span>
-            )}
-          </div>
-          <Button
-            icon={<CloseOutlined />}
-            onClick={() => {
-              resetForm();
-              onClose();
-            }}
-            size="small"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(255, 255, 255, 0.2)",
-              borderColor: "rgba(255, 255, 255, 0.4)",
-              color: "#fff",
-              width: "32px",
-              height: "32px",
-              padding: 0,
-            }}
-          />
-        </div>
-      }
-      open={open}
-      onCancel={() => {
-        resetForm();
-        onClose();
-      }}
-      width={1200}
-      centered={true}
-      styles={{
-        body: { padding: "0 8px 24px" },
-        header: {
-          background: "#164679",
-          padding: "18px 24px",
-          borderTopLeftRadius: 8,
-          borderTopRightRadius: 8,
-        },
-      }}
-      footer={null}
-    >
-      <Space direction="vertical" style={{ width: "100%" }} size="large">
-        <ChecklistFormFields
-          rms={rms}
-          assignedToRM={assignedToRM}
-          setAssignedToRM={setAssignedToRM}
-          customerId={customerId}
-          setCustomerId={setCustomerId}
-          customerName={customerName}
-          setCustomerName={setCustomerName}
-          customerNumber={customerNumber}
-          setCustomerNumber={setCustomerNumber}
-          customerEmail={customerEmail}
-          setCustomerEmail={setCustomerEmail}
-          loanType={loanType}
-          loanTypes={loanTypes}
-          handleLoanTypeChange={handleLoanTypeChange}
-          selectedMultipleLoanTypes={selectedMultipleLoanTypes}
-          setSelectedMultipleLoanTypes={setSelectedMultipleLoanTypes}
-        />
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                >
+                  <span
+                    style={{ color: "#fff", fontSize: "15px", fontWeight: 600 }}
+                  >
+                    Create Document Checklist
+                  </span>
+                  {lastSaved && (
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#b5d334",
+                        fontWeight: "normal",
+                      }}
+                    >
+                      Auto-saved: {new Date(lastSaved).toLocaleTimeString()}
+                    </span>
+                  )}
+                </div>
+                <Button
+                  icon={<CloseOutlined />}
+                  onClick={() => {
+                    resetForm();
+                    onClose();
+                  }}
+                  size="small"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "rgba(255, 255, 255, 0.2)",
+                    borderColor: "rgba(255, 255, 255, 0.4)",
+                    color: "#fff",
+                    width: "32px",
+                    height: "32px",
+                    padding: 0,
+                  }}
+                />
+              </div>
+            </div>
 
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}
-          >
-            IBPS NO *
-          </label>
-          <input
-            type="text"
-            placeholder="Enter IBPS Number"
-            value={ibpsNo}
-            onChange={(e) => setIbpsNo(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
-          />
-        </div>
+            {/* Body */}
+            <div className="create-dcl-modal-body">
+              <Space
+                direction="vertical"
+                style={{ width: "100%" }}
+                size="large"
+              >
+                <ChecklistFormFields
+                  rms={rms}
+                  assignedToRM={assignedToRM}
+                  setAssignedToRM={setAssignedToRM}
+                  customerId={customerId}
+                  setCustomerId={setCustomerId}
+                  customerName={customerName}
+                  setCustomerName={setCustomerName}
+                  customerNumber={customerNumber}
+                  setCustomerNumber={setCustomerNumber}
+                  customerEmail={customerEmail}
+                  setCustomerEmail={setCustomerEmail}
+                  loanType={loanType}
+                  loanTypes={loanTypes}
+                  handleLoanTypeChange={handleLoanTypeChange}
+                  selectedMultipleLoanTypes={selectedMultipleLoanTypes}
+                  setSelectedMultipleLoanTypes={setSelectedMultipleLoanTypes}
+                />
 
-        {loanType && (
-          <div style={{ marginBottom: "16px" }}>
-            <DocumentInputSectionCoCreator
-              loanType={
-                loanType === "Multiple Loan Type"
-                  ? selectedMultipleLoanTypes.join(", ")
-                  : loanType
-              }
-              newDocName={newDocName}
-              setNewDocName={setNewDocName}
-              selectedCategoryName={selectedCategoryName}
-              setSelectedCategoryName={setSelectedCategoryName}
-              handleAddNewDocument={handleAddNewDocument}
-            />
-            <div style={{ marginTop: 24 }}>
-              <DocumentAccordion
-                documents={documents}
-                setDocuments={setDocuments}
-              />
+                <div style={{ marginBottom: "16px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    IBPS NO *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter IBPS Number"
+                    value={ibpsNo}
+                    onChange={(e) => setIbpsNo(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #d9d9d9",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+
+                {loanType && (
+                  <div style={{ marginBottom: "16px" }}>
+                    <DocumentInputSectionCoCreator
+                      loanType={
+                        loanType === "Multiple Loan Type"
+                          ? selectedMultipleLoanTypes.join(", ")
+                          : loanType
+                      }
+                      newDocName={newDocName}
+                      setNewDocName={setNewDocName}
+                      selectedCategoryName={selectedCategoryName}
+                      setSelectedCategoryName={setSelectedCategoryName}
+                      handleAddNewDocument={handleAddNewDocument}
+                    />
+                    <div style={{ marginTop: 24 }}>
+                      <DocumentAccordion
+                        documents={documents}
+                        setDocuments={setDocuments}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  type="primary"
+                  block
+                  onClick={handleSubmit}
+                  disabled={!isFormValid}
+                  style={{
+                    color: "white !important",
+                    backgroundColor: !isFormValid
+                      ? "#CCCCCC !important"
+                      : "#164679 !important",
+                    borderColor: !isFormValid
+                      ? "#CCCCCC !important"
+                      : "#164679 !important",
+                    cursor: !isFormValid ? "not-allowed" : undefined,
+                    fontWeight: 600,
+                  }}
+                >
+                  Create DCL
+                </Button>
+
+                <Button
+                  block
+                  onClick={handleSaveDraft}
+                  disabled={!loanType && !assignedToRM && !customerNumber}
+                  style={{
+                    marginTop: "8px",
+                    color: "white !important",
+                    backgroundColor:
+                      !loanType && !assignedToRM && !customerNumber
+                        ? "#CCCCCC !important"
+                        : "#164679 !important",
+                    borderColor:
+                      !loanType && !assignedToRM && !customerNumber
+                        ? "#CCCCCC !important"
+                        : "#164679 !important",
+                    fontWeight: 600,
+                  }}
+                >
+                  Save Draft
+                </Button>
+
+                {!isFormValid && (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      color: "#ff4d4f",
+                      fontSize: "12px",
+                      marginTop: "-8px",
+                    }}
+                  >
+                    Please fill all required fields (Assigned RM, Loan Type,{" "}
+                    {loanType === "Multiple Loan Type"
+                      ? "Actual Loan Types, "
+                      : ""}{" "}
+                    and IBPS NO)
+                  </div>
+                )}
+              </Space>
             </div>
           </div>
-        )}
-
-        <Button
-          type="primary"
-          block
-          onClick={handleSubmit}
-          disabled={!isFormValid}
-          style={{
-            color: "white !important",
-            backgroundColor: !isFormValid
-              ? "#CCCCCC !important"
-              : "#164679 !important",
-            borderColor: !isFormValid
-              ? "#CCCCCC !important"
-              : "#164679 !important",
-            cursor: !isFormValid ? "not-allowed" : undefined,
-            fontWeight: 600,
-          }}
-        >
-          Create DCL
-        </Button>
-
-        <Button
-          block
-          onClick={handleSaveDraft}
-          disabled={!loanType && !assignedToRM && !customerNumber}
-          style={{
-            marginTop: "8px",
-            color: "white !important",
-            backgroundColor:
-              !loanType && !assignedToRM && !customerNumber
-                ? "#CCCCCC !important"
-                : "#164679 !important",
-            borderColor:
-              !loanType && !assignedToRM && !customerNumber
-                ? "#CCCCCC !important"
-                : "#164679 !important",
-            fontWeight: 600,
-          }}
-        >
-          Save Draft
-        </Button>
-
-        {!isFormValid && (
-          <div
-            style={{
-              textAlign: "center",
-              color: "#ff4d4f",
-              fontSize: "12px",
-              marginTop: "-8px",
-            }}
-          >
-            Please fill all required fields (Assigned RM, Loan Type,{" "}
-            {loanType === "Multiple Loan Type" ? "Actual Loan Types, " : ""} and
-            IBPS NO)
-          </div>
-        )}
-      </Space>
-    </Modal>
+        </div>
+      )}
+    </>
   );
 };
 

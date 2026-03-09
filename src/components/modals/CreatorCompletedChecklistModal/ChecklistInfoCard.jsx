@@ -36,7 +36,7 @@ const ChecklistInfoCard = ({ checklist }) => {
     >
       <Descriptions size="middle" column={{ xs: 1, sm: 2, lg: 3 }}>
         <Descriptions.Item label="DCL No">
-          <strong>{checklist.dclNo || "N/A"}</strong>
+          <span>{checklist.dclNo || "N/A"}</span>
         </Descriptions.Item>
         <Descriptions.Item label="IBPS No">
           {checklist.ibpsNo || "Not provided"}
@@ -45,34 +45,32 @@ const ChecklistInfoCard = ({ checklist }) => {
           {formatDate(checklist.createdAt)}
         </Descriptions.Item>
         <Descriptions.Item label="Loan Type">
-          <Tag color="blue">{checklist.loanType || "N/A"}</Tag>
+          <Tag>{checklist.loanType || "N/A"}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Created By">
-          <span style={{ fontWeight: 600 }}>
+          <span>
             {checklist.createdBy?.name || checklist.createdBy || "N/A"}
           </span>
         </Descriptions.Item>
         <Descriptions.Item label="RM">
-          <span style={{ fontWeight: 600 }}>
-            {checklist.assignedToRM?.name || "N/A"}
-          </span>
+          <span>{checklist.assignedToRM?.name || "N/A"}</span>
         </Descriptions.Item>
         <Descriptions.Item label="Co-Checker">
           {checklist.assignedToCoChecker?.name ? (
-            <Tag color="green">{checklist.assignedToCoChecker.name}</Tag>
+            <Tag>{checklist.assignedToCoChecker.name}</Tag>
           ) : (
-            <Tag color="orange">Pending Assignment</Tag>
+            <Tag>Pending Assignment</Tag>
           )}
         </Descriptions.Item>
         <Descriptions.Item label="Status">
           <Tag
             style={{
-              backgroundColor: statusColorConfig.bgColor,
-              color: statusColorConfig.textColor || statusColorConfig.color,
+              // backgroundColor: statusColorConfig.bgColor,
+              // color: statusColorConfig.textColor || statusColorConfig.color,
               borderColor: statusColorConfig.borderColor,
               fontWeight: 600,
               fontSize: "13px",
-              padding: "4px 10px",
+              padding: "2px 5px",
               lineHeight: "22px",
               borderRadius: "4px",
               textTransform: "capitalize",

@@ -5,6 +5,7 @@ import { generateChecklistPDF } from '../utils/pdfGeneratorImproved';
 const usePDFGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [error, setError] = useState(null);
 
   /**
    * Generate and download PDF using improved generator
@@ -15,10 +16,12 @@ const usePDFGenerator = () => {
     supportingDocs = [],
     creatorComment = '',
     comments = [],
-    onProgress
+    onProgress,
+    fileName // Optional custom filename
   }) => {
     setIsGenerating(true);
     setProgress(0);
+    setError(null);
 
     try {
       const updateProgress = (percent) => {
@@ -28,6 +31,21 @@ const usePDFGenerator = () => {
 
       updateProgress(10);
 
+      // Validate required data
+      if (!checklist) {
+        throw new Error("Checklist data is required");
+      }
+
+      // Log for debugging
+      console.log('📊 Generating PDF with:', {
+        checklistId: checklist?._id || checklist?.id,
+        documentsCount: documents.length,
+        supportingDocsCount: supportingDocs.length,
+        hasComments: comments?.length > 0
+      });
+
+      updateProgress(30);
+
       // Use the improved PDF generator
       const result = await generateChecklistPDF({
         checklist,
@@ -35,19 +53,29 @@ const usePDFGenerator = () => {
         supportingDocs,
         creatorComment,
         comments,
+        fileName, // Pass custom filename if provided
       });
 
       updateProgress(100);
 
-      message.success('Checklist PDF generated successfully!');
+      message.success({
+        content: `PDF generated: ${result.fileName}`,
+        duration: 3,
+      });
 
       return {
         success: true,
-        fileName: result.fileName
+        fileName: result.fileName,
+        fileUrl: result.fileUrl,
       };
     } catch (error) {
-      console.error('PDF generation error:', error);
-      message.error('Failed to generate PDF. Please try again.');
+      console.error('❌ PDF generation error:', error);
+      setError(error.message);
+      
+      message.error({
+        content: error.message || "Failed to generate PDF",
+        duration: 4,
+      });
 
       return {
         success: false,
@@ -55,13 +83,15 @@ const usePDFGenerator = () => {
       };
     } finally {
       setIsGenerating(false);
-      setProgress(0);
+      // Keep progress at 100 for a moment before resetting
+      setTimeout(() => setProgress(0), 1000);
     }
   }, []);
 
   return {
     isGenerating,
     progress,
+    error,
     generatePDF,
   };
 };

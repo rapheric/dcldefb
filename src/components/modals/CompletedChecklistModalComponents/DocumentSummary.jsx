@@ -1,7 +1,7 @@
 // src/components/completedChecklistModal/components/DocumentSummary.jsx
 import React from "react";
 import { Progress } from "antd";
-import { PRIMARY_BLUE } from "../../../utils/checklistConstants";
+import { PRIMARY_BLUE, ACCENT_LIME } from "../../../utils/constants";
 // import { PRIMARY_BLUE } from "../utils/checklistConstants";
 
 const DocumentSummary = ({ documentCounts }) => {
@@ -47,8 +47,12 @@ const DocumentSummary = ({ documentCounts }) => {
       </div>
       <Progress
         percent={progressPercent}
-        strokeColor="#52c41a"
-        showInfo={false}
+        strokeColor={{
+          "0%": PRIMARY_BLUE,
+          "100%": ACCENT_LIME,
+        }}
+        strokeWidth={8}
+        status="success"
       />
       <div
         style={{

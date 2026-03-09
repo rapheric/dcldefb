@@ -279,17 +279,20 @@ const DocumentInputSectionCoCreator = ({
     if (!loanType) return [];
 
     // Split types by comma (handles "A, B" cases) or just use the single type
-    const typesToCheck = loanType.split(",").map(t => t.trim()).filter(Boolean);
+    const typesToCheck = loanType
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
     const allUniqueCategories = new Set();
 
-    typesToCheck.forEach(type => {
+    typesToCheck.forEach((type) => {
       // Find the entry that matches (case-insensitive)
       const exactMatch = Object.keys(loanTypeDocuments).find(
-        key => key.toLowerCase() === type.toLowerCase()
+        (key) => key.toLowerCase() === type.toLowerCase(),
       );
 
       if (exactMatch && loanTypeDocuments[exactMatch]) {
-        loanTypeDocuments[exactMatch].forEach(group => {
+        loanTypeDocuments[exactMatch].forEach((group) => {
           if (group.title) allUniqueCategories.add(group.title);
         });
       }
@@ -297,8 +300,8 @@ const DocumentInputSectionCoCreator = ({
 
     // Fallback: If no categories were found, it might be the general "Multiple Loan Type" placeholder
     if (allUniqueCategories.size === 0 && loanType) {
-      Object.values(loanTypeDocuments).forEach(catList => {
-        catList.forEach(cat => allUniqueCategories.add(cat.title));
+      Object.values(loanTypeDocuments).forEach((catList) => {
+        catList.forEach((cat) => allUniqueCategories.add(cat.title));
       });
     }
 
@@ -337,7 +340,16 @@ const DocumentInputSectionCoCreator = ({
         ))}
       </Select>
 
-      <Button type="primary" onClick={handleAddClick}>
+      <Button
+        type="primary"
+        onClick={handleAddClick}
+        style={{
+          backgroundColor: "#164679 !important",
+          borderColor: "#164679 !important",
+          color: "#fff !important",
+        }}
+        className="primary-dcl-button"
+      >
         Add Document
       </Button>
     </div>

@@ -29,7 +29,9 @@ const RmLayout = ({ userId, rmId }) => {
   const location = useLocation();
   const [selectedKey, setSelectedKey] = useState("myqueue");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 375);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    window.innerWidth < 768,
+  );
   const [draftToRestore, setDraftToRestore] = useState(null);
 
   // Handle responsive sidebar behavior
@@ -48,14 +50,18 @@ const RmLayout = ({ userId, rmId }) => {
   // 🔄 Sync selectedKey with current route
   useEffect(() => {
     const pathname = location.pathname;
-    
+
     if (pathname.includes("/deferrals")) {
       setSelectedKey("deferral");
     } else if (pathname.includes("/completed")) {
       setSelectedKey("completed");
     } else if (pathname.includes("/reports")) {
       setSelectedKey("reports");
-    } else if (pathname.includes("/myqueue") || pathname === "/rm" || pathname === "/rm/") {
+    } else if (
+      pathname.includes("/myqueue") ||
+      pathname === "/rm" ||
+      pathname === "/rm/"
+    ) {
       setSelectedKey("myqueue");
     }
   }, [location.pathname]);
@@ -130,6 +136,7 @@ const RmLayout = ({ userId, rmId }) => {
         overflow: "hidden",
         background: "#f0f2f5",
         boxSizing: "border-box",
+        "--sidebar-width": `${getSidebarWidth(sidebarCollapsed)}px`,
       }}
     >
       {/* Overlay for mobile sidebar */}
@@ -147,7 +154,7 @@ const RmLayout = ({ userId, rmId }) => {
           }}
         />
       )}
-      
+
       <SharedSidebar
         selectedKey={selectedKey}
         setSelectedKey={setSelectedKey}
@@ -156,19 +163,21 @@ const RmLayout = ({ userId, rmId }) => {
         toggleCollapse={toggleSidebar}
         menuItems={menuItems}
       />
-      
+
       {/* Calculate sidebar width based on screen size */}
       {/* < 768px: Fully collapsed/hidden */}
       {/* 768px - 1099px: Half size (40→150px) */}
       {/* >= 1100px: Full size (80→300px) */}
-      
+
       <div
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
           marginLeft: isMobile ? 0 : getSidebarWidth(sidebarCollapsed),
-          width: isMobile ? "100%" : `calc(100% - ${getSidebarWidth(sidebarCollapsed)}px)`,
+          width: isMobile
+            ? "100%"
+            : `calc(100% - ${getSidebarWidth(sidebarCollapsed)}px)`,
           maxWidth: "100vw",
           transition: "all 0.2s cubic-bezier(0.2, 0, 0, 1) 0s",
           height: "100vh",
@@ -193,15 +202,29 @@ const RmLayout = ({ userId, rmId }) => {
             {/* Main RM Routes */}
             <Route
               path="/"
-              element={<MyQueue userId={userId || "rm_current"} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />}
+              element={
+                <MyQueue
+                  userId={userId || "rm_current"}
+                  draftToRestore={draftToRestore}
+                  setDraftToRestore={setDraftToRestore}
+                />
+              }
             />
             <Route
               path="/myqueue"
-              element={<MyQueue userId={userId || "rm_current"} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />}
+              element={
+                <MyQueue
+                  userId={userId || "rm_current"}
+                  draftToRestore={draftToRestore}
+                  setDraftToRestore={setDraftToRestore}
+                />
+              }
             />
             <Route
               path="/drafts"
-              element={<DraftsPage type="rm" onSelectDraft={handleRestoreDraft} />}
+              element={
+                <DraftsPage type="rm" onSelectDraft={handleRestoreDraft} />
+              }
             />
             <Route
               path="/completed"

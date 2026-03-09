@@ -22,23 +22,23 @@ const ProgressStatsSection = ({ docs }) => {
 
   const stats = [
     { label: "Total", value: total, color: COLORS.PRIMARY_BLUE },
-    { label: "Submitted", value: submitted, color: "#52C41A" },
+    { label: "Submitted", value: submitted, color: "#464e57" },
     {
       label: "Pending RM",
       value: pendingFromRM,
-      color: pendingFromRM > 0 ? "#FF4D4F" : "#8b5cf6",
+      color: pendingFromRM > 0 ? "#464e57" : "#464e57",
       highlight: pendingFromRM > 0,
     },
     {
       label: "Pending Co",
       value: pendingFromCo,
-      color: "#FF4D4F",
+      color: "#464e57",
       highlight: pendingFromCo > 0,
     },
-    { label: "Deferred", value: deferred, color: "#FAAD14" },
-    { label: "Sighted", value: sighted, color: "#52C41A" },
-    { label: "Waived", value: waived, color: "#FAAD14" },
-    { label: "TBO", value: tbo, color: "#FAAD14" },
+    { label: "Deferred", value: deferred, color: "#464e57" },
+    { label: "Sighted", value: sighted, color: "#464e57" },
+    { label: "Waived", value: waived, color: "#464e57" },
+    { label: "TBO", value: tbo, color: "#464e57" },
   ];
 
   return (
@@ -78,7 +78,8 @@ const ProgressStatsSection = ({ docs }) => {
             "0%": COLORS.PRIMARY_BLUE,
             "100%": COLORS.ACCENT_LIME,
           }}
-          strokeWidth={6}
+          strokeWidth={8}
+          status={progressPercent < 100 ? "active" : "success"}
         />
       </div>
     </div>

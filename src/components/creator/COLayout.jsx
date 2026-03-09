@@ -13,7 +13,7 @@ import Completed from "../../pages/creator/Completed";
 import Deferrals from "../../pages/creator/Deferrals";
 import StatsReportModal from "../modals/StatsReportModal";
 import CreatorSidebar from "./CreatorSidebar";
-import Navbar from "../Navbar"
+import Navbar from "../Navbar";
 import Queue from "../../pages/creator/Queue";
 import CompletedQueue from "../../pages/creator/CompletedQueue";
 import DraftsPage from "../shared/DraftsPage";
@@ -26,10 +26,13 @@ const MainLayout = () => {
 
   const [selectedKey, setSelectedKey] = useState("creatchecklist");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 375);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    window.innerWidth < 768,
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [draftToRestore, setDraftToRestore] = useState(null);
-  const [reviewChecklistToRestore, setReviewChecklistToRestore] = useState(null);
+  const [reviewChecklistToRestore, setReviewChecklistToRestore] =
+    useState(null);
 
   // Handle restoring a draft - check if it's a new checklist or editing existing one
   const handleRestoreDraft = (draft) => {
@@ -65,11 +68,24 @@ const MainLayout = () => {
   const renderContent = () => {
     switch (selectedKey) {
       case "creatchecklist":
-        return <CoChecklistPage userId={userId} draftToRestore={draftToRestore} setDraftToRestore={setDraftToRestore} />;
+        return (
+          <CoChecklistPage
+            userId={userId}
+            draftToRestore={draftToRestore}
+            setDraftToRestore={setDraftToRestore}
+          />
+        );
       case "drafts":
-        return <DraftsPage type="cocreator" onSelectDraft={handleRestoreDraft} />;
+        return (
+          <DraftsPage type="cocreator" onSelectDraft={handleRestoreDraft} />
+        );
       case "myqueue":
-        return <MyQueue draftToRestore={reviewChecklistToRestore} setDraftToRestore={setReviewChecklistToRestore} />;
+        return (
+          <MyQueue
+            draftToRestore={reviewChecklistToRestore}
+            setDraftToRestore={setReviewChecklistToRestore}
+          />
+        );
       case "completed":
         return <Completed />;
       case "deferrals":
@@ -85,7 +101,18 @@ const MainLayout = () => {
   const sidebarWidth = getSidebarWidth(sidebarCollapsed);
 
   return (
-    <div style={{ display: "flex", height: "100vh", width: "100%", overflow: "hidden", margin: 0, padding: 0, boxSizing: "border-box" }}>
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        width: "100%",
+        overflow: "hidden",
+        margin: 0,
+        padding: 0,
+        boxSizing: "border-box",
+        "--sidebar-width": `${sidebarWidth}px`,
+      }}
+    >
       {/* Overlay for mobile sidebar */}
       {isMobile && !sidebarCollapsed && (
         <div

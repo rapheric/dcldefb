@@ -52,6 +52,44 @@ button[class*="bg-[#0A1929]"] {
   color: white !important;
 }
 
+/* ✅ PRIMARY DCL BUTTON STYLING - Consistent #164679 blue with white text */
+.primary-dcl-button {
+  background-color: #164679 !important;
+  border-color: #164679 !important;
+  color: #fff !important;
+}
+
+.primary-dcl-button:hover,
+.primary-dcl-button:focus,
+.primary-dcl-button:active {
+  background-color: #0f3a56 !important;
+  border-color: #0f3a56 !important;
+  color: #fff !important;
+}
+
+.primary-dcl-button:disabled,
+.primary-dcl-button[disabled] {
+  background-color: #cccccc !important;
+  border-color: #cccccc !important;
+  color: #fff !important;
+}
+
+/* ✅ CREATE NEW DCL BUTTON - Gradient background with white text override */
+.create-dcl-btn {
+  color: #fff !important;
+}
+
+.create-dcl-btn,
+.create-dcl-btn * {
+  color: #fff !important;
+  fill: #fff !important;
+}
+
+.create-dcl-btn:hover,
+.create-dcl-btn:focus {
+  color: #fff !important;
+}
+
 /* ✅ UNIFORM TABLE STYLING - Applied to all tables for professional appearance */
 .ant-table-wrapper {
   border-radius: 12px;
@@ -284,3 +322,96 @@ button[class*="bg-[#0A1929]"] {
   pointer-events: auto !important;
 }
 
+/* Create DCL Modal - Centered with sidebar awareness (like ReviewChecklistModal) */
+.create-dcl-modal {
+  z-index: 1001 !important;
+}
+
+/* Override Ant Design Modal wrapper to match ReviewChecklistModal pattern */
+.ant-modal-wrap.create-dcl-modal-wrapper {
+  position: fixed !important;
+  top: 65px !important;
+  left: var(--sidebar-width, 150px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0) !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  z-index: 1001 !important;
+  overflow-y: auto !important;
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+  transition: left 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+  pointer-events: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: 0 !important;
+}
+
+/* When create-dcl-modal is visible, style the backdrop mask */
+.ant-modal-mask[style*="display: block"] {
+  position: fixed !important;
+  top: 65px !important;
+  left: var(--sidebar-width, 150px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  z-index: 990 !important;
+  transition: left 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+  animation: none !important;
+}
+
+/* Alternative: Target the mask that comes before the create-dcl-modal-wrapper   */
+.create-dcl-modal-wrapper {
+  z-index: 1001 !important;
+}
+
+/* Create DCL Modal - modal content styling */
+.ant-modal-wrap.create-dcl-modal-wrapper .ant-modal {
+  width: 1200px !important;
+  max-width: calc(100vw - 310px) !important;
+  margin: 0 16px 0 116px !important;
+  position: relative !important;
+  z-index: 1001 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.15), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Responsive: Tablet */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .ant-modal-wrap.create-dcl-modal-wrapper {
+    left: var(--sidebar-width, 40px) !important;
+  }
+  
+  .ant-modal-mask[style*="display: block"] {
+    left: var(--sidebar-width, 40px) !important;
+  }
+  
+  .ant-modal-wrap.create-dcl-modal-wrapper .ant-modal {
+    width: calc(100vw - 120px) !important;
+    max-width: calc(100vw - 120px) !important;
+    margin: 0 16px 0 86px !important;
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 767px) {
+  .ant-modal-wrap.create-dcl-modal-wrapper {
+    left: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 16px !important;
+  }
+  
+  .ant-modal-mask[style*="display: block"] {
+    left: 0 !important;
+  }
+  
+  .ant-modal-wrap.create-dcl-modal-wrapper .ant-modal {
+    width: calc(100vw - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+    margin: 0 16px 0 70px !important;
+  }
+}

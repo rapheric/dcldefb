@@ -19,7 +19,7 @@ const Queue = ({ userId }) => {
   const myCurrentQueue = checklists.filter(
     (c) =>
       c.createdBy?._id === userId &&
-      ["co_creator_review", "rm_review"].includes(c.status?.toLowerCase())
+      ["co_creator_review", "rm_review"].includes(c.status?.toLowerCase()),
   );
 
   console.log(myCurrentQueue);
@@ -27,12 +27,33 @@ const Queue = ({ userId }) => {
   const myPreviousQueue = checklists.filter(
     (c) =>
       c.createdBy?._id === userId &&
-      c.status?.toLowerCase() === "co_checker_review"
+      c.status?.toLowerCase() === "co_checker_review",
   );
 
   return (
     <div style={{ padding: 16 }}>
-      <Button type="primary" size="small" onClick={() => setDrawerOpen(true)}>
+      <Button
+        type="primary"
+        onClick={() => setDrawerOpen(true)}
+        className="create-dcl-btn"
+        style={{
+          background: "linear-gradient(180deg, #164679 0%, #0f3a56 100%)",
+          borderColor: "transparent",
+          color: "#fff !important",
+          fontWeight: 600,
+          fontSize: "14px",
+          padding: "8px 24px",
+          height: "auto",
+          borderRadius: "6px",
+          transition: "all 0.3s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.boxShadow = "0 4px 12px rgba(22, 70, 121, 0.3)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.boxShadow = "none";
+        }}
+      >
         Create New DCL
       </Button>
 
