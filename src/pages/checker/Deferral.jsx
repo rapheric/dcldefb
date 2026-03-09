@@ -64,6 +64,7 @@ import { formatDeferralDocumentType } from "../../utils/deferralDocumentType";
 import { getDeferralDocumentBuckets } from "../../utils/deferralDocuments";
 import { getLoanDisplay } from "../../utils/loanUtils";
 import UniformTag from "../../components/common/UniformTag";
+import ExtensionApprovalModal from "../../components/modals/ExtensionApprovalModal";
 // Extension components removed — starting fresh per request
 
 // Extend dayjs
@@ -846,6 +847,9 @@ const Deferrals = ({ userId }) => {
   // Placeholder state for extension applications (to be implemented)
   const [myExtensions, setMyExtensions] = useState([]);
   const [extensionsLoading, setExtensionsLoading] = useState(false);
+  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
+  const [selectedExtension, setSelectedExtension] = useState(null);
+  const [pendingExtensions, setPendingExtensions] = useState([]);
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const q = new URLSearchParams(window.location.search);
@@ -961,6 +965,77 @@ const Deferrals = ({ userId }) => {
   useEffect(() => {
     applyFilters();
   }, [deferrals, filters, activeTab]);
+
+  // Load pending extensions when extensions tab is active
+  useEffect(() => {
+    if (activeTab === "extensions") {
+      loadPendingExtensions();
+    }
+  }, [activeTab]);
+
+  const loadPendingExtensions = async () => {
+    try {
+      setExtensionsLoading(true);
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      const token = user?.token;
+
+      if (!token) {
+        message.error("Authentication token not found");
+        return;
+      }
+
+      const extensions = await deferralApi.getCheckerPendingExtensions(token);
+      setPendingExtensions(extensions || []);
+    } catch (error) {
+      console.error("Error loading pending extensions:", error);
+      message.error("Failed to load extension applications");
+      setPendingExtensions([]);
+    } finally {
+      setExtensionsLoading(false);
+    }
+  };
+
+  const handleApproveExtension = async (extensionId, comment) => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      const token = user?.token;
+
+      if (!token) {
+        message.error("Authentication token not found");
+        return;
+      }
+
+      await deferralApi.approveExtensionAsChecker(extensionId, comment, token);
+      message.success("Extension approved successfully");
+      setExtensionModalOpen(false);
+      setSelectedExtension(null);
+      await loadPendingExtensions();
+    } catch (error) {
+      console.error("Error approving extension:", error);
+      message.error(error.message || "Failed to approve extension");
+    }
+  };
+
+  const handleRejectExtension = async (extensionId, reason) => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      const token = user?.token;
+
+      if (!token) {
+        message.error("Authentication token not found");
+        return;
+      }
+
+      await deferralApi.rejectExtensionAsChecker(extensionId, reason, token);
+      message.success("Extension rejected successfully");
+      setExtensionModalOpen(false);
+      setSelectedExtension(null);
+      await loadPendingExtensions();
+    } catch (error) {
+      console.error("Error rejecting extension:", error);
+      message.error(error.message || "Failed to reject extension");
+    }
+  };
 
   const applyFilters = () => {
     const approvedStatusesForChecker = ["approved", "deferral_approved"];
@@ -3134,15 +3209,15 @@ const Deferrals = ({ userId }) => {
           >
             <Spin tip={`Loading extension applications...`} />
           </div>
-        ) : myExtensions.length === 0 ? (
+        ) : pendingExtensions.length === 0 ? (
           <Empty
             description={
               <div>
                 <p style={{ fontSize: 16, marginBottom: 8 }}>
-                  No extension applications found
+                  No extension applications pending approval
                 </p>
                 <p style={{ color: "#999" }}>
-                  No extension applications are currently available.
+                  No extension applications waiting for your approval.
                 </p>
               </div>
             }
@@ -3151,9 +3226,57 @@ const Deferrals = ({ userId }) => {
         ) : (
           <div className="deferrals-table">
             <Table
-              columns={columns}
-              dataSource={myExtensions}
-              rowKey={(record) => record._id || record.id}
+              columns={[
+                {
+                  title: "Deferral No",
+                  dataIndex: "deferralNumber",
+                  key: "deferralNumber",
+                  render: (text) => <strong>{text}</strong>,
+                },
+                {
+                  title: "Customer",
+                  dataIndex: "customerName",
+                  key: "customerName",
+                },
+                {
+                  title: "Current Days",
+                  dataIndex: "currentDaysSought",
+                  key: "currentDaysSought",
+                  render: (days) => `${days} days`,
+                },
+                {
+                  title: "Requested Days",
+                  dataIndex: "requestedDaysSought",
+                  key: "requestedDaysSought",
+                  render: (days) => (
+                    <strong style={{ color: "#faad14" }}>{days} days</strong>
+                  ),
+                },
+                {
+                  title: "Status",
+                  dataIndex: "status",
+                  key: "status",
+                  render: (status) => <Tag>{status}</Tag>,
+                },
+                {
+                  title: "Action",
+                  key: "action",
+                  render: (_, record) => (
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => {
+                        setSelectedExtension(record);
+                        setExtensionModalOpen(true);
+                      }}
+                    >
+                      Review
+                    </Button>
+                  ),
+                },
+              ]}
+              dataSource={pendingExtensions}
+              rowKey={(record) => record.id}
               size="large"
               pagination={{
                 pageSize: 10,
@@ -5398,6 +5521,20 @@ const Deferrals = ({ userId }) => {
           </div>
         </div>
       </Modal>
+
+      {/* Extension Approval Modal */}
+      <ExtensionApprovalModal
+        extension={selectedExtension}
+        open={extensionModalOpen}
+        onClose={() => {
+          setExtensionModalOpen(false);
+          setSelectedExtension(null);
+        }}
+        onApprove={handleApproveExtension}
+        onReject={handleRejectExtension}
+        approverRole="checker"
+        loading={false}
+      />
     </div>
   );
 };

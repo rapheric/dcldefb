@@ -1134,6 +1134,249 @@ const deferralApi = {
     if (!res.ok) throw new Error("Failed to post comment");
     return res.json();
   },
+
+  submitExtension: async (deferralId, extensionData, token) => {
+    // Calculate total requested days
+    const extensionDaysObj = extensionData.extensionDaysByDoc || {};
+    const totalRequestedDays = Object.values(extensionDaysObj).reduce(
+      (sum, days) => sum + (typeof days === "number" ? days : 0),
+      0
+    );
+
+    // Convert fileUrls to AdditionalFiles format
+    const additionalFiles = (extensionData.fileUrls || []).map((url) => ({
+      name: url.split("/").pop() || "file",
+      url: url,
+      size: 0,
+      uploadedAt: new Date().toISOString(),
+    }));
+
+    const payload = {
+      deferralId: deferralId,
+      requestedDaysSought: totalRequestedDays,
+      extensionReason: extensionData.comment || "",
+      additionalFiles: additionalFiles,
+    };
+
+    console.log("🚀 Submitting extension:", {
+      deferralId,
+      payload,
+      totalRequestedDays,
+      extensionDaysObj,
+    });
+
+    const jsonBody = JSON.stringify(payload);
+    console.log("📦 JSON body:", jsonBody);
+
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions`, {
+      method: "POST",
+      headers: getAuthHeaders(token),
+      body: jsonBody,
+    });
+
+    console.log("📨 Response status:", res.status);
+
+    if (!res.ok) {
+      let errorObj;
+      const responseText = await res.text();
+      console.log("📄 Response text:", responseText);
+      
+      try {
+        errorObj = JSON.parse(responseText);
+      } catch (e) {
+        errorObj = { error: `HTTP ${res.status}: ${res.statusText}` };
+      }
+
+      // Extract validation errors if present
+      let errorMsg = errorObj?.error || errorObj?.message || "Failed to submit extension";
+      if (errorObj?.errors) {
+        const validationErrors = Object.entries(errorObj.errors)
+          .map(([key, messages]) => `${key}: ${Array.isArray(messages) ? messages.join(", ") : messages}`)
+          .join("; ");
+        errorMsg = validationErrors || errorMsg;
+      }
+
+      console.error("❌ Extension submission error:", { 
+        status: res.status, 
+        statusText: res.statusText,
+        error: errorMsg, 
+        fullResponse: errorObj,
+        payload: payload,
+        deferralId
+      });
+      throw new Error(errorMsg);
+    }
+
+    return res.json();
+  },
+
+  // Extension Approval APIs
+
+  getApproverExtensionQueue: async (token) => {
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/approver/queue`, {
+      method: "GET",
+      headers: getAuthHeaders(token),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to fetch approver extension queue");
+    }
+
+    return res.json();
+  },
+
+  getApproverExtensionActioned: async (token) => {
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/approver/actioned`, {
+      method: "GET",
+      headers: getAuthHeaders(token),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to fetch approver actioned extensions");
+    }
+
+    return res.json();
+  },
+
+  approveExtension: async (extensionId, comment, token) => {
+    const payload = { comment };
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/${extensionId}/approve`, {
+      method: "PUT",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to approve extension");
+    }
+
+    return res.json();
+  },
+
+  rejectExtension: async (extensionId, reason, token) => {
+    const payload = { reason };
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/${extensionId}/reject`, {
+      method: "PUT",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to reject extension");
+    }
+
+    return res.json();
+  },
+
+  getCreatorPendingExtensions: async (token) => {
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/creator/pending`, {
+      method: "GET",
+      headers: getAuthHeaders(token),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to fetch creator pending extensions");
+    }
+
+    return res.json();
+  },
+
+  approveExtensionAsCreator: async (extensionId, comment, token) => {
+    const payload = { comment };
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/${extensionId}/approve-creator`, {
+      method: "PUT",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to approve extension as creator");
+    }
+
+    return res.json();
+  },
+
+  rejectExtensionAsCreator: async (extensionId, reason, token) => {
+    const payload = { reason };
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/${extensionId}/reject-creator`, {
+      method: "PUT",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to reject extension as creator");
+    }
+
+    return res.json();
+  },
+
+  getCheckerPendingExtensions: async (token) => {
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/checker/pending`, {
+      method: "GET",
+      headers: getAuthHeaders(token),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to fetch checker pending extensions");
+    }
+
+    return res.json();
+  },
+
+  approveExtensionAsChecker: async (extensionId, comment, token) => {
+    const payload = { comment };
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/${extensionId}/approve-checker`, {
+      method: "PUT",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to approve extension as checker");
+    }
+
+    return res.json();
+  },
+
+  rejectExtensionAsChecker: async (extensionId, reason, token) => {
+    const payload = { reason };
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/${extensionId}/reject-checker`, {
+      method: "PUT",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to reject extension as checker");
+    }
+
+    return res.json();
+  },
+
+  getExtensionById: async (extensionId, token) => {
+    const res = await fetch(`${API_BASE.replace(/\/deferrals$/, "")}/extensions/${extensionId}`, {
+      method: "GET",
+      headers: getAuthHeaders(token),
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to fetch extension details");
+    }
+
+    return res.json();
+  },
 };
 
 export default deferralApi;

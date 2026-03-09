@@ -32,6 +32,7 @@ import {
   Steps,
   Tooltip,
   Select,
+  InputNumber,
 } from "antd";
 import {
   SearchOutlined,
@@ -2979,14 +2980,16 @@ const DeferralDetailsModal = ({
       /* ignore */
     }
 
-    // Close any open modals and reset selection, then switch to Pending tab
+    // Ask parent to close any open modals and reset selection
     try {
-      setReturnForReworkVisible(false);
-      setExtensionModalOpen(false);
-      setExtensionDetailsModalOpen(false);
-      setModalOpen(false);
-      setSelectedDeferral(null);
-      setSelectedExtension(null);
+      if (typeof onAction === "function") {
+        onAction({ action: "close_deferral_modal" });
+      } else {
+        // fallback: attempt to dispatch an event
+        window.dispatchEvent(
+          new CustomEvent("deferral:close_modals", { detail: updatedDeferral }),
+        );
+      }
     } catch (e) {
       /* ignore */
     }
@@ -2998,8 +3001,14 @@ const DeferralDetailsModal = ({
 
   // Handle Extension Application
   const handleApplyForExtension = (deferral) => {
-    setSelectedDeferralForExtension(deferral);
-    setExtensionModalOpen(true);
+    if (typeof onAction === "function") {
+      onAction({ action: "apply_extension", deferral });
+      return;
+    }
+    // fallback: try to use window event
+    window.dispatchEvent(
+      new CustomEvent("deferral:apply_extension", { detail: deferral }),
+    );
   };
 
   if (!localDeferral) return null;
@@ -3545,7 +3554,22 @@ const DeferralDetailsModal = ({
                   </Button>
                 ),
 
-                // Apply for Extension removed
+                // Apply Extension button (for approved deferrals)
+                (status === "deferral_approved" || status === "approved") &&
+                  !localDeferral?.extensionStatus && (
+                    <Button
+                      key="apply_extension"
+                      type="primary"
+                      onClick={() => handleApplyForExtension(localDeferral)}
+                      style={{
+                        backgroundColor: PRIMARY_BLUE,
+                        borderColor: PRIMARY_BLUE,
+                        color: "white",
+                      }}
+                    >
+                      Apply Extension
+                    </Button>
+                  ),
 
                 // Submit Close Request button (RM approved tab)
                 (status === "deferral_approved" || status === "approved") && (
@@ -5445,7 +5469,8 @@ const DeferralPending = ({ userId = "rm_current" }) => {
         a === "approved" ||
         a === "pending" ||
         a === "closed" ||
-        a === "closeRequests"
+        a === "closeRequests" ||
+        a === "extensions"
       )
         return a;
     } catch (e) {}
@@ -5456,6 +5481,16 @@ const DeferralPending = ({ userId = "rm_current" }) => {
   // Extension submit handler removed
 
   // Extension detail handlers removed
+
+  // Extension modal state
+  const [selectedDeferralForExtension, setSelectedDeferralForExtension] =
+    useState(null);
+  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
+  const [extensionDays, setExtensionDays] = useState("");
+  const [extensionDaysByDoc, setExtensionDaysByDoc] = useState({});
+  const [extensionComment, setExtensionComment] = useState("");
+  const [extensionFiles, setExtensionFiles] = useState([]);
+  const [extensionSubmitting, setExtensionSubmitting] = useState(false);
 
   const loadDeferrals = useCallback(async () => {
     setLoading(true);
@@ -5504,7 +5539,60 @@ const DeferralPending = ({ userId = "rm_current" }) => {
   }, [userId]);
 
   const handleModalAction = useCallback(
-    ({ updatedDeferral }) => {
+    (payload) => {
+      // Support custom actions (e.g. apply_extension) and legacy updatedDeferral shape
+      if (!payload) {
+        loadDeferrals();
+        return;
+      }
+
+      if (payload.action === "apply_extension" && payload.deferral) {
+        // Initialize extension modal using the selected deferral
+        const def = payload.deferral;
+        setSelectedDeferralForExtension(def);
+        // initialize per-document extension days map from requestedDocs
+        try {
+          const { requestedDocs = [] } = getDeferralDocumentBuckets(def) || {};
+          const init = {};
+          requestedDocs.forEach((doc) => {
+            const key = String((doc && (doc.name || doc.label)) || doc || "")
+              .trim()
+              .toLowerCase();
+            const defaultDays =
+              typeof doc?.daysSought !== "undefined"
+                ? doc.daysSought
+                : typeof doc?.requestedDaysSought !== "undefined"
+                  ? doc.requestedDaysSought
+                  : 0;
+            init[key] = defaultDays || 0;
+          });
+          setExtensionDaysByDoc(init);
+        } catch (e) {
+          setExtensionDaysByDoc({});
+        }
+        setExtensionModalOpen(true);
+        return;
+      }
+      if (payload.action === "close_deferral_modal") {
+        // Close the details modal and any extension UI
+        try {
+          setModalOpen(false);
+        } catch (e) {}
+        try {
+          setSelectedDeferral(null);
+        } catch (e) {}
+        try {
+          setDetailOverrides(null);
+        } catch (e) {}
+        try {
+          setSelectedDeferralForExtension(null);
+          setExtensionModalOpen(false);
+          setExtensionDaysByDoc({});
+        } catch (e) {}
+        return;
+      }
+
+      const updatedDeferral = payload.updatedDeferral;
       if (!updatedDeferral) {
         loadDeferrals();
         return;
@@ -5729,6 +5817,18 @@ const DeferralPending = ({ userId = "rm_current" }) => {
     [filteredData],
   );
 
+  const extensionsData = useMemo(() => {
+    return filteredData.filter((d) => {
+      const hasStatus = Boolean(d.extensionStatus);
+      const hasExtensionsArray =
+        Array.isArray(d.extensions) && d.extensions.length > 0;
+      const hasRequestedDays =
+        typeof d.requestedDaysSought !== "undefined" ||
+        typeof d.requestedDays !== "undefined";
+      return hasStatus || hasExtensionsArray || hasRequestedDays;
+    });
+  }, [filteredData]);
+
   const currentData =
     activeTab === "pending"
       ? pendingData
@@ -5738,7 +5838,9 @@ const DeferralPending = ({ userId = "rm_current" }) => {
           ? rejectedData
           : activeTab === "closeRequests"
             ? closeRequestsData
-            : closedData;
+            : activeTab === "extensions"
+              ? extensionsData
+              : closedData;
 
   // Columns
   const columns = [
@@ -5899,30 +6001,7 @@ const DeferralPending = ({ userId = "rm_current" }) => {
       ],
       onFilter: (value, record) => record.status === value,
     },
-    {
-      title: "Days Sought",
-      dataIndex: "daysSought",
-      key: "daysSought",
-      width: 100,
-      align: "center",
-      render: (days) => (
-        <div
-          style={{
-            fontWeight: "bold",
-            color:
-              days > 45 ? ERROR_RED : days > 30 ? WARNING_ORANGE : PRIMARY_BLUE,
-            fontSize: 14,
-            backgroundColor:
-              days > 45 ? "#fff2f0" : days > 30 ? "#fff7e6" : "#f0f7ff",
-            padding: "4px 8px",
-            borderRadius: 4,
-            display: "inline-block",
-          }}
-        >
-          {days} days
-        </div>
-      ),
-    },
+
     {
       title: "SLA",
       dataIndex: "slaExpiry",
@@ -6128,6 +6207,10 @@ const DeferralPending = ({ userId = "rm_current" }) => {
             key="approved"
           />
           <Tabs.TabPane
+            tab={`Extension Applications (${extensionsData.length})`}
+            key="extensions"
+          />
+          <Tabs.TabPane
             tab={`Re-work Deferrals (${rejectedData.length})`}
             key="rejected"
           />
@@ -6148,13 +6231,15 @@ const DeferralPending = ({ userId = "rm_current" }) => {
             ? `Pending Deferrals`
             : activeTab === "approved"
               ? `Approved Deferrals`
-              : activeTab === "rejected"
-                ? `Re-work Deferrals`
-                : activeTab === "closeRequests"
-                  ? `Close Requests`
-                  : activeTab === "closed"
-                    ? `Completed Deferrals`
-                    : ``}{" "}
+              : activeTab === "extensions"
+                ? `Extension Applications`
+                : activeTab === "rejected"
+                  ? `Re-work Deferrals`
+                  : activeTab === "closeRequests"
+                    ? `Close Requests`
+                    : activeTab === "closed"
+                      ? `Completed Deferrals`
+                      : ``}{" "}
           ({currentData.length} items)
         </span>
       </Divider>
@@ -6163,85 +6248,84 @@ const DeferralPending = ({ userId = "rm_current" }) => {
       {/* Extensions feature removed; will reintroduce a fresh implementation later */}
 
       {/* Table */}
-      {activeTab !== "extensions" &&
-        (loading ? (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              padding: 40,
-            }}
-          >
-            <Spin tip="Loading deferral requests..." />
-          </div>
-        ) : currentData.length === 0 ? (
-          <Empty
-            description={
-              <div>
-                <p style={{ fontSize: 16, marginBottom: 8 }}>
-                  {activeTab === "pending"
-                    ? "No pending deferrals found"
+      {loading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 40,
+          }}
+        >
+          <Spin tip="Loading deferral requests..." />
+        </div>
+      ) : currentData.length === 0 ? (
+        <Empty
+          description={
+            <div>
+              <p style={{ fontSize: 16, marginBottom: 8 }}>
+                {activeTab === "pending"
+                  ? "No pending deferrals found"
+                  : activeTab === "approved"
+                    ? "No approved deferrals found"
+                    : activeTab === "rejected"
+                      ? "No re-work deferrals found"
+                      : "No completed deferrals found"}
+              </p>
+              <p style={{ color: "#999" }}>
+                {searchText
+                  ? "Try changing your search term"
+                  : activeTab === "pending"
+                    ? "No pending deferrals currently"
                     : activeTab === "approved"
-                      ? "No approved deferrals found"
+                      ? "No deferrals have been approved yet"
                       : activeTab === "rejected"
-                        ? "No re-work deferrals found"
-                        : "No completed deferrals found"}
-                </p>
-                <p style={{ color: "#999" }}>
-                  {searchText
-                    ? "Try changing your search term"
-                    : activeTab === "pending"
-                      ? "No pending deferrals currently"
-                      : activeTab === "approved"
-                        ? "No deferrals have been approved yet"
-                        : activeTab === "rejected"
-                          ? "No deferrals have been rejected"
-                          : activeTab === "closeRequests"
-                            ? "No close requests currently"
-                            : "No deferrals have been closed by CO"}
-                </p>
-                {activeTab === "pending" && (
-                  <Button
-                    type="primary"
-                    onClick={() =>
-                      (window.location.href = "/rm/deferrals/request")
-                    }
-                    style={{ marginTop: 16 }}
-                  >
-                    Request New Deferral
-                  </Button>
-                )}
-              </div>
-            }
-            style={{ padding: 40 }}
+                        ? "No deferrals have been rejected"
+                        : activeTab === "closeRequests"
+                          ? "No close requests currently"
+                          : "No deferrals have been closed by CO"}
+              </p>
+              {activeTab === "pending" && (
+                <Button
+                  type="primary"
+                  onClick={() =>
+                    (window.location.href = "/rm/deferrals/request")
+                  }
+                  style={{ marginTop: 16 }}
+                >
+                  Request New Deferral
+                </Button>
+              )}
+            </div>
+          }
+          style={{ padding: 40 }}
+        />
+      ) : (
+        <div className="deferral-pending-table">
+          <Table
+            columns={columns}
+            dataSource={currentData}
+            rowKey="_id"
+            size="middle"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50"],
+              position: ["bottomCenter"],
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} of ${total} deferrals`,
+            }}
+            scroll={{ x: 1000 }}
+            onRow={(record) => ({
+              onClick: () => {
+                setSelectedDeferral(record);
+                setDetailOverrides(null);
+                setModalOpen(true);
+              },
+            })}
           />
-        ) : (
-          <div className="deferral-pending-table">
-            <Table
-              columns={columns}
-              dataSource={currentData}
-              rowKey="_id"
-              size="middle"
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                pageSizeOptions: ["10", "20", "50"],
-                position: ["bottomCenter"],
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} of ${total} deferrals`,
-              }}
-              scroll={{ x: 1000 }}
-              onRow={(record) => ({
-                onClick: () => {
-                  setSelectedDeferral(record);
-                  setDetailOverrides(null);
-                  setModalOpen(true);
-                },
-              })}
-            />
-          </div>
-        ))}
+        </div>
+      )}
 
       {/* Footer Info */}
       <div
@@ -6287,7 +6371,350 @@ const DeferralPending = ({ userId = "rm_current" }) => {
         />
       )}
 
-      {/* Extension application modal removed */}
+      {/* Extension Application Modal */}
+      <Modal
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <CalendarOutlined style={{ color: PRIMARY_BLUE }} />
+            <span>Apply Extension</span>
+          </div>
+        }
+        open={extensionModalOpen}
+        zIndex={2000}
+        onCancel={() => {
+          setExtensionModalOpen(false);
+          setSelectedDeferralForExtension(null);
+          setExtensionDays("");
+          setExtensionComment("");
+          setExtensionFiles([]);
+        }}
+        width={900}
+        styles={{
+          body: { maxHeight: "70vh", overflowY: "auto", paddingRight: 8 },
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setExtensionModalOpen(false);
+              setSelectedDeferralForExtension(null);
+              setExtensionDays("");
+              setExtensionComment("");
+              setExtensionFiles([]);
+            }}
+            disabled={extensionSubmitting}
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            loading={extensionSubmitting}
+            onClick={async () => {
+              // Validate per-document days
+              if (
+                !extensionDaysByDoc ||
+                Object.keys(extensionDaysByDoc).length === 0
+              ) {
+                message.error(
+                  "Please enter extension days for at least one document",
+                );
+                return;
+              }
+
+              const hasDays = Object.values(extensionDaysByDoc).some(
+                (days) => typeof days === "number" && days > 0,
+              );
+              if (!hasDays) {
+                message.error("Please enter valid extension days");
+                return;
+              }
+
+              setExtensionSubmitting(true);
+              try {
+                const stored = JSON.parse(
+                  localStorage.getItem("user") || "null",
+                );
+                const token = stored?.token;
+
+                const extensionData = {
+                  extensionDaysByDoc,
+                  comment: extensionComment,
+                  fileUrls: extensionFiles
+                    .map((f) => f.url || f.response?.url || "")
+                    .filter(
+                      (url) => typeof url === "string" && url.trim() !== "",
+                    ),
+                };
+
+                await deferralApi.submitExtension(
+                  selectedDeferralForExtension._id,
+                  extensionData,
+                  token,
+                );
+
+                message.success("Extension application submitted successfully");
+
+                // Refresh deferral data
+                await loadDeferrals();
+
+                // Dispatch update event
+                if (selectedDeferralForExtension) {
+                  window.dispatchEvent(
+                    new CustomEvent("deferral:updated", {
+                      detail: selectedDeferralForExtension,
+                    }),
+                  );
+                }
+
+                // Close both modals and reset state
+                setExtensionModalOpen(false);
+                setModalOpen(false);
+                setSelectedDeferralForExtension(null);
+                setSelectedDeferral(null);
+                setExtensionDays("");
+                setExtensionComment("");
+                setExtensionFiles([]);
+                setExtensionDaysByDoc({});
+              } catch (error) {
+                console.error("Error submitting extension:", error);
+                message.error(
+                  error.message || "Failed to submit extension application",
+                );
+              } finally {
+                setExtensionSubmitting(false);
+              }
+            }}
+            style={{ backgroundColor: PRIMARY_BLUE, borderColor: PRIMARY_BLUE }}
+          >
+            {extensionSubmitting ? "Submitting..." : "Submit Extension"}
+          </Button>,
+        ]}
+      >
+        {selectedDeferralForExtension &&
+          (() => {
+            const { dclDocs, uploadedDocs, requestedDocs } =
+              getDeferralDocumentBuckets(selectedDeferralForExtension);
+
+            return (
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 20 }}
+              >
+                {/* Customer Info */}
+                <Card
+                  size="small"
+                  title={
+                    <span style={{ color: PRIMARY_BLUE }}>
+                      Customer Information
+                    </span>
+                  }
+                >
+                  <Descriptions size="small" column={{ xs: 1, sm: 2, lg: 3 }}>
+                    <Descriptions.Item label="Customer">
+                      <Text strong>
+                        {selectedDeferralForExtension.customerName}
+                      </Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Deferral #">
+                      <Text strong>
+                        {selectedDeferralForExtension.deferralNumber}
+                      </Text>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
+
+                {/* Extension Days Input (default + per-document) */}
+                <Card
+                  size="small"
+                  title={
+                    <span style={{ color: PRIMARY_BLUE }}>
+                      Extension Details
+                    </span>
+                  }
+                >
+                  <Form layout="vertical">
+                    <Form.Item label="Default Extension Days (optional)">
+                      <InputNumber
+                        min={1}
+                        max={365}
+                        value={extensionDays || undefined}
+                        onChange={(val) => {
+                          setExtensionDays(val);
+                          if (val && selectedDeferralForExtension) {
+                            const { requestedDocs = [] } =
+                              getDeferralDocumentBuckets(
+                                selectedDeferralForExtension,
+                              ) || {};
+                            const nextMap = { ...(extensionDaysByDoc || {}) };
+                            requestedDocs.forEach((doc) => {
+                              const key = String(
+                                (doc && (doc.name || doc.label)) || doc || "",
+                              )
+                                .trim()
+                                .toLowerCase();
+                              nextMap[key] = val || 0;
+                            });
+                            setExtensionDaysByDoc(nextMap);
+                          }
+                        }}
+                        placeholder="Enter number of days and apply to all"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                    <Form.Item label="Per-document Extension Days">
+                      <Text type="secondary">
+                        Adjust days per document if needed. New due dates will
+                        update automatically.
+                      </Text>
+                    </Form.Item>
+                  </Form>
+                </Card>
+
+                {/* Documents with Auto-calculated Due Dates */}
+                <Card
+                  size="small"
+                  title={
+                    <span style={{ color: PRIMARY_BLUE }}>
+                      Documents to be Deferred ({requestedDocs.length})
+                    </span>
+                  }
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
+                    }}
+                  >
+                    {requestedDocs.map((doc, idx) => {
+                      const currentDueDate = doc.nextDocumentDueDate
+                        ? dayjs(doc.nextDocumentDueDate)
+                        : null;
+                      const key = String(
+                        (doc && (doc.name || doc.label)) || doc || "",
+                      )
+                        .trim()
+                        .toLowerCase();
+                      const perDocDays =
+                        typeof extensionDaysByDoc[key] !== "undefined"
+                          ? Number(extensionDaysByDoc[key])
+                          : 0;
+                      const newDueDate =
+                        perDocDays && currentDueDate
+                          ? currentDueDate.add(Number(perDocDays), "day")
+                          : null;
+
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            padding: 12,
+                            backgroundColor: "#f9f9f9",
+                            borderRadius: 6,
+                            border: "1px solid #e0e0e0",
+                          }}
+                        >
+                          <div
+                            style={{
+                              marginBottom: 8,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 12,
+                            }}
+                          >
+                            <Text strong style={{ color: PRIMARY_BLUE }}>
+                              {doc.name}
+                            </Text>
+                            <div style={{ minWidth: 160 }}>
+                              <InputNumber
+                                min={0}
+                                max={365}
+                                value={perDocDays}
+                                onChange={(val) =>
+                                  setExtensionDaysByDoc((prev) => ({
+                                    ...(prev || {}),
+                                    [key]: typeof val === "number" ? val : 0,
+                                  }))
+                                }
+                                style={{ width: 160 }}
+                              />
+                            </div>
+                          </div>
+
+                          <Row gutter={16}>
+                            <Col xs={24} sm={12}>
+                              <div style={{ fontSize: 12, color: "#666" }}>
+                                <b>Current Due Date:</b>
+                                <br />
+                                {currentDueDate
+                                  ? currentDueDate.format("DD MMM YYYY")
+                                  : "-"}
+                              </div>
+                            </Col>
+                            <Col xs={24} sm={12}>
+                              <div style={{ fontSize: 12, color: "#666" }}>
+                                <b>New Due Date:</b>
+                                <br />
+                                <Text strong style={{ color: SUCCESS_GREEN }}>
+                                  {newDueDate
+                                    ? newDueDate.format("DD MMM YYYY")
+                                    : "-"}
+                                </Text>
+                              </div>
+                            </Col>
+                          </Row>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+
+                {/* Comment Section */}
+                <Card
+                  size="small"
+                  title={
+                    <span style={{ color: PRIMARY_BLUE }}>
+                      Extension Comment
+                    </span>
+                  }
+                >
+                  <TextArea
+                    rows={4}
+                    value={extensionComment}
+                    onChange={(e) => setExtensionComment(e.target.value)}
+                    placeholder="Provide reasons for the extension request..."
+                  />
+                </Card>
+
+                {/* Additional Documents Upload */}
+                <Card
+                  size="small"
+                  title={
+                    <span style={{ color: PRIMARY_BLUE }}>
+                      Upload Additional Documents
+                    </span>
+                  }
+                >
+                  <Upload
+                    fileList={extensionFiles}
+                    beforeUpload={() => false}
+                    onChange={({ fileList }) => setExtensionFiles(fileList)}
+                    multiple
+                  >
+                    <Button icon={<UploadOutlined />}>
+                      Click to Upload Additional Documents
+                    </Button>
+                  </Upload>
+                  <div style={{ fontSize: 12, color: "#999", marginTop: 8 }}>
+                    You can upload additional supporting documents for this
+                    extension request
+                  </div>
+                </Card>
+              </div>
+            );
+          })()}
+      </Modal>
     </div>
   );
 };

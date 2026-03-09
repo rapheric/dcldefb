@@ -2198,6 +2198,8 @@ const DeferralDetailsModal = ({
                                     marginTop: 6,
                                     fontSize: 12,
                                     color: "#444",
+                                    display: "flex",
+                                    gap: "20px",
                                   }}
                                 >
                                   <div>
@@ -3274,6 +3276,27 @@ const MyQueue = () => {
   // Fetch data on component mount
   useEffect(() => {
     fetchDeferrals();
+  }, []);
+
+  // Listen for deferral updates from other components (e.g., document removal)
+  useEffect(() => {
+    const handleDeferralUpdated = (event) => {
+      const updatedDeferral = event.detail;
+      if (updatedDeferral && updatedDeferral._id) {
+        setDeferrals((prevDeferrals) =>
+          prevDeferrals.map((d) =>
+            d._id === updatedDeferral._id || d.id === updatedDeferral._id
+              ? updatedDeferral
+              : d,
+          ),
+        );
+      }
+    };
+
+    window.addEventListener("deferral:updated", handleDeferralUpdated);
+    return () => {
+      window.removeEventListener("deferral:updated", handleDeferralUpdated);
+    };
   }, []);
 
   const fetchDeferrals = async () => {
