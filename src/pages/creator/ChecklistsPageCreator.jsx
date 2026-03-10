@@ -513,18 +513,13 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
                 )}
 
                 <Button
-                  type="primary"
                   block
                   onClick={handleSubmit}
                   disabled={!isFormValid}
                   style={{
-                    color: "white !important",
-                    backgroundColor: !isFormValid
-                      ? "#CCCCCC !important"
-                      : "#164679 !important",
-                    borderColor: !isFormValid
-                      ? "#CCCCCC !important"
-                      : "#164679 !important",
+                    color: !isFormValid ? "#bfbfbf" : "#164679",
+                    backgroundColor: "#ffffff",
+                    borderColor: !isFormValid ? "#d9d9d9" : "#d9d9d9",
                     cursor: !isFormValid ? "not-allowed" : undefined,
                     fontWeight: 600,
                   }}
@@ -538,15 +533,12 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
                   disabled={!loanType && !assignedToRM && !customerNumber}
                   style={{
                     marginTop: "8px",
-                    color: "white !important",
-                    backgroundColor:
+                    color:
                       !loanType && !assignedToRM && !customerNumber
-                        ? "#CCCCCC !important"
-                        : "#164679 !important",
-                    borderColor:
-                      !loanType && !assignedToRM && !customerNumber
-                        ? "#CCCCCC !important"
-                        : "#164679 !important",
+                        ? "#bfbfbf"
+                        : "#164679",
+                    backgroundColor: "#ffffff",
+                    borderColor: "#d9d9d9",
                     fontWeight: 600,
                   }}
                 >

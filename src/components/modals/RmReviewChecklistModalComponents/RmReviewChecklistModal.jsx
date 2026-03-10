@@ -1251,6 +1251,11 @@ const RmReviewChecklistModal = ({
                 checklist={{
                   ...checklist,
                   dclNo: checklist?.dclNo || checklist?._id,
+                  rmName:
+                    checklist?.rmName ||
+                    auth?.user?.name ||
+                    auth?.user?.username ||
+                    "Relationship Manager",
                 }}
                 docs={docs}
                 supportingDocs={supportingDocs || []}

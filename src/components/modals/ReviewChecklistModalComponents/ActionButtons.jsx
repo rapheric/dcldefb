@@ -22,6 +22,7 @@ const ActionButtons = ({
   docs,
   supportingDocs,
   creatorComment,
+  auth,
   onSaveDraft,
   onSubmitToRM,
   onSubmitToCheckers,
@@ -224,7 +225,14 @@ const ActionButtons = ({
 
           {/* PDF Generator */}
           <PDFGenerator
-            checklist={checklist}
+            checklist={{
+              ...checklist,
+              rmName:
+                checklist?.rmName ||
+                auth?.user?.name ||
+                auth?.user?.username ||
+                "Relationship Manager",
+            }}
             docs={docs}
             supportingDocs={supportingDocs}
             creatorComment={creatorComment}

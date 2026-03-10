@@ -216,15 +216,15 @@ const DocumentAccordion = ({ documents, setDocuments }) => {
               onClick={() => handleAddDocument(catIdx)}
               style={{
                 marginBottom: 15,
-                backgroundColor: "#1890ff",
-                color: "#FFFFFF",
+                backgroundColor: "#ffffff",
+                color: "#164679",
                 fontWeight: 700,
                 fontSize: 13,
                 padding: "10px 16px",
                 borderRadius: "4px",
                 cursor: "pointer",
                 textAlign: "center",
-                border: "none",
+                border: "1px solid #d9d9d9",
               }}
             >
               + Add Document

@@ -264,8 +264,8 @@ const DocumentSidebar = ({
                   <div
                     style={{
                       display: "flex",
-                      gap: 4,
-                      marginTop: 3,
+                      gap: 8,
+                      marginTop: 6,
                     }}
                   >
                     <Button
@@ -273,12 +273,19 @@ const DocumentSidebar = ({
                       size="small"
                       icon={<EyeOutlined />}
                       style={{
-                        padding: "0 6px",
-                        fontSize: "9px",
-                        height: "20px",
-                        color: "#164679",
+                        padding: "4px 8px",
+                        fontSize: "11px",
+                        height: "24px",
+                        color: "#666",
+                        textDecoration: "none",
                       }}
-                      onClick={() => window.open(getFullUrl(fileUrl), "_blank")}
+                      onClick={() => {
+                        try {
+                          window.open(getFullUrl(fileUrl), "_blank");
+                        } catch (error) {
+                          console.error("Error opening file:", error);
+                        }
+                      }}
                     >
                       View
                     </Button>
@@ -287,12 +294,26 @@ const DocumentSidebar = ({
                       size="small"
                       icon={<DownloadOutlined />}
                       style={{
-                        padding: "0 6px",
-                        fontSize: "9px",
-                        height: "20px",
-                        color: "#52C41A",
+                        padding: "4px 8px",
+                        fontSize: "11px",
+                        height: "24px",
+                        color: "#666",
+                        textDecoration: "none",
                       }}
-                      onClick={() => window.open(getFullUrl(fileUrl), "_blank")}
+                      onClick={() => {
+                        try {
+                          const url = getFullUrl(fileUrl);
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = fileName || "document";
+                          link.target = "_blank";
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        } catch (error) {
+                          console.error("Error downloading file:", error);
+                        }
+                      }}
                     >
                       Download
                     </Button>

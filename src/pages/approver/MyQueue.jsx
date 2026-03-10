@@ -2600,25 +2600,29 @@ const DeferralDetailsModal = ({
                   if (approvalsToUse && Array.isArray(approvalsToUse)) {
                     hasApprovers = true;
                     approvalsToUse.forEach((approver, index) => {
+                      const approvalStatus = (
+                        approver.approvalStatus || "pending"
+                      ).toLowerCase();
                       const isApproved =
                         approver.approved === true ||
                         approver.approved === "true" ||
-                        approver.approvalStatus === "approved";
+                        approvalStatus === "approved";
                       const isRejected =
                         approver.rejected === true ||
                         approver.rejected === "true" ||
-                        approver.approvalStatus === "rejected";
+                        approvalStatus === "rejected";
                       const isReturned =
                         approver.returned === true ||
                         approver.returned === "true" ||
-                        approver.approvalStatus === "returned_for_rework";
+                        approvalStatus === "returned_for_rework";
                       const isCurrent =
-                        !isApproved &&
-                        !isRejected &&
-                        !isReturned &&
-                        (index === 0 ||
-                          deferral.currentApprover === approver ||
-                          deferral.currentApprover?._id === approver?._id);
+                        approver.isCurrent === true ||
+                        (!isApproved &&
+                          !isRejected &&
+                          !isReturned &&
+                          (index === 0 ||
+                            deferral.currentApprover === approver ||
+                            deferral.currentApprover?._id === approver?._id));
 
                       approvers.push({
                         ...approver,
@@ -2755,212 +2759,224 @@ const DeferralDetailsModal = ({
                     );
                   }
 
-                  return approvers.map((approver, index) => {
-                    const approverName =
-                      typeof approver === "object"
-                        ? approver.name ||
-                          approver.user?.name ||
-                          approver.userId?.name ||
-                          approver.email ||
-                          approver.role ||
-                          String(approver)
-                        : typeof approver === "string" && approver.includes("@")
-                          ? approver.split("@")[0]
-                          : approver;
+                  return approvers
+                    .filter(
+                      (approver) =>
+                        approver.isCurrent ||
+                        (!approver.isApproved &&
+                          !approver.isRejected &&
+                          !approver.isReturned),
+                    )
+                    .map((approver, index) => {
+                      const approverName =
+                        typeof approver === "object"
+                          ? approver.name ||
+                            approver.user?.name ||
+                            approver.userId?.name ||
+                            approver.email ||
+                            approver.role ||
+                            String(approver)
+                          : typeof approver === "string" &&
+                              approver.includes("@")
+                            ? approver.split("@")[0]
+                            : approver;
 
-                    return (
-                      <div
-                        key={index}
-                        style={{
-                          padding: "14px 16px",
-                          backgroundColor: approver.isApproved
-                            ? "#f6ffed"
-                            : approver.isRejected
-                              ? `${ERROR_RED}10`
-                              : approver.isReturned
-                                ? `${WARNING_ORANGE}10`
-                                : approver.isCurrent
-                                  ? "#e6f7ff"
-                                  : "#fafafa",
-                          borderRadius: 8,
-                          border: approver.isApproved
-                            ? `2px solid ${SUCCESS_GREEN}`
-                            : approver.isRejected
-                              ? `2px solid ${ERROR_RED}`
-                              : approver.isReturned
-                                ? `2px solid ${WARNING_ORANGE}`
-                                : approver.isCurrent
-                                  ? `2px solid ${PRIMARY_BLUE}`
-                                  : "1px solid #e8e8e8",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 14,
-                        }}
-                      >
-                        <Badge
-                          count={index + 1}
+                      return (
+                        <div
+                          key={index}
                           style={{
+                            padding: "14px 16px",
                             backgroundColor: approver.isApproved
-                              ? SUCCESS_GREEN
+                              ? "#f6ffed"
                               : approver.isRejected
-                                ? ERROR_RED
+                                ? `${ERROR_RED}10`
                                 : approver.isReturned
-                                  ? WARNING_ORANGE
+                                  ? `${WARNING_ORANGE}10`
                                   : approver.isCurrent
-                                    ? PRIMARY_BLUE
-                                    : "#bfbfbf",
-                            fontSize: 13,
-                            height: 30,
-                            minWidth: 30,
+                                    ? "#e6f7ff"
+                                    : "#fafafa",
+                            borderRadius: 8,
+                            border: approver.isApproved
+                              ? `2px solid ${SUCCESS_GREEN}`
+                              : approver.isRejected
+                                ? `2px solid ${ERROR_RED}`
+                                : approver.isReturned
+                                  ? `2px solid ${WARNING_ORANGE}`
+                                  : approver.isCurrent
+                                    ? `2px solid ${PRIMARY_BLUE}`
+                                    : "1px solid #e8e8e8",
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            fontWeight: 600,
-                            borderRadius: "50%",
+                            gap: 14,
                           }}
-                        />
-                        <div style={{ flex: 1 }}>
-                          <div
+                        >
+                          <Badge
+                            count={index + 1}
                             style={{
+                              backgroundColor: approver.isApproved
+                                ? SUCCESS_GREEN
+                                : approver.isRejected
+                                  ? ERROR_RED
+                                  : approver.isReturned
+                                    ? WARNING_ORANGE
+                                    : approver.isCurrent
+                                      ? PRIMARY_BLUE
+                                      : "#bfbfbf",
+                              fontSize: 13,
+                              height: 30,
+                              minWidth: 30,
                               display: "flex",
                               alignItems: "center",
-                              gap: 8,
-                              marginBottom: 6,
+                              justifyContent: "center",
+                              fontWeight: 600,
+                              borderRadius: "50%",
                             }}
-                          >
-                            <Text
-                              strong
-                              style={{ fontSize: 14, color: "#262626" }}
-                            >
-                              {approver.role || "Approver"}
-                            </Text>
-                            {approver.isApproved && (
-                              <UniformTag
-                                icon={<CheckCircleOutlined />}
-                                color="success"
-                                text="Approved"
-                              />
-                            )}
-                            {approver.isRejected && (
-                              <UniformTag
-                                icon={<CloseCircleOutlined />}
-                                color="error"
-                                text="Rejected"
-                              />
-                            )}
-                            {approver.isReturned && (
-                              <UniformTag
-                                icon={<ExclamationCircleOutlined />}
-                                color="warning"
-                                text="Returned"
-                              />
-                            )}
-                            {approver.isCurrent &&
-                              !approver.isApproved &&
-                              !approver.isRejected &&
-                              !approver.isReturned && (
-                                <UniformTag color="processing" text="Current" />
-                              )}
-                          </div>
-
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 8,
-                            }}
-                          >
-                            <Avatar
-                              size={24}
-                              icon={<UserOutlined />}
-                              style={{
-                                backgroundColor: approver.isApproved
-                                  ? SUCCESS_GREEN
-                                  : approver.isCurrent
-                                    ? PRIMARY_BLUE
-                                    : "#8c8c8c",
-                              }}
-                            />
-                            <Text style={{ fontSize: 14, color: "#595959" }}>
-                              {approverName}
-                            </Text>
-                          </div>
-
-                          {approver.isRejected && approver.rejectionDate && (
+                          />
+                          <div style={{ flex: 1 }}>
                             <div
                               style={{
-                                fontSize: 12,
-                                color: ERROR_RED,
-                                marginTop: 2,
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 4,
+                                gap: 8,
+                                marginBottom: 6,
                               }}
                             >
-                              <CloseCircleOutlined style={{ fontSize: 11 }} />
-                              Rejected:{" "}
-                              {dayjs(approver.rejectionDate).format(
-                                "DD MMM YYYY HH:mm",
+                              <Text
+                                strong
+                                style={{ fontSize: 14, color: "#262626" }}
+                              >
+                                {approver.role || "Approver"}
+                              </Text>
+                              {approver.isApproved && (
+                                <UniformTag
+                                  icon={<CheckCircleOutlined />}
+                                  color="success"
+                                  text="Approved"
+                                />
                               )}
+                              {approver.isRejected && (
+                                <UniformTag
+                                  icon={<CloseCircleOutlined />}
+                                  color="error"
+                                  text="Rejected"
+                                />
+                              )}
+                              {approver.isReturned && (
+                                <UniformTag
+                                  icon={<ExclamationCircleOutlined />}
+                                  color="warning"
+                                  text="Returned"
+                                />
+                              )}
+                              {approver.isCurrent &&
+                                !approver.isApproved &&
+                                !approver.isRejected &&
+                                !approver.isReturned && (
+                                  <UniformTag
+                                    color="processing"
+                                    text="Current"
+                                  />
+                                )}
                             </div>
-                          )}
 
-                          {approver.isReturned && approver.returnDate && (
                             <div
                               style={{
-                                fontSize: 12,
-                                color: WARNING_ORANGE,
-                                marginTop: 2,
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 4,
+                                gap: 8,
                               }}
                             >
-                              <ExclamationCircleOutlined
-                                style={{ fontSize: 11 }}
+                              <Avatar
+                                size={24}
+                                icon={<UserOutlined />}
+                                style={{
+                                  backgroundColor: approver.isApproved
+                                    ? SUCCESS_GREEN
+                                    : approver.isCurrent
+                                      ? PRIMARY_BLUE
+                                      : "#8c8c8c",
+                                }}
                               />
-                              Returned:{" "}
-                              {dayjs(approver.returnDate).format(
-                                "DD MMM YYYY HH:mm",
-                              )}
+                              <Text style={{ fontSize: 14, color: "#595959" }}>
+                                {approverName}
+                              </Text>
                             </div>
-                          )}
 
-                          {approver.isCurrent &&
-                            !approver.isApproved &&
-                            !approver.isRejected &&
-                            !approver.isReturned &&
-                            deferral.status !== "rejected" && (
+                            {approver.isRejected && approver.rejectionDate && (
                               <div
                                 style={{
                                   fontSize: 12,
-                                  color: PRIMARY_BLUE,
+                                  color: ERROR_RED,
                                   marginTop: 2,
                                   display: "flex",
                                   alignItems: "center",
                                   gap: 4,
                                 }}
                               >
-                                Pending Approval
+                                <CloseCircleOutlined style={{ fontSize: 11 }} />
+                                Rejected:{" "}
+                                {dayjs(approver.rejectionDate).format(
+                                  "DD MMM YYYY HH:mm",
+                                )}
                               </div>
                             )}
 
-                          {approver.comment && (
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "#666",
-                                marginTop: 4,
-                                fontStyle: "italic",
-                              }}
-                            >
-                              "{approver.comment}"
-                            </div>
-                          )}
+                            {approver.isReturned && approver.returnDate && (
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  color: WARNING_ORANGE,
+                                  marginTop: 2,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                }}
+                              >
+                                <ExclamationCircleOutlined
+                                  style={{ fontSize: 11 }}
+                                />
+                                Returned:{" "}
+                                {dayjs(approver.returnDate).format(
+                                  "DD MMM YYYY HH:mm",
+                                )}
+                              </div>
+                            )}
+
+                            {approver.isCurrent &&
+                              !approver.isApproved &&
+                              !approver.isRejected &&
+                              !approver.isReturned &&
+                              deferral.status !== "rejected" && (
+                                <div
+                                  style={{
+                                    fontSize: 12,
+                                    color: PRIMARY_BLUE,
+                                    marginTop: 2,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                  }}
+                                >
+                                  Pending Approval
+                                </div>
+                              )}
+
+                            {approver.comment && (
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  color: "#666",
+                                  marginTop: 4,
+                                  fontStyle: "italic",
+                                }}
+                              >
+                                "{approver.comment}"
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  });
+                      );
+                    });
                 })()}
               </div>
             </Card>
@@ -3180,7 +3196,23 @@ const MyQueue = () => {
 
         if (res && res.ok) {
           const data = await res.json().catch(() => []);
-          if (mounted) setQueueExtensions(Array.isArray(data) ? data : []);
+          // Deduplicate extensions by deferralId (keep first occurrence)
+          const uniqueExtensions = [];
+          const seenDeferralIds = new Set();
+          if (Array.isArray(data)) {
+            data.forEach((ext) => {
+              const deferralId =
+                ext.deferralId || ext.deferral?.id || ext.deferral?._id;
+              if (deferralId && !seenDeferralIds.has(deferralId)) {
+                seenDeferralIds.add(deferralId);
+                uniqueExtensions.push(ext);
+              } else if (!deferralId) {
+                // If no deferralId, add it anyway
+                uniqueExtensions.push(ext);
+              }
+            });
+          }
+          if (mounted) setQueueExtensions(uniqueExtensions);
         } else {
           if (mounted) setQueueExtensions([]);
         }
@@ -3724,13 +3756,6 @@ const MyQueue = () => {
   }) => {
     const extColumns = [
       {
-        title: "Extension No",
-        dataIndex: "id",
-        width: 140,
-        render: (v, r) =>
-          r?.id || r?._id || r?.extensionNumber || r?.extensionNo || "N/A",
-      },
-      {
         title: "Deferral No",
         dataIndex: "deferralNumber",
         width: 140,
@@ -3748,18 +3773,6 @@ const MyQueue = () => {
         render: (v) => v || "N/A",
       },
       {
-        title: "Requested Days",
-        dataIndex: "requestedDaysSought",
-        width: 120,
-        align: "center",
-        render: (v, r) =>
-          (v ??
-            r?.requestedDaysSought ??
-            r?.requestedDays ??
-            r?.RequestedDaysSought) ||
-          "N/A",
-      },
-      {
         title: "Status",
         dataIndex: "status",
         width: 120,
@@ -3770,25 +3783,6 @@ const MyQueue = () => {
         dataIndex: "createdAt",
         width: 160,
         render: (d) => (d ? dayjs(d).format("DD MMM YYYY") : ""),
-      },
-      {
-        title: "Actions",
-        dataIndex: "actions",
-        width: 120,
-        render: (_, r) => {
-          return (
-            <Button
-              size="small"
-              type="link"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenExtensionDetails(r);
-              }}
-            >
-              View
-            </Button>
-          );
-        },
       },
     ];
 

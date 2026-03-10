@@ -245,7 +245,7 @@ export default function DeferralForm({ userId, onSuccess }) {
   const [perDocumentDays, setPerDocumentDays] = useState({});
 
   const handlePerDocumentDaysChange = (docKey, value) => {
-    const v = Number(value) || 0;
+    const v = value === null || value === undefined ? undefined : Number(value);
     setPerDocumentDays((prev) => ({ ...prev, [docKey]: v }));
   };
   const [dclNumber, setDclNumber] = useState("");
@@ -1136,7 +1136,7 @@ export default function DeferralForm({ userId, onSuccess }) {
               >
                 {selectedDocuments.map((doc, idx) => {
                   const docKey = doc._id || doc.name || String(idx);
-                  const days = perDocumentDays[docKey] ?? 0;
+                  const days = perDocumentDays[docKey];
                   const computedDate = days
                     ? dayjs().add(Number(days), "day").format("YYYY-MM-DD")
                     : "";

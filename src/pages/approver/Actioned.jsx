@@ -231,6 +231,104 @@ const Actioned = () => {
     return sorted;
   })();
 
+  // Resolve per-document requested days and next due date with same logic as MyQueue
+  const resolveDocDaysAndDate = (doc, deferral) => {
+    if (!doc) return { days: undefined, date: undefined };
+
+    const pickDayCandidates = (d) => {
+      if (!d) return undefined;
+      const candidates = [
+        d.daysSought,
+        d.requestedDaysSought,
+        d.requestedDays,
+        d.daysRequested,
+        d.DaysSought,
+        d.RequestedDaysSought,
+        d.requested_days,
+        d.days_sought,
+      ];
+      for (const c of candidates) {
+        if (typeof c === "number" && !Number.isNaN(c)) return c;
+        if (
+          typeof c === "string" &&
+          c.trim() !== "" &&
+          !Number.isNaN(Number(c))
+        )
+          return Number(c);
+      }
+      return undefined;
+    };
+
+    const pickDateCandidates = (d) => {
+      if (!d) return undefined;
+      const candidates = [
+        d.nextDocumentDueDate,
+        d.nextDueDate,
+        d.next_document_due_date,
+        d.next_due_date,
+        d.NextDocumentDueDate,
+      ];
+      for (const c of candidates) {
+        if (!c) continue;
+        const iso = String(c);
+        const parsed = dayjs(iso);
+        if (parsed.isValid()) return parsed.toISOString();
+      }
+      return undefined;
+    };
+
+    // Try doc-level values first
+    let days = pickDayCandidates(doc);
+    let date = pickDateCandidates(doc);
+
+    // If missing, try to find matching selectedDocuments inside deferral
+    if (
+      (days === undefined || date === undefined) &&
+      deferral &&
+      Array.isArray(deferral.selectedDocuments)
+    ) {
+      const name = (doc.name || "").toString().toLowerCase();
+      const match = deferral.selectedDocuments.find((sd) => {
+        if (!sd) return false;
+        const sdName = (
+          sd.name ||
+          sd.label ||
+          (typeof sd === "string" ? sd : "")
+        )
+          .toString()
+          .toLowerCase();
+        if (sdName && name && sdName === name) return true;
+        if (sdName && name && sdName.includes(name)) return true;
+        if (
+          sd.documentType &&
+          doc.documentType &&
+          String(sd.documentType).toLowerCase() ===
+            String(doc.documentType).toLowerCase()
+        )
+          return true;
+        return false;
+      });
+      if (match) {
+        if (days === undefined) days = pickDayCandidates(match);
+        if (date === undefined) date = pickDateCandidates(match);
+      }
+    }
+
+    // Final fallback: if date missing but deferral.nextDueDate exists, use that
+    if (!date) {
+      const fallback =
+        deferral?.nextDueDate ||
+        deferral?.nextDocumentDueDate ||
+        deferral?.next_due_date ||
+        deferral?.next_document_due_date ||
+        deferral?.createdAt;
+      const parsed = dayjs(fallback);
+      if (parsed.isValid()) date = parsed.toISOString();
+    }
+
+    return { days, date };
+  };
+
   // Helper: View document
   const handleViewDocument = (file) => {
     if (file && file.url) {
@@ -677,25 +775,30 @@ const Actioned = () => {
       const { amountNumber, formattedAmount, classification } =
         getLoanDisplay(selected);
       const classificationText = classification ? ` (${classification})` : "";
-      const loanItems = [
-        { label: "Loan Amount", value: formattedAmount + classificationText },
-        { label: "Days Sought", value: `${selected.daysSought || 0} days` },
-        {
-          label: "Deferral Due Date",
-          value:
-            selected.nextDueDate || selected.nextDocumentDueDate
-              ? dayjs(
-                  selected.nextDueDate || selected.nextDocumentDueDate,
-                ).format("DD MMM YYYY")
-              : "Not calculated",
-        },
-        {
-          label: "SLA Expiry",
-          value: selected.slaExpiry
-            ? dayjs(selected.slaExpiry).format("DD MMM YYYY")
-            : "Not set",
-        },
-      ];
+      const loanItems = [];
+      if (amountNumber && amountNumber > 0) {
+        // show only the classification (below/above 75 million), do not show numeric amount
+        loanItems.push({ label: "Loan Amount", value: classification || "" });
+      }
+      loanItems.push({
+        label: "Days Sought",
+        value: `${selected.daysSought || 0} days`,
+      });
+      loanItems.push({
+        label: "Deferral Due Date",
+        value:
+          selected.nextDueDate || selected.nextDocumentDueDate
+            ? dayjs(
+                selected.nextDueDate || selected.nextDocumentDueDate,
+              ).format("DD MMM YYYY")
+            : "Not calculated",
+      });
+      loanItems.push({
+        label: "SLA Expiry",
+        value: selected.slaExpiry
+          ? dayjs(selected.slaExpiry).format("DD MMM YYYY")
+          : "Not set",
+      });
       yPosition = addCardSection("Loan Information", loanItems);
 
       if (selected.facilities && selected.facilities.length > 0) {
@@ -1721,93 +1824,42 @@ const Actioned = () => {
                   })()}
                 </Descriptions.Item>
 
-                <Descriptions.Item label="Loan Amount">
-                  <div
-                    style={{
-                      fontWeight: 500,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                    }}
-                  >
-                    {(function () {
-                      const loanAmountCandidates = [
-                        selected.loanAmount,
-                        selected.requestedAmount,
-                        selected.amount,
-                      ];
-                      const facilitiesTotal = (
-                        Array.isArray(selected.facilities)
-                          ? selected.facilities
-                          : []
-                      ).reduce((sum, facility) => {
-                        const value = Number(
-                          facility?.sanctioned ?? facility?.amount ?? 0,
-                        );
-                        return sum + (Number.isFinite(value) ? value : 0);
-                      }, 0);
-                      const amt = Number(
-                        loanAmountCandidates.find(
-                          (candidate) => Number(candidate || 0) > 0,
-                        ) ||
-                          facilitiesTotal ||
-                          0,
-                      );
-                      if (!amt) return "Not specified";
-                      const isAbove75 =
-                        amt > 75 && amt <= 1000
-                          ? true
-                          : amt > 75000000
-                            ? true
-                            : false;
-                      return (
-                        <span style={{ color: PRIMARY_BLUE, fontWeight: 600 }}>
-                          {isAbove75 ? "Above 75 million" : "Under 75 million"}
-                        </span>
-                      );
-                    })()}
-                  </div>
-                </Descriptions.Item>
-                <Descriptions.Item label="Days Sought">
-                  {(() => {
-                    return (
-                      <div
-                        style={{
-                          fontWeight: "bold",
-                          color:
-                            selectedDaysSoughtValue > 45
-                              ? ERROR_RED
-                              : selectedDaysSoughtValue > 30
-                                ? WARNING_ORANGE
-                                : PRIMARY_BLUE,
-                          fontSize: 14,
-                        }}
-                      >
-                        {selectedDaysSoughtValue} days
-                      </div>
-                    );
-                  })()}
-                </Descriptions.Item>
-                <Descriptions.Item label="Deferral Due Date">
-                  {(() => {
-                    const fallbackDueDate =
-                      selected.createdAt && Number(selected.daysSought || 0) > 0
-                        ? dayjs(selected.createdAt)
-                            .add(Number(selected.daysSought || 0), "day")
-                            .toISOString()
-                        : null;
-                    const finalDueDate =
-                      selectedNextDueDateValue || fallbackDueDate;
+                {(function () {
+                  // compute loan classification (below/above 75 million) and only render classification
+                  const loanCandidates = [
+                    selected?.loanAmount,
+                    selected?.requestedAmount,
+                    selected?.amount,
+                  ];
+                  const facilitiesTotal = Array.isArray(selected?.facilities)
+                    ? selected.facilities.reduce(
+                        (s, f) =>
+                          s + (Number(f?.sanctioned ?? f?.amount ?? 0) || 0),
+                        0,
+                      )
+                    : 0;
+                  const detected = Number(
+                    loanCandidates.find((c) => Number(c || 0) > 0) ||
+                      facilitiesTotal ||
+                      0,
+                  );
+                  const classification =
+                    detected > 0
+                      ? detected < 75000000
+                        ? "below 75 million"
+                        : "above 75 million"
+                      : null;
 
-                    return (
-                      <div style={{ color: PRIMARY_BLUE }}>
-                        {finalDueDate
-                          ? `${dayjs(finalDueDate).format("DD MMM YYYY")}`
-                          : "Not calculated"}
+                  if (!classification) return null;
+
+                  return (
+                    <Descriptions.Item label="Loan Amount">
+                      <div style={{ fontWeight: 600, color: PRIMARY_BLUE }}>
+                        {classification}
                       </div>
-                    );
-                  })()}
-                </Descriptions.Item>
+                    </Descriptions.Item>
+                  );
+                })()}
                 <Descriptions.Item label="Created At">
                   <div>
                     <Text strong style={{ color: PRIMARY_BLUE }}>
@@ -1921,6 +1973,38 @@ const Actioned = () => {
                                   : ""}
                               </div>
                             )}
+                            {(() => {
+                              const resolved = resolveDocDaysAndDate(
+                                doc,
+                                selected,
+                              );
+                              return (
+                                <div
+                                  style={{
+                                    marginTop: 6,
+                                    fontSize: 12,
+                                    color: "#444",
+                                    display: "flex",
+                                    gap: "20px",
+                                  }}
+                                >
+                                  <div>
+                                    <b>Requested days:</b>{" "}
+                                    {typeof resolved.days === "number"
+                                      ? `${resolved.days} days`
+                                      : "-"}
+                                  </div>
+                                  <div>
+                                    <b>New due date:</b>{" "}
+                                    {resolved.date
+                                      ? dayjs(resolved.date).format(
+                                          "DD MMM YYYY",
+                                        )
+                                      : "-"}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                         <Space>

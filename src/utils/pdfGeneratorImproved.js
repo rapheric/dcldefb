@@ -18,7 +18,41 @@ export const generateChecklistPDF = async ({
 }) => {
   return new Promise((resolve, reject) => {
     try {
+      // Normalize comments - handle both direct array and wrapped data property
+      const rawComments = Array.isArray(comments)
+        ? comments
+        : (comments?.data && Array.isArray(comments.data))
+        ? comments.data
+        : [];
+      
+      // Filter out system-generated logs, keep only user comments
+      // System logs contain:
+      // - Keywords: Approved, Returned, submitted, updated, saved, created, changed, etc.
+      // - File uploads: "Supporting Document uploaded", "Document uploaded", ".pdf", ".jpg", etc.
+      // - Role-based actions: "by Co-Creator", "by RM", etc.
+      const systemLogPatterns = [
+        /^(Checklist|Draft|Document|Status|User|Extension|Email)\s/i,
+        /\s(by|from|to)\s(Co-Creator|RM|Checker|Creator|Approver|System)\b/i,
+        /(uploaded|submission|updated by|saved by|created by|deleted by|rejected by|approved by|submitted by)\b/i,
+        /^(.*)\s(approved|submitted|saved|created|updated|deleted|rejected|sent|uploaded)\s(by|from)\s/i,
+        /(Supporting Document|Document)\s(uploaded|added|removed|deleted|changed)/i,
+        /\.(pdf|jpg|jpeg|png|doc|docx|xls|xlsx|txt)\b/i, // File extensions
+        /DCL_|checklist_|document_/i, // System file naming
+      ];
+      
+      const isSystemLog = (message) => {
+        if (!message || typeof message !== 'string') return false;
+        return systemLogPatterns.some(pattern => pattern.test(message));
+      };
+      
+      const normalizedComments = rawComments.filter(comment => !isSystemLog(comment.message));
+      
       console.log('📄 Starting PDF generation...');
+      console.log('📝 Raw activity logs:', rawComments.length, 'total');
+      console.log('📝 User-typed comments (filtered):', normalizedComments.length);
+      if (normalizedComments.length > 0) {
+        console.log('📝 First user comment:', normalizedComments[0]);
+      }
       
       // Create PDF document with better quality settings
       const doc = new jsPDF({
@@ -47,7 +81,7 @@ export const generateChecklistPDF = async ({
           // For simplicity, we'll try to add it directly
           // If it fails, we'll continue without logo
           try {
-            doc.addImage(ncbaLogoPNG, 'PNG', 15, 10, 40, 15);
+            doc.addImage(ncbaLogoPNG, 'PNG', 155, 10, 40, 15);
             console.log('✅ Logo added successfully');
           } catch (imgError) {
             console.warn('⚠️ Could not add logo directly, continuing without it:', imgError);
@@ -155,7 +189,7 @@ export const generateChecklistPDF = async ({
       const docRows = documents.map((doc) => [
         doc.category || 'N/A',
         doc.name || 'N/A',
-        doc.action || 'N/A',
+        doc.coStatus || doc.action || doc.status || 'N/A',
         doc.deferralNo || '-',
         doc.checkerStatus || 'N/A',
         doc.coComment || '-',
@@ -255,7 +289,9 @@ export const generateChecklistPDF = async ({
       }
 
       // Comments Section - Simplified with necessary info only
-      if (comments && comments.length > 0) {
+      if (normalizedComments && normalizedComments.length > 0) {
+        console.log('✅ Rendering Comment Trail with', normalizedComments.length, 'comments');
+        
         doc.setFontSize(14);
         doc.setFont('courier', 'bold');
         doc.setTextColor(22, 70, 121); // PRIMARY_BLUE
@@ -264,11 +300,15 @@ export const generateChecklistPDF = async ({
         yPos += 8;
 
         // Only include: Date, User, Comment (necessary info)
-        const commentRows = comments.map((comment) => [
-          comment.createdAt ? format(new Date(comment.createdAt), 'dd/MM/yyyy HH:mm') : 'N/A',
-          comment.user?.name || comment.userName || 'N/A',
-          comment.text || comment.comment || '-',
-        ]);
+        const commentRows = normalizedComments.map((comment, idx) => {
+          const dateStr = comment.createdAt ? format(new Date(comment.createdAt), 'dd/MM/yyyy HH:mm') : 'N/A';
+          const userName = comment.user?.name || comment.userName || 'N/A';
+          const message = comment.message || comment.text || comment.comment || '-';
+          
+          console.log(`  📝 Comment ${idx + 1}: [${dateStr}] ${userName}: ${message?.substring(0, 30)}...`);
+          
+          return [dateStr, userName, message];
+        });
 
         if (typeof doc.autoTable === 'function') {
           doc.autoTable({
@@ -291,9 +331,9 @@ export const generateChecklistPDF = async ({
               font: 'courier',
             },
             columnStyles: {
-              0: { cellWidth: 35 },
-              1: { cellWidth: 30 },
-              2: { cellWidth: 80 },
+              0: { cellWidth: 40 },
+              1: { cellWidth: 35 },
+              2: { cellWidth: 96 },
             },
             margin: { left: 15, right: 15 },
           });

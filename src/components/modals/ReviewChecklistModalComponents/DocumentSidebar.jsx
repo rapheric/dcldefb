@@ -83,6 +83,8 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
               ? doc.fileUrl.split("/").pop()
               : "document.pdf",
             fileUrl: doc.fileUrl,
+            uploadedBy: doc.uploadedBy?.name || doc.uploadedBy || null,
+            uploadedByRole: doc.uploadedBy?.role || doc.uploadedByRole || null,
             uploadDate: doc.uploadDate || new Date().toISOString(),
             modifiedDate: doc.modifiedDate || new Date().toISOString(),
           }))
@@ -245,8 +247,8 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
                     <div
                       style={{
                         display: "flex",
-                        gap: 4,
-                        marginTop: 3,
+                        gap: 8,
+                        marginTop: 6,
                       }}
                     >
                       <Button
@@ -254,21 +256,26 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
                         size="small"
                         icon={<EyeOutlined />}
                         style={{
-                          padding: "0 6px",
-                          fontSize: "9px",
-                          height: "20px",
-                          color: "#164679",
+                          padding: "4px 8px",
+                          fontSize: "11px",
+                          height: "24px",
+                          color: "#666",
+                          textDecoration: "none",
                         }}
                         onClick={() => {
-                          const API_BASE =
-                            import.meta.env?.VITE_APP_API_URL ||
-                            "http://localhost:5000";
-                          const url =
-                            doc.fileUrl.startsWith("http") ||
-                            doc.fileUrl.startsWith("blob:")
-                              ? doc.fileUrl
-                              : `${API_BASE}${doc.fileUrl}`;
-                          window.open(url, "_blank");
+                          try {
+                            const API_BASE =
+                              import.meta.env?.VITE_APP_API_URL ||
+                              "http://localhost:5000";
+                            const url =
+                              doc.fileUrl.startsWith("http") ||
+                              doc.fileUrl.startsWith("blob:")
+                                ? doc.fileUrl
+                                : `${API_BASE}${doc.fileUrl}`;
+                            window.open(url, "_blank");
+                          } catch (error) {
+                            console.error("Error opening file:", error);
+                          }
                         }}
                       >
                         View
@@ -278,21 +285,32 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
                         size="small"
                         icon={<DownloadOutlined />}
                         style={{
-                          padding: "0 6px",
-                          fontSize: "9px",
-                          height: "20px",
-                          color: "#52C41A",
+                          padding: "4px 8px",
+                          fontSize: "11px",
+                          height: "24px",
+                          color: "#666",
+                          textDecoration: "none",
                         }}
                         onClick={() => {
-                          const API_BASE =
-                            import.meta.env?.VITE_APP_API_URL ||
-                            "http://localhost:5000";
-                          const url =
-                            doc.fileUrl.startsWith("http") ||
-                            doc.fileUrl.startsWith("blob:")
-                              ? doc.fileUrl
-                              : `${API_BASE}${doc.fileUrl}`;
-                          window.open(url, "_blank");
+                          try {
+                            const API_BASE =
+                              import.meta.env?.VITE_APP_API_URL ||
+                              "http://localhost:5000";
+                            const url =
+                              doc.fileUrl.startsWith("http") ||
+                              doc.fileUrl.startsWith("blob:")
+                                ? doc.fileUrl
+                                : `${API_BASE}${doc.fileUrl}`;
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.download = doc.fileName || "document";
+                            link.target = "_blank";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          } catch (error) {
+                            console.error("Error downloading file:", error);
+                          }
                         }}
                       >
                         Download

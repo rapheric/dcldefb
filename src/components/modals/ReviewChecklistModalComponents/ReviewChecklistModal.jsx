@@ -832,6 +832,7 @@ const ReviewChecklistModal = ({
                 docs={docs}
                 supportingDocs={[]}
                 creatorComment={creatorComment}
+                auth={auth}
                 onSaveDraft={saveDraft}
                 onSubmitToRM={submitToRMWithUnlock}
                 onSubmitToCheckers={submitToCheckersWithUnlock}

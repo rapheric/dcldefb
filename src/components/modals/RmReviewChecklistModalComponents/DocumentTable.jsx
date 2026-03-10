@@ -435,13 +435,6 @@ const DocumentTable = ({
         );
       },
     },
-    // {
-    //   title: "RM Status",
-    //   width: 120,
-    //   render: (_, record) => (
-    //     <div style={{ opacity: 0.6 }}>{renderRmStatusTag(record)}</div>
-    //   ),
-    // },
 
     {
       title: "RM Status",
@@ -451,12 +444,6 @@ const DocumentTable = ({
 
         let displayText = formatStatusForSnakeCase(rmStatus);
         // Remove the deferral number from display - just show the status
-        // The deferral number is already shown in the Deferral No column
-
-        // Define colors for each status
-        // submitted_for_review: white background, green text
-        // deferral_requested: white background, amber text
-        // pending_from_customer: red theme
         let bgColor = "#f5f5f5";
         let textColor = "#000";
         let borderColor = "#d9d9d9";

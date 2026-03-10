@@ -832,6 +832,10 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
   };
 
   const handleSubmit = async (values) => {
+    console.log("[Submit] Form values:", values);
+    console.log("[Submit] Selected documents:", selectedDocuments);
+    console.log("[Submit] Approver slots:", approverSlots);
+
     setLoading(true);
     try {
       // Filter out empty approver slots
@@ -845,6 +849,8 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
             "Unknown",
         }));
 
+      console.log("[Submit] Valid approvers:", validApprovers);
+
       if (validApprovers.length === 0) {
         message.error("Please select at least one approver");
         setLoading(false);
@@ -852,6 +858,7 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
       }
 
       // Update deferral with new documents, description, and approvers
+      console.log("[Submit] Sending update to backend...");
       const updatedDeferral = await deferralApi.updateDeferral(deferral._id, {
         deferralDescription: values.deferralDescription,
         selectedDocuments,
@@ -861,14 +868,20 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
         resubmittedAt: new Date().toISOString(),
       });
 
+      console.log("[Submit] Backend response:", updatedDeferral);
+
       // Upload any new files
       if (dclFile) {
+        console.log("[Submit] Uploading DCL file...");
         await deferralApi.uploadDocument(deferral._id, dclFile, {
           isDCL: true,
         });
       }
 
       if (additionalFiles.length > 0) {
+        console.log(
+          `[Submit] Uploading ${additionalFiles.length} additional files...`,
+        );
         for (const file of additionalFiles) {
           await deferralApi.uploadDocument(deferral._id, file, {
             isAdditional: true,
@@ -879,12 +892,15 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
       message.success("Deferral resubmitted for review successfully!");
 
       // Update local state with the resubmitted deferral
+      console.log("[Submit] Refreshing deferral...");
       const refreshedDeferral = await deferralApi.getDeferralById(deferral._id);
+      console.log("[Submit] Refreshed deferral:", refreshedDeferral);
+
       onUpdate(refreshedDeferral);
       onClose();
     } catch (error) {
-      console.error("Error resubmitting deferral:", error);
-      message.error("Failed to resubmit deferral for review");
+      console.error("[Submit] Error resubmitting deferral:", error);
+      message.error(error?.message || "Failed to resubmit deferral for review");
     } finally {
       setLoading(false);
     }
@@ -893,27 +909,111 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
   // Remove a requested document from the list (persist immediately)
   const handleRemoveRequestedDocument = async (indexToRemove) => {
     try {
+      const docToRemove = selectedDocuments[indexToRemove];
+      const docName =
+        typeof docToRemove === "string"
+          ? docToRemove
+          : docToRemove?.name ||
+            docToRemove?.label ||
+            docToRemove?.documentName;
+
+      console.log(`[Delete] Attempting to remove index ${indexToRemove}`);
+      console.log(`[Delete] Document to remove:`, docToRemove);
+      console.log(`[Delete] Document name being removed: "${docName}"`);
+      console.log(
+        `[Delete] Full selectedDocuments list before delete:`,
+        selectedDocuments,
+      );
+
       const newSelected = selectedDocuments.filter(
         (_, i) => i !== indexToRemove,
       );
+
+      console.log(
+        `[Delete] Filtered selectedDocuments (deleted index ${indexToRemove}):`,
+        newSelected,
+      );
+      console.log(
+        `[Delete] Names being kept:`,
+        newSelected.map((d) =>
+          typeof d === "string" ? d : d?.name || d?.label || d?.documentName,
+        ),
+      );
+
       setSelectedDocuments(newSelected);
 
       // Persist change to backend so other modals reflect removal
       if (deferral && deferral._id) {
         try {
-          await deferralApi.updateDeferral(deferral._id, {
-            selectedDocuments: newSelected,
+          // Normalize the data being sent to backend to match SelectedDocumentData structure
+          const docsToSend = newSelected.map((d) => {
+            if (typeof d === "string") {
+              return { name: d, type: "", category: "" };
+            }
+            return {
+              name: d?.name || d?.label || d?.documentName || "",
+              type: d?.type || "",
+              category: d?.category || d?.documentCategory || "",
+              daysSought: d?.daysSought,
+              nextDocumentDueDate: d?.nextDocumentDueDate,
+            };
           });
+
+          console.log(
+            `[Delete] Normalized documents to send to backend:`,
+            docsToSend,
+          );
+          console.log(
+            `[Delete] Document names being sent:`,
+            docsToSend.map((d) => d.name),
+          );
+
+          // Send the new (filtered) selectedDocuments to backend
+          const updateResponse = await deferralApi.updateDeferral(
+            deferral._id,
+            {
+              selectedDocuments: docsToSend,
+            },
+          );
+
+          console.log(
+            `[Delete] Backend update response for deferral ${deferral._id}:`,
+            updateResponse,
+          );
+
+          // Refresh from backend to ensure consistency for multiple deletions
           const refreshed = await deferralApi.getDeferralById(deferral._id);
+
+          console.log(
+            `[Delete] Refreshed from backend - selectedDocuments:`,
+            refreshed?.selectedDocuments,
+          );
+          console.log(
+            `[Delete] Refreshed document names:`,
+            refreshed?.selectedDocuments?.map((d) => d?.name || d) || [],
+          );
+
+          // Update the modal's selectedDocuments state with what the backend now has
+          // This ensures indices remain correct for multiple deletions
+          if (refreshed && refreshed.selectedDocuments) {
+            console.log(
+              `[Delete] Updating modal state with refreshed data from backend`,
+            );
+            setSelectedDocuments(refreshed.selectedDocuments);
+          }
+
           // Notify other components (do NOT call parent onUpdate to avoid closing this modal)
           window.dispatchEvent(
             new CustomEvent("deferral:updated", { detail: refreshed }),
           );
-          message.success("Document removed from deferral");
+
+          message.success(`"${docName}" removed from deferral`);
           // Intentionally do not call onUpdate(refreshed) here so the modal stays open
         } catch (err) {
           console.error("Failed to persist removed document", err);
           message.error("Failed to persist removed document");
+          // Restore the document if persistence failed
+          setSelectedDocuments(selectedDocuments);
         }
       }
     } catch (err) {
@@ -1192,8 +1292,37 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
           key="submit"
           type="primary"
           loading={loading}
-          onClick={() => form.submit()}
-          style={{ backgroundColor: PRIMARY_BLUE, borderColor: PRIMARY_BLUE }}
+          onClick={async () => {
+            try {
+              console.log("[Button] Submit button clicked");
+              console.log("[Button] Form values:", form.getFieldsValue(true));
+              console.log("[Button] Approver slots:", approverSlots);
+
+              // Validate form first
+              const values = await form.validateFields();
+              console.log(
+                "[Button] Form validation passed, submitting...",
+                values,
+              );
+              await handleSubmit(values);
+            } catch (errorInfo) {
+              console.error("[Button] Form validation failed:", errorInfo);
+              if (errorInfo.errorFields && errorInfo.errorFields.length > 0) {
+                const firstErrorField = errorInfo.errorFields[0];
+                console.error(
+                  `[Button] Validation error in ${firstErrorField.name.join(".")}:`,
+                  firstErrorField.errors,
+                );
+                message.error(
+                  `${firstErrorField.name.join(".")}: ${firstErrorField.errors.join(", ")}`,
+                );
+              }
+            }
+          }}
+          style={{
+            backgroundColor: PRIMARY_BLUE,
+            borderColor: PRIMARY_BLUE,
+          }}
         >
           {loading ? "Resubmitting..." : "Resubmit for Review"}
         </Button>,
@@ -5491,6 +5620,8 @@ const DeferralPending = ({ userId = "rm_current" }) => {
   const [extensionComment, setExtensionComment] = useState("");
   const [extensionFiles, setExtensionFiles] = useState([]);
   const [extensionSubmitting, setExtensionSubmitting] = useState(false);
+  const [extensionSubmissionSuccess, setExtensionSubmissionSuccess] =
+    useState(false);
 
   const loadDeferrals = useCallback(async () => {
     setLoading(true);
@@ -5571,6 +5702,7 @@ const DeferralPending = ({ userId = "rm_current" }) => {
           setExtensionDaysByDoc({});
         }
         setExtensionModalOpen(true);
+        setExtensionSubmissionSuccess(false);
         return;
       }
       if (payload.action === "close_deferral_modal") {
@@ -6387,111 +6519,155 @@ const DeferralPending = ({ userId = "rm_current" }) => {
           setExtensionDays("");
           setExtensionComment("");
           setExtensionFiles([]);
+          setExtensionDaysByDoc({});
+          setExtensionSubmissionSuccess(false);
         }}
         width={900}
         styles={{
           body: { maxHeight: "70vh", overflowY: "auto", paddingRight: 8 },
         }}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => {
-              setExtensionModalOpen(false);
-              setSelectedDeferralForExtension(null);
-              setExtensionDays("");
-              setExtensionComment("");
-              setExtensionFiles([]);
-            }}
-            disabled={extensionSubmitting}
-          >
-            Cancel
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            loading={extensionSubmitting}
-            onClick={async () => {
-              // Validate per-document days
-              if (
-                !extensionDaysByDoc ||
-                Object.keys(extensionDaysByDoc).length === 0
-              ) {
-                message.error(
-                  "Please enter extension days for at least one document",
-                );
-                return;
-              }
+        footer={
+          extensionSubmissionSuccess
+            ? [
+                <Button
+                  key="view"
+                  type="primary"
+                  onClick={() => {
+                    setExtensionModalOpen(false);
+                    setSelectedDeferralForExtension(null);
+                    setExtensionDays("");
+                    setExtensionComment("");
+                    setExtensionFiles([]);
+                    setExtensionDaysByDoc({});
+                    setExtensionSubmissionSuccess(false);
+                    // Switch to extensions tab to show submitted extension
+                    setActiveTab("extensions");
+                  }}
+                  style={{
+                    backgroundColor: PRIMARY_BLUE,
+                    borderColor: PRIMARY_BLUE,
+                  }}
+                >
+                  View Extension Applications
+                </Button>,
+              ]
+            : [
+                <Button
+                  key="cancel"
+                  onClick={() => {
+                    setExtensionModalOpen(false);
+                    setSelectedDeferralForExtension(null);
+                    setExtensionDays("");
+                    setExtensionComment("");
+                    setExtensionFiles([]);
+                  }}
+                  disabled={extensionSubmitting}
+                >
+                  Cancel
+                </Button>,
+                <Button
+                  key="submit"
+                  type="primary"
+                  loading={extensionSubmitting}
+                  onClick={async () => {
+                    // Validate per-document days
+                    if (
+                      !extensionDaysByDoc ||
+                      Object.keys(extensionDaysByDoc).length === 0
+                    ) {
+                      message.error(
+                        "Please enter extension days for at least one document",
+                      );
+                      return;
+                    }
 
-              const hasDays = Object.values(extensionDaysByDoc).some(
-                (days) => typeof days === "number" && days > 0,
-              );
-              if (!hasDays) {
-                message.error("Please enter valid extension days");
-                return;
-              }
+                    const hasDays = Object.values(extensionDaysByDoc).some(
+                      (days) => typeof days === "number" && days > 0,
+                    );
+                    if (!hasDays) {
+                      message.error("Please enter valid extension days");
+                      return;
+                    }
 
-              setExtensionSubmitting(true);
-              try {
-                const stored = JSON.parse(
-                  localStorage.getItem("user") || "null",
-                );
-                const token = stored?.token;
+                    setExtensionSubmitting(true);
+                    try {
+                      const stored = JSON.parse(
+                        localStorage.getItem("user") || "null",
+                      );
+                      const token = stored?.token;
 
-                const extensionData = {
-                  extensionDaysByDoc,
-                  comment: extensionComment,
-                  fileUrls: extensionFiles
-                    .map((f) => f.url || f.response?.url || "")
-                    .filter(
-                      (url) => typeof url === "string" && url.trim() !== "",
-                    ),
-                };
+                      const extensionData = {
+                        extensionDaysByDoc,
+                        comment: extensionComment,
+                        fileUrls: extensionFiles
+                          .map((f) => f.url || f.response?.url || "")
+                          .filter(
+                            (url) =>
+                              typeof url === "string" && url.trim() !== "",
+                          ),
+                      };
 
-                await deferralApi.submitExtension(
-                  selectedDeferralForExtension._id,
-                  extensionData,
-                  token,
-                );
+                      await deferralApi.submitExtension(
+                        selectedDeferralForExtension._id,
+                        extensionData,
+                        token,
+                      );
 
-                message.success("Extension application submitted successfully");
+                      message.success(
+                        "Extension application submitted successfully",
+                      );
 
-                // Refresh deferral data
-                await loadDeferrals();
+                      // Refresh deferral data
+                      await loadDeferrals();
 
-                // Dispatch update event
-                if (selectedDeferralForExtension) {
-                  window.dispatchEvent(
-                    new CustomEvent("deferral:updated", {
-                      detail: selectedDeferralForExtension,
-                    }),
-                  );
-                }
+                      // Dispatch update event
+                      if (selectedDeferralForExtension) {
+                        window.dispatchEvent(
+                          new CustomEvent("deferral:updated", {
+                            detail: selectedDeferralForExtension,
+                          }),
+                        );
+                      }
 
-                // Close both modals and reset state
-                setExtensionModalOpen(false);
-                setModalOpen(false);
-                setSelectedDeferralForExtension(null);
-                setSelectedDeferral(null);
-                setExtensionDays("");
-                setExtensionComment("");
-                setExtensionFiles([]);
-                setExtensionDaysByDoc({});
-              } catch (error) {
-                console.error("Error submitting extension:", error);
-                message.error(
-                  error.message || "Failed to submit extension application",
-                );
-              } finally {
-                setExtensionSubmitting(false);
-              }
-            }}
-            style={{ backgroundColor: PRIMARY_BLUE, borderColor: PRIMARY_BLUE }}
-          >
-            {extensionSubmitting ? "Submitting..." : "Submit Extension"}
-          </Button>,
-        ]}
+                      // Show success state - user can now click "View Extension Applications"
+                      setExtensionSubmissionSuccess(true);
+                    } catch (error) {
+                      console.error("Error submitting extension:", error);
+                      message.error(
+                        error.message ||
+                          "Failed to submit extension application",
+                      );
+                    } finally {
+                      setExtensionSubmitting(false);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: PRIMARY_BLUE,
+                    borderColor: PRIMARY_BLUE,
+                  }}
+                >
+                  {extensionSubmitting ? "Submitting..." : "Submit Extension"}
+                </Button>,
+              ]
+        }
       >
-        {selectedDeferralForExtension &&
+        {extensionSubmissionSuccess ? (
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <div
+              style={{ fontSize: 48, marginBottom: 16, color: PRIMARY_BLUE }}
+            >
+              ✓
+            </div>
+            <Text strong style={{ fontSize: 18 }}>
+              Extension application submitted successfully!
+            </Text>
+            <div style={{ marginTop: 16, color: "#999" }}>
+              Click "View Extension Applications" below to see your submission
+              and track its approval status.
+            </div>
+          </div>
+        ) : (
+          selectedDeferralForExtension &&
           (() => {
             const { dclDocs, uploadedDocs, requestedDocs } =
               getDeferralDocumentBuckets(selectedDeferralForExtension);
@@ -6713,7 +6889,8 @@ const DeferralPending = ({ userId = "rm_current" }) => {
                 </Card>
               </div>
             );
-          })()}
+          })()
+        )}
       </Modal>
     </div>
   );

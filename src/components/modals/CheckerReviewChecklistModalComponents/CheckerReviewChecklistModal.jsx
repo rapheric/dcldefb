@@ -153,6 +153,7 @@ const CheckerReviewChecklistModal = ({
       ...doc,
       key: doc.id || doc._id || `doc-${idx}`,
       status: doc.status || doc.action || "pending",
+      coStatus: doc.coStatus || doc.status || doc.action || "pending",
       approved: shouldForceApproved ? true : doc.approved || false,
       checkerStatus: shouldForceApproved
         ? "approved"
@@ -632,6 +633,10 @@ const CheckerReviewChecklistModal = ({
             />
 
             <ActionButtons
+              checklist={localChecklist}
+              docs={docs}
+              comments={comments || []}
+              auth={auth}
               effectiveReadOnly={effectiveReadOnly}
               isGeneratingPDF={isGeneratingPDF}
               isSavingDraft={isSavingDraft}
