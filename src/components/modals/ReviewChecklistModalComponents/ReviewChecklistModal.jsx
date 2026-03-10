@@ -658,7 +658,11 @@ const ReviewChecklistModal = ({
             </div>
 
             {/* Body */}
-            <div className="p-6 space-y-6" style={{ padding: "24px" }}>
+            <div
+              className="p-6 space-y-6"
+              style={{ padding: "24px" }}
+              onClick={(e) => e.stopPropagation()}
+            >
               {checklist && (
                 <div
                   style={{

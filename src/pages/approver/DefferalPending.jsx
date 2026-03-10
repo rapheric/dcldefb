@@ -532,7 +532,11 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
         type="primary"
         onClick={handleApprove}
         loading={approving}
-        style={{ backgroundColor: PRIMARY_BLUE, borderColor: PRIMARY_BLUE }}
+        style={{
+          backgroundColor: PRIMARY_BLUE,
+          borderColor: PRIMARY_BLUE,
+          color: "#FFFFFF !important",
+        }}
       >
         Approve
       </Button>,
@@ -649,7 +653,7 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
             </Descriptions.Item>
             <Descriptions.Item label="Status">
               {status === "deferral_requested" ||
-                status === "pending_approval" ? (
+              status === "pending_approval" ? (
                 <Tag color="processing" style={{ fontWeight: 700 }}>
                   Pending
                 </Tag>
@@ -839,9 +843,10 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                       localDeferral.amount,
                     ];
 
-                    const facilitiesTotal = (Array.isArray(localDeferral.facilities)
-                      ? localDeferral.facilities
-                      : []
+                    const facilitiesTotal = (
+                      Array.isArray(localDeferral.facilities)
+                        ? localDeferral.facilities
+                        : []
                     ).reduce((sum, facility) => {
                       const value = Number(
                         facility?.sanctioned ?? facility?.amount ?? 0,
@@ -852,7 +857,9 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                     const amt = Number(
                       loanAmountCandidates.find(
                         (candidate) => Number(candidate || 0) > 0,
-                      ) || facilitiesTotal || 0,
+                      ) ||
+                        facilitiesTotal ||
+                        0,
                     );
                     if (!amt) return "Not specified";
                     return `KSh ${amt.toLocaleString()}`;
@@ -864,9 +871,10 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                     localDeferral.requestedAmount,
                     localDeferral.amount,
                   ];
-                  const facilitiesTotal = (Array.isArray(localDeferral.facilities)
-                    ? localDeferral.facilities
-                    : []
+                  const facilitiesTotal = (
+                    Array.isArray(localDeferral.facilities)
+                      ? localDeferral.facilities
+                      : []
                   ).reduce((sum, facility) => {
                     const value = Number(
                       facility?.sanctioned ?? facility?.amount ?? 0,
@@ -876,7 +884,9 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                   const amt = Number(
                     loanAmountCandidates.find(
                       (candidate) => Number(candidate || 0) > 0,
-                    ) || facilitiesTotal || 0,
+                    ) ||
+                      facilitiesTotal ||
+                      0,
                   );
                   if (!amt) return null;
                   const isAbove75 =
@@ -918,30 +928,31 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                   localDeferral.nextDueDate ||
                   localDeferral.nextDocumentDueDate ||
                   localDeferral.requestedExpiry ||
-                  (localDeferral.createdAt && Number(localDeferral.daysSought || 0) > 0
+                  (localDeferral.createdAt &&
+                  Number(localDeferral.daysSought || 0) > 0
                     ? dayjs(localDeferral.createdAt)
-                      .add(Number(localDeferral.daysSought || 0), "day")
-                      .toISOString()
+                        .add(Number(localDeferral.daysSought || 0), "day")
+                        .toISOString()
                     : null);
 
                 const isOverdue =
-                  !!nextDueDateValue && dayjs(nextDueDateValue).isBefore(dayjs());
+                  !!nextDueDateValue &&
+                  dayjs(nextDueDateValue).isBefore(dayjs());
 
                 return (
-              <div
-                style={{
-                  color:
-                    nextDueDateValue
-                      ? isOverdue
-                        ? ERROR_RED
-                        : SUCCESS_GREEN
-                      : PRIMARY_BLUE,
-                }}
-              >
-                {nextDueDateValue
-                  ? `${dayjs(nextDueDateValue).format("DD MMM YYYY")}`
-                  : "Not calculated"}
-              </div>
+                  <div
+                    style={{
+                      color: nextDueDateValue
+                        ? isOverdue
+                          ? ERROR_RED
+                          : SUCCESS_GREEN
+                        : PRIMARY_BLUE,
+                    }}
+                  >
+                    {nextDueDateValue
+                      ? `${dayjs(nextDueDateValue).format("DD MMM YYYY")}`
+                      : "Not calculated"}
+                  </div>
                 );
               })()}
             </Descriptions.Item>
@@ -1003,7 +1014,11 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                       }}
                     >
                       <div
-                        style={{ display: "flex", alignItems: "center", gap: 12 }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                        }}
                       >
                         <FileDoneOutlined
                           style={{
@@ -1057,31 +1072,38 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                         </div>
                       </div>
                       <Space>
-                        {isUploaded && uploadedVersion && uploadedVersion.url && (
-                          <>
-                            <Button
-                              type="text"
-                              icon={<EyeOutlined />}
-                              onClick={() => openFileInNewTab(uploadedVersion.url)}
-                              size="small"
-                            >
-                              View
-                            </Button>
-                            <Button
-                              type="text"
-                              icon={<DownloadOutlined />}
-                              onClick={() => {
-                                downloadFile(uploadedVersion.url, uploadedVersion.name);
-                                message.success(
-                                  `Downloading ${uploadedVersion.name}...`,
-                                );
-                              }}
-                              size="small"
-                            >
-                              Download
-                            </Button>
-                          </>
-                        )}
+                        {isUploaded &&
+                          uploadedVersion &&
+                          uploadedVersion.url && (
+                            <>
+                              <Button
+                                type="text"
+                                icon={<EyeOutlined />}
+                                onClick={() =>
+                                  openFileInNewTab(uploadedVersion.url)
+                                }
+                                size="small"
+                              >
+                                View
+                              </Button>
+                              <Button
+                                type="text"
+                                icon={<DownloadOutlined />}
+                                onClick={() => {
+                                  downloadFile(
+                                    uploadedVersion.url,
+                                    uploadedVersion.name,
+                                  );
+                                  message.success(
+                                    `Downloading ${uploadedVersion.name}...`,
+                                  );
+                                }}
+                                size="small"
+                              >
+                                Download
+                              </Button>
+                            </>
+                          )}
                       </Space>
                     </div>
                   );
@@ -1175,12 +1197,21 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                           }}
                         >
                           {doc.name}
-                          <Tag color={isUploaded ? "green" : "orange"} style={{ fontSize: 10 }}>
+                          <Tag
+                            color={isUploaded ? "green" : "orange"}
+                            style={{ fontSize: 10 }}
+                          >
                             {isUploaded ? "Uploaded" : "Requested"}
                           </Tag>
                         </div>
                         {uploadedVersion && (
-                          <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#666",
+                              marginTop: 4,
+                            }}
+                          >
                             Uploaded as: {uploadedVersion.name}
                             {uploadedVersion.uploadDate
                               ? ` • ${dayjs(uploadedVersion.uploadDate).format("DD MMM YYYY HH:mm")}`
@@ -1196,7 +1227,9 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                           <Button
                             type="text"
                             icon={<EyeOutlined />}
-                            onClick={() => openFileInNewTab(uploadedVersion.url)}
+                            onClick={() =>
+                              openFileInNewTab(uploadedVersion.url)
+                            }
                             size="small"
                           >
                             View
@@ -1205,8 +1238,13 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                             type="text"
                             icon={<DownloadOutlined />}
                             onClick={() => {
-                              downloadFile(uploadedVersion.url, uploadedVersion.name);
-                              message.success(`Downloading ${uploadedVersion.name}...`);
+                              downloadFile(
+                                uploadedVersion.url,
+                                uploadedVersion.name,
+                              );
+                              message.success(
+                                `Downloading ${uploadedVersion.name}...`,
+                              );
                             }}
                             size="small"
                           >
@@ -1440,11 +1478,11 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                       <Text strong style={{ fontSize: 14 }}>
                         {typeof approver === "object"
                           ? approver.name ||
-                          approver.user?.name ||
-                          approver.userId?.name ||
-                          approver.email ||
-                          approver.role ||
-                          String(approver)
+                            approver.user?.name ||
+                            approver.userId?.name ||
+                            approver.email ||
+                            approver.role ||
+                            String(approver)
                           : approver}
                       </Text>
                       {isCurrentApprover && (
@@ -1543,11 +1581,11 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                               ? approver.split("@")[0]
                               : approver
                             : approver.name ||
-                            approver.user?.name ||
-                            approver.userId?.name ||
-                            approver.email ||
-                            approver.role ||
-                            String(approver)}
+                              approver.user?.name ||
+                              approver.userId?.name ||
+                              approver.email ||
+                              approver.role ||
+                              String(approver)}
                         </Text>
                         {isCurrentApprover && (
                           <div
@@ -1648,6 +1686,11 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
               onClick={handlePostComment}
               loading={postingComment}
               disabled={!newComment.trim()}
+              style={{
+                backgroundColor: "#1890ff",
+                borderColor: "#1890ff",
+                color: "#FFFFFF !important",
+              }}
             >
               Post Comment
             </Button>
@@ -1662,67 +1705,85 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
             const events = [];
 
             // Initial request - show requestor's real name and role
-            const requesterName = localDeferral.requestor?.name || localDeferral.requestedBy || localDeferral.rmName || 'RM';
-            const requesterRole = localDeferral.requestor?.role || 'RM';
-            const requestComment = localDeferral.rmReason || 'Deferral request submitted';
+            const requesterName =
+              localDeferral.requestor?.name ||
+              localDeferral.requestedBy ||
+              localDeferral.rmName ||
+              "RM";
+            const requesterRole = localDeferral.requestor?.role || "RM";
+            const requestComment =
+              localDeferral.rmReason || "Deferral request submitted";
 
             // Add initial request only if there's actual comment text
-            if (requestComment && requestComment.trim() !== '') {
+            if (requestComment && requestComment.trim() !== "") {
               events.push({
                 user: requesterName,
                 userRole: requesterRole,
                 date: localDeferral.requestedDate || localDeferral.createdAt,
-                comment: requestComment
+                comment: requestComment,
               });
             }
 
             // Add all user-provided comments (includes co-creator and co-checker comments)
-            if (localDeferral.comments && Array.isArray(localDeferral.comments) && localDeferral.comments.length > 0) {
-              localDeferral.comments.forEach(c => {
-                const commentAuthorName = c.author?.name || 'Unknown';
-                const commentAuthorRole = c.author?.role || '';
-                const commentText = c.text || '';
+            if (
+              localDeferral.comments &&
+              Array.isArray(localDeferral.comments) &&
+              localDeferral.comments.length > 0
+            ) {
+              localDeferral.comments.forEach((c) => {
+                const commentAuthorName = c.author?.name || "Unknown";
+                const commentAuthorRole = c.author?.role || "";
+                const commentText = c.text || "";
 
                 // Only add if there's actual comment text
-                if (commentText && commentText.trim() !== '') {
+                if (commentText && commentText.trim() !== "") {
                   events.push({
                     user: commentAuthorName,
                     userRole: commentAuthorRole,
                     date: c.createdAt,
-                    comment: commentText
+                    comment: commentText,
                   });
                 }
               });
             }
 
             // Add history items, but ONLY those with actual user comments (not system-generated messages)
-            if (localDeferral.history && Array.isArray(localDeferral.history) && localDeferral.history.length > 0) {
-              localDeferral.history.forEach(h => {
+            if (
+              localDeferral.history &&
+              Array.isArray(localDeferral.history) &&
+              localDeferral.history.length > 0
+            ) {
+              localDeferral.history.forEach((h) => {
                 // Skip system actions without user comments
-                if (h.action === 'moved') {
+                if (h.action === "moved") {
                   return;
                 }
 
                 // Only include history items that have a 'comment' field with actual user input
                 // Skip system-generated 'notes' that don't have corresponding user comments
-                const userComment = h.comment || '';
+                const userComment = h.comment || "";
 
-                if (userComment && userComment.trim() !== '') {
-                  const userName = h.user?.name || h.userName || h.user || 'Unknown';
-                  const userRole = h.user?.role || h.userRole || h.role || '';
+                if (userComment && userComment.trim() !== "") {
+                  const userName =
+                    h.user?.name || h.userName || h.user || "Unknown";
+                  const userRole = h.user?.role || h.userRole || h.role || "";
                   events.push({
                     user: userName,
                     userRole: userRole,
                     date: h.date || h.createdAt || h.timestamp || h.entryDate,
-                    comment: userComment
+                    comment: userComment,
                   });
                 }
               });
             }
 
             // Sort events by date ascending
-            const sorted = events.sort((a, b) => (new Date(a.date || 0)) - (new Date(b.date || 0)));
-            return <CommentTrail history={sorted} isLoading={loadingComments} />;
+            const sorted = events.sort(
+              (a, b) => new Date(a.date || 0) - new Date(b.date || 0),
+            );
+            return (
+              <CommentTrail history={sorted} isLoading={loadingComments} />
+            );
           })()}
         </div>
       </Modal>
@@ -2155,6 +2216,7 @@ const DeferralPending = ({ userId = "creator_current" }) => {
               style={{
                 backgroundColor: PRIMARY_BLUE,
                 borderColor: PRIMARY_BLUE,
+                color: "#FFFFFF !important",
               }}
             >
               Export to Excel

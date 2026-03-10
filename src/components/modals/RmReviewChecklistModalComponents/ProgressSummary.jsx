@@ -157,24 +157,6 @@ const ProgressSummary = ({ documentStats }) => {
           strokeWidth={8}
           status={progressPercent < 100 ? "active" : "success"}
         />
-
-        {/* Success message if all completed */}
-        {progressPercent === 100 && (
-          <div
-            style={{
-              fontSize: "11px",
-              color: "#047857",
-              backgroundColor: "#d1fae5",
-              padding: "8px 12px",
-              borderRadius: "6px",
-              marginTop: 10,
-              border: "1px solid #10b981",
-              fontWeight: "500",
-            }}
-          >
-            ✅ All documents are completed!
-          </div>
-        )}
       </div>
     </Card>
   );

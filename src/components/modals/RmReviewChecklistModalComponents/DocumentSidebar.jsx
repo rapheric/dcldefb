@@ -115,6 +115,8 @@ const DocumentSidebar = ({
       width={380}
       open={open}
       onClose={onClose}
+      zIndex={1100}
+      mask={false}
       styles={{
         header: { borderBottom: "1px solid #E8E8E8", padding: "10px 14px" },
         body: { padding: "6px 10px", backgroundColor: "#FAFAFA" },
@@ -148,7 +150,10 @@ const DocumentSidebar = ({
         </div>
       )}
 
-      <div style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}>
+      <div
+        style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {Object.entries(groupedDocs).map(([category, docs]) => (
           <div key={category} style={{ marginBottom: 8 }}>
             <div
@@ -279,7 +284,8 @@ const DocumentSidebar = ({
                         color: "#666",
                         textDecoration: "none",
                       }}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         try {
                           window.open(getFullUrl(fileUrl), "_blank");
                         } catch (error) {
@@ -300,7 +306,8 @@ const DocumentSidebar = ({
                         color: "#666",
                         textDecoration: "none",
                       }}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         try {
                           const url = getFullUrl(fileUrl);
                           const link = document.createElement("a");
@@ -332,6 +339,7 @@ const DocumentSidebar = ({
               color: "#8C8C8C",
               fontSize: "11px",
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             <FileOutlined
               style={{ fontSize: "28px", marginBottom: 6, opacity: 0.5 }}

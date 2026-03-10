@@ -1130,9 +1130,6 @@ const RmReviewChecklistModal = ({
                   style={{ display: "flex", alignItems: "center", gap: "8px" }}
                 >
                   <Button
-                    icon={
-                      showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />
-                    }
                     onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
                     size="small"
                     style={{
@@ -1186,7 +1183,10 @@ const RmReviewChecklistModal = ({
             </div>
 
             {/* Body */}
-            <div style={{ padding: "24px" }}>
+            <div
+              style={{ padding: "24px" }}
+              onClick={(e) => e.stopPropagation()}
+            >
               {console.log(
                 "🔍 RM Modal - Rendering DocumentSidebar with docs:",
                 docs.length,

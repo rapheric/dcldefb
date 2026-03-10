@@ -1322,6 +1322,7 @@ const ReturnForReworkModal = ({ open, onClose, deferral, onUpdate }) => {
           style={{
             backgroundColor: PRIMARY_BLUE,
             borderColor: PRIMARY_BLUE,
+            color: "#FFFFFF !important",
           }}
         >
           {loading ? "Resubmitting..." : "Resubmit for Review"}
@@ -3669,6 +3670,7 @@ const DeferralDetailsModal = ({
                     style={{
                       backgroundColor: WARNING_ORANGE,
                       borderColor: WARNING_ORANGE,
+                      color: "#FFFFFF !important",
                     }}
                     icon={<ReloadOutlined />}
                   >
@@ -4622,6 +4624,7 @@ const DeferralDetailsModal = ({
                             style={{
                               background: PRIMARY_BLUE,
                               borderColor: PRIMARY_BLUE,
+                              color: "#FFFFFF !important",
                             }}
                           >
                             Confirm Approvers
@@ -6455,7 +6458,12 @@ const DeferralPending = ({ userId = "rm_current" }) => {
                   onClick={() =>
                     (window.location.href = "/rm/deferrals/request")
                   }
-                  style={{ marginTop: 16 }}
+                  style={{
+                    marginTop: 16,
+                    backgroundColor: PRIMARY_BLUE,
+                    borderColor: PRIMARY_BLUE,
+                    color: "#FFFFFF !important",
+                  }}
                 >
                   Request New Deferral
                 </Button>
@@ -6578,6 +6586,7 @@ const DeferralPending = ({ userId = "rm_current" }) => {
                   style={{
                     backgroundColor: PRIMARY_BLUE,
                     borderColor: PRIMARY_BLUE,
+                    color: "#FFFFFF !important",
                   }}
                 >
                   View Extension Applications
@@ -6676,6 +6685,7 @@ const DeferralPending = ({ userId = "rm_current" }) => {
                   style={{
                     backgroundColor: PRIMARY_BLUE,
                     borderColor: PRIMARY_BLUE,
+                    color: "#FFFFFF !important",
                   }}
                 >
                   {extensionSubmitting ? "Submitting..." : "Submit Extension"}

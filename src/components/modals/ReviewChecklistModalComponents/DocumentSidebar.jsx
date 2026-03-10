@@ -135,12 +135,17 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
       width={380}
       open={open}
       onClose={onClose}
+      zIndex={1100}
+      mask={false}
       styles={{
         header: { borderBottom: "1px solid #E8E8E8", padding: "10px 14px" },
         body: { padding: "6px 10px", backgroundColor: "#FAFAFA" },
       }}
     >
-      <div style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}>
+      <div
+        style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {Object.entries(groupedDocs).map(([category, docs]) => (
           <div key={category} style={{ marginBottom: 8 }}>
             <div
@@ -262,7 +267,8 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
                           color: "#666",
                           textDecoration: "none",
                         }}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           try {
                             const API_BASE =
                               import.meta.env?.VITE_APP_API_URL ||
@@ -291,26 +297,12 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
                           color: "#666",
                           textDecoration: "none",
                         }}
-                        onClick={() => {
-                          try {
-                            const API_BASE =
-                              import.meta.env?.VITE_APP_API_URL ||
-                              "http://localhost:5000";
-                            const url =
-                              doc.fileUrl.startsWith("http") ||
-                              doc.fileUrl.startsWith("blob:")
-                                ? doc.fileUrl
-                                : `${API_BASE}${doc.fileUrl}`;
-                            const link = document.createElement("a");
-                            link.href = url;
-                            link.download = doc.fileName || "document";
-                            link.target = "_blank";
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                          } catch (error) {
-                            console.error("Error downloading file:", error);
-                          }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadFile(
+                            doc.fileName || "document",
+                            doc.fileUrl,
+                          );
                         }}
                       >
                         Download
@@ -331,6 +323,7 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
               color: "#8C8C8C",
               fontSize: "11px",
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             <FileOutlined
               style={{ fontSize: "28px", marginBottom: 6, opacity: 0.5 }}
