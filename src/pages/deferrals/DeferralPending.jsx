@@ -3938,20 +3938,42 @@ const DeferralDetailsModal = ({
                 style={{ display: "flex", alignItems: "center", gap: "12px" }}
               >
                 <div>
-                  {stats.total === 0 ? (
-                    <Text strong style={{ color: PRIMARY_BLUE }}>
-                      No approvers
-                    </Text>
-                  ) : stats.approved === stats.total ? (
-                    <Text strong style={{ color: SUCCESS_GREEN }}>
-                      All Approved
-                    </Text>
-                  ) : (
-                    <Text
-                      strong
-                      style={{ color: PRIMARY_BLUE }}
-                    >{`${stats.approved} of ${stats.total} Approved`}</Text>
-                  )}
+                  {(() => {
+                    let total = 0;
+                    let approved = 0;
+                    if (overrideApprovals && overrideApprovals.approvers) {
+                      total = overrideApprovals.approvers.length;
+                      approved = overrideApprovals.approvers.filter(
+                        (a) =>
+                          a.approvalStatus === "Approved" ||
+                          a.approved === true,
+                      ).length;
+                    } else {
+                      total = stats.total;
+                      approved = stats.approved;
+                    }
+
+                    if (total === 0) {
+                      return (
+                        <Text strong style={{ color: PRIMARY_BLUE }}>
+                          No approvers
+                        </Text>
+                      );
+                    }
+                    if (approved === total) {
+                      return (
+                        <Text strong style={{ color: SUCCESS_GREEN }}>
+                          All Approved
+                        </Text>
+                      );
+                    }
+                    return (
+                      <Text
+                        strong
+                        style={{ color: PRIMARY_BLUE }}
+                      >{`${approved} of ${total} Approved`}</Text>
+                    );
+                  })()}
                 </div>
               </div>
             </Descriptions.Item>
