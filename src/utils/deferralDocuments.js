@@ -77,6 +77,14 @@ export const getDeferralDocumentBuckets = (deferral) => {
   }
 
   const allDocs = [];
+  const selectedDocNames = new Set();
+
+  // Helper to normalize document names for comparison
+  const normalizeDocName = (name) =>
+    String(name || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
 
   (deferral.attachments || []).forEach((attachment, index) => {
     const sectionFromUrl = getDocumentSectionFromUrl(attachment.url);
@@ -117,12 +125,15 @@ export const getDeferralDocumentBuckets = (deferral) => {
   });
 
   (deferral.selectedDocuments || []).forEach((document, index) => {
+    const docName =
+      typeof document === "string"
+        ? document
+        : document.name || document.label || "Document";
+    selectedDocNames.add(normalizeDocName(docName));
+    
     allDocs.push({
       id: `req_${index}`,
-      name:
-        typeof document === "string"
-          ? document
-          : document.name || document.label || "Document",
+      name: docName,
       type: document.type || "",
       documentType:
         typeof document === "object"
@@ -146,6 +157,11 @@ export const getDeferralDocumentBuckets = (deferral) => {
   });
 
   (deferral.documents || []).forEach((document, index) => {
+    // Skip if this document was already added from selectedDocuments
+    if (selectedDocNames.has(normalizeDocName(document.name))) {
+      return;
+    }
+
     const name = (document.name || "").toString();
     const sectionFromUrl = getDocumentSectionFromUrl(document.url);
     const dclNameMatch =

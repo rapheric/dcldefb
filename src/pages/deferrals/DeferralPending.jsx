@@ -3230,6 +3230,9 @@ const DeferralDetailsModal = ({
   // Helper to pull all documents into categories
   const getAllDocuments = () => {
     const all = [];
+    // Track selected document names to avoid duplicates
+    const selectedDocNames = new Set();
+
     (localDeferral.attachments || []).forEach((att, i) => {
       const sectionFromUrl = getDocumentSectionFromUrl(att.url);
       const normalizedAttachmentName = String(att.name || "").trim();
@@ -3271,9 +3274,12 @@ const DeferralDetailsModal = ({
       });
     });
     (localDeferral.selectedDocuments || []).forEach((d, i) => {
+      const docName =
+        typeof d === "string" ? d : d.name || d.label || "Document";
+      selectedDocNames.add(normalizeDocKey(docName));
       all.push({
         id: `req_${i}`,
-        name: typeof d === "string" ? d : d.name || d.label || "Document",
+        name: docName,
         type: d.type || "",
         documentType:
           typeof d === "object"
@@ -3309,6 +3315,10 @@ const DeferralDetailsModal = ({
       });
     });
     (localDeferral.documents || []).forEach((d, i) => {
+      // Skip if this document was already added from selectedDocuments
+      if (selectedDocNames.has(normalizeDocKey(d.name))) {
+        return;
+      }
       const name = (d.name || "").toString();
       const sectionFromUrl = getDocumentSectionFromUrl(d.url);
       const dclNameMatch =

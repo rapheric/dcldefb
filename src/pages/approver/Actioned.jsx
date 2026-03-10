@@ -1340,34 +1340,6 @@ const Actioned = () => {
       },
     },
     {
-      title: "Days Sought",
-      dataIndex: "daysSought",
-      key: "daysSought",
-      width: 100,
-      align: "center",
-      render: (daysSought) => (
-        <div
-          style={{
-            fontWeight: "bold",
-            color:
-              daysSought > 45
-                ? ERROR_RED
-                : daysSought > 30
-                  ? WARNING_ORANGE
-                  : daysSought > 15
-                    ? PROCESSING_BLUE
-                    : SUCCESS_GREEN,
-            fontSize: 13,
-            padding: "2px 8px",
-            borderRadius: 4,
-            display: "inline-block",
-          }}
-        >
-          {daysSought} days
-        </div>
-      ),
-    },
-    {
       title: "SLA",
       dataIndex: "slaExpiry",
       key: "slaExpiry",
