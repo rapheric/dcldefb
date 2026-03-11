@@ -4138,9 +4138,7 @@ const Deferrals = ({ userId }) => {
                               >
                                 <FileDoneOutlined
                                   style={{
-                                    color: isUploaded
-                                      ? SUCCESS_GREEN
-                                      : WARNING_ORANGE,
+                                    color: "#000000",
                                     fontSize: 16,
                                   }}
                                 />
@@ -4156,7 +4154,7 @@ const Deferrals = ({ userId }) => {
                                   >
                                     {doc.name}
                                     <UniformTag
-                                      color={isUploaded ? "green" : "orange"}
+                                      color="default"
                                       text={
                                         isUploaded ? "Uploaded" : "Requested"
                                       }

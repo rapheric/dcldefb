@@ -10,14 +10,7 @@ import {
   message,
   Tooltip,
 } from "antd";
-import {
-  UploadOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  SyncOutlined,
-} from "@ant-design/icons";
+import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 // import { getExpiryStatus } from "../utils/documentStats";
 // import { handleDeleteFile } from "../utils/uploadUtils";
@@ -79,7 +72,6 @@ const DocumentTable = ({
     let textColor = "#000";
     let borderColor = "#d9d9d9";
     let text = key || "Unknown";
-    let icon = <SyncOutlined spin />;
 
     if (
       lowerKey === "submitted" ||
@@ -90,17 +82,11 @@ const DocumentTable = ({
       textColor = "#52c41a";
       borderColor = "#52c41a";
       text = lowerKey;
-      icon = <CheckCircleOutlined />;
-    } else if (
-      lowerKey === "pending" ||
-      lowerKey === "pendingrm" ||
-      lowerKey === "pendingco"
-    ) {
+    } else if (lowerKey === "pendingrm" || lowerKey === "pendingco") {
       bgColor = "#ffebe6";
       textColor = "#FF4D4F";
       borderColor = "#FF4D4F";
-      text = "pending";
-      icon = <ClockCircleOutlined />;
+      text = lowerKey;
     } else if (
       lowerKey === "deferred" ||
       lowerKey === "waived" ||
@@ -110,12 +96,10 @@ const DocumentTable = ({
       textColor = "#FAAD14";
       borderColor = "#FAAD14";
       text = lowerKey;
-      icon = <CloseCircleOutlined />;
     }
 
     return (
       <Tag
-        icon={icon}
         className="status-tag"
         style={{
           backgroundColor: bgColor,

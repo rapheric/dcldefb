@@ -41,15 +41,6 @@ const ERROR_RED = "#ff4d4f";
 const WARNING_ORANGE = "#faad14";
 const INFO_BLUE = "#1890ff";
 
-// const STATUS_CONFIG = {
-//   Submitted: { color: SUCCESS_GREEN, textColor: "white" },
-//   "Pending from RM": { color: WARNING_ORANGE, textColor: "white" },
-//   "Pending from CO": { color: INFO_BLUE, textColor: "white" },
-//   Deferred: { color: SECONDARY_BLUE, textColor: "white" },
-//   Waived: { color: PRIMARY_PURPLE, textColor: "white" },
-//   TBO: { color: "#666666", textColor: "white" },
-// };
-
 const MyQueue = ({
   userId,
   draftToRestore = null,
@@ -129,8 +120,6 @@ const MyQueue = ({
     refetch,
   } = useGetAllCoCreatorChecklistsQuery();
 
-  // ... (Theme colors and other constants) ...
-
   // Filter checklists assigned to this RM and queue status
   const filteredData = useMemo(() => {
     if (!checklists) return [];
@@ -140,10 +129,7 @@ const MyQueue = ({
         .filter((c) => (c.assignedToRM?.id || c.assignedToRM?._id) === userId)
         .filter((c) => {
           const status = (c.status || "").toLowerCase();
-
-          // 1. Filter out only "approved" and "rejected"
-          // Keep "pending" status because newly created checklists start as pending
-          return status !== "approved" && status !== "rejected";
+          return status === "rmreview";
         })
 
         // Map and Inject the displayStatus field

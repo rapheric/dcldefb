@@ -67,6 +67,7 @@ import {
   FolderOpenOutlined,
   FileOutlined,
   PlusOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import getFacilityColumns from "../../utils/facilityColumns";
 import dayjs from "dayjs";
@@ -98,18 +99,210 @@ const { Option } = Select;
 
 // Custom CSS for modal styling
 const customStyles = `
+  /* Core Modal Styling */
   .ant-modal-header { background-color: ${PRIMARY_BLUE} !important; padding: 18px 24px !important; }
   .ant-modal-title { color: white !important; font-size: 1.15rem !important; font-weight: 700 !important; letter-spacing: 0.5px; }
   .ant-modal-close-x { color: white !important; }
 
+  /* Deferral Info Card Styling */
   .deferral-info-card .ant-card-head { border-bottom: 2px solid ${ACCENT_LIME} !important; }
   .deferral-info-card .ant-descriptions-item-label { font-weight: 600 !important; color: ${SECONDARY_PURPLE} !important; padding-bottom: 4px; }
   .deferral-info-card .ant-descriptions-item-content { color: ${PRIMARY_BLUE} !important; font-weight: 700 !important; font-size: 13px !important; }
 
+  /* Form Controls */
   .ant-input, .ant-select-selector { border-radius: 6px !important; border-color: #e0e0e0 !important; }
   .ant-input:focus, .ant-select-focused .ant-select-selector { box-shadow: 0 0 0 2px rgba(22, 70, 121, 0.2) !important; border-color: ${PRIMARY_BLUE} !important; }
 
+  /* Status Tags */
   .status-tag { font-weight: 700 !important; border-radius: 999px !important; padding: 3px 8px !important; text-transform: capitalize; min-width: 80px; text-align: center; display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
+
+  /* Deferral Modal Overlay - Full Screen */
+  .deferral-modal-overlay {
+    position: fixed;
+    top: 65px;
+    left: var(--sidebar-width, 150px);
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 990;
+    overflow: auto;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+    max-height: 100vh;
+  }
+
+  /* Deferral Modal Container */
+  .deferral-modal-container {
+    background: white;
+    border-radius: 12px;
+    overflow: visible;
+    width: 1200px;
+    max-width: calc(100vw - 310px);
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+    margin: 0 16px 0 96px;
+    position: relative;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    max-height: auto;
+  }
+
+  /* Deferral Modal Header */
+  .deferral-modal-header {
+    background-color: ${PRIMARY_BLUE} !important;
+    padding: 18px 24px !important;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .deferral-modal-header h3 {
+    color: white !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+  }
+
+  /* Deferral Modal Body - Full scrolling */
+  .deferral-modal-body {
+    padding: 24px 24px 0 24px;
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Deferral Modal Footer */
+  .deferral-modal-footer {
+    padding: 16px 24px;
+    background: #fafafa;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    border-radius: 0 0 12px 12px;
+    flex-shrink: 0;
+  }
+
+  .deferral-modal-footer .ant-btn {
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .deferral-modal-footer .ant-btn-primary {
+    background-color: #164679 !important;
+    border-color: #164679 !important;
+    color: #ffffff !important;
+  }
+
+  .deferral-modal-footer .ant-btn-primary:hover {
+    background-color: #0f3a5f !important;
+    border-color: #0f3a5f !important;
+    color: #ffffff !important;
+  }
+
+  .deferral-modal-footer .ant-btn-default {
+    background-color: #ffffff !important;
+    border-color: #d9d9d9 !important;
+    color: #000000 !important;
+  }
+
+  .deferral-modal-footer .ant-btn-default:hover {
+    background-color: #fafafa !important;
+    border-color: #b3b3b3 !important;
+    color: #000000 !important;
+  }
+
+  /* Comment List Styling - Compact Horizontal Layout */
+  .deferral-comments-list .ant-list-item {
+    padding: 8px 0 !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+  }
+
+  .deferral-comments-list .ant-list-item:last-child {
+    border-bottom: none !important;
+  }
+
+  .deferral-comments-list .ant-list-item-meta {
+    align-items: flex-start !important;
+    margin-bottom: 0 !important;
+  }
+
+  .deferral-comments-list .ant-list-item-meta-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .deferral-comments-list .ant-avatar {
+    flex-shrink: 0;
+  }
+
+  /* Comment content row layout */
+  .comment-content-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    line-height: 1.4;
+  }
+
+  .comment-author {
+    font-weight: 600;
+    color: ${PRIMARY_BLUE} !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+    font-size: 13px;
+  }
+
+  .comment-text {
+    color: #4a4a4a;
+    font-size: 13px;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .comment-timestamp {
+    font-size: 11px;
+    color: #999;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Responsive adjustments */
+  @media (min-width: 768px) and (max-width: 1099px) {
+    .deferral-modal-overlay {
+      left: var(--sidebar-width, 40px);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .deferral-modal-overlay {
+      left: 0;
+      padding-left: 0;
+      padding-right: 16px;
+    }
+    .deferral-modal-container {
+      width: calc(100vw - 32px) !important;
+      max-width: calc(100vw - 32px) !important;
+      margin: 0 !important;
+    }
+    .comment-content-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
 `;
 
 const getFileIcon = (type) => {
@@ -3603,2010 +3796,2155 @@ const DeferralDetailsModal = ({
         </Space>
       </Modal>
 
-      <Modal
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <BankOutlined />
-            <span>Deferral Request: {localDeferral.deferralNumber}</span>
-            {headerTag && (
-              <Tag color="geekblue" style={{ marginLeft: 6, fontWeight: 700 }}>
-                {headerTag}
-              </Tag>
-            )}
-          </div>
-        }
-        open={open}
-        onCancel={onClose}
-        width={1000}
-        styles={{ body: { padding: "0 24px 24px" } }}
-        footer={
-          readOnly
-            ? [
-                <Button
-                  key="download"
-                  type="primary"
-                  onClick={downloadDeferralAsPDF}
-                  loading={actionLoading}
-                  icon={<FilePdfOutlined />}
-                  style={{
-                    marginRight: "auto",
-                    backgroundColor: "#164679",
-                    borderColor: "#164679",
-                    color: "#fff !important",
-                  }}
-                >
-                  Download as PDF
-                </Button>,
-                <Button key="close" onClick={onClose}>
-                  Close
-                </Button>,
-              ]
-            : [
-                // Download button
-                <Button
-                  key="download"
-                  type="primary"
-                  onClick={downloadDeferralAsPDF}
-                  loading={actionLoading}
-                  icon={<FilePdfOutlined />}
-                  style={{
-                    marginRight: "auto",
-                    backgroundColor: "#164679",
-                    borderColor: "#164679",
-                    color: "#fff !important",
-                  }}
-                >
-                  Download as PDF
-                </Button>,
-
-                // Return for Rework button (only for returned deferrals)
-                isReturnedForRework && (
-                  <Button
-                    key="rework"
-                    type="primary"
-                    onClick={handleReturnForRework}
-                    style={{
-                      backgroundColor: WARNING_ORANGE,
-                      borderColor: WARNING_ORANGE,
-                      color: "#FFFFFF !important",
-                    }}
-                    icon={<ReloadOutlined />}
-                  >
-                    Resubmit for Review
-                  </Button>
-                ),
-
-                // Withdraw button - Available unless deferral is fully approved or completed
-                !isApprovedStatus && !isFullyApproved && !isCompleted && (
-                  <Button
-                    key="withdraw"
-                    type="default"
-                    onClick={handleWithdrawRequest}
-                    loading={loadingWithdraw}
-                    style={{
-                      backgroundColor: ERROR_RED,
-                      borderColor: ERROR_RED,
-                      color: "white",
-                    }}
-                  >
-                    Withdraw Request
-                  </Button>
-                ),
-
-                // Apply Extension button (for approved deferrals)
-                (status === "deferral_approved" || status === "approved") &&
-                  !localDeferral?.extensionStatus && (
-                    <Button
-                      key="apply_extension"
-                      type="primary"
-                      onClick={() => handleApplyForExtension(localDeferral)}
-                      style={{
-                        backgroundColor: PRIMARY_BLUE,
-                        borderColor: PRIMARY_BLUE,
-                        color: "white",
-                      }}
+      <>
+        <style>{customStyles}</style>
+        <div
+          className="deferral-modal-overlay"
+          style={{
+            display: open ? "flex" : "none",
+          }}
+          onClick={onClose}
+        >
+          {open && (
+            <div
+              className="deferral-modal-container"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="deferral-modal-header">
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <BankOutlined />
+                  <span>Deferral Request: {localDeferral.deferralNumber}</span>
+                  {headerTag && (
+                    <Tag
+                      color="geekblue"
+                      style={{ marginLeft: 6, fontWeight: 700 }}
                     >
-                      Apply Extension
-                    </Button>
-                  ),
-
-                // Submit Close Request button (RM approved tab)
-                (status === "deferral_approved" || status === "approved") && (
-                  <Button
-                    key="close_request"
-                    type="primary"
-                    onClick={handleOpenCloseRequest}
-                    style={{
-                      backgroundColor: PRIMARY_BLUE,
-                      borderColor: PRIMARY_BLUE,
-                      color: "white",
-                    }}
-                  >
-                    Close Deferral
-                  </Button>
-                ),
-
-                // Close button
-                <Button key="close" onClick={onClose}>
-                  Close
-                </Button>,
-              ].filter(Boolean)
-        }
-      >
-        {/* Real-time Status Alert */}
-        <DeferralStatusAlert
-          deferral={localDeferral}
-          hideApprovedStatus={!!overrideApprovals}
-        />
-
-        <Card
-          className="deferral-info-card"
-          size="small"
-          title={
-            <span style={{ color: PRIMARY_BLUE }}>Customer Information</span>
-          }
-          style={{ marginBottom: 18, marginTop: 24 }}
-        >
-          <Descriptions size="middle" column={{ xs: 1, sm: 2, lg: 3 }}>
-            <Descriptions.Item label="Customer Name">
-              <Text strong style={{ color: PRIMARY_BLUE }}>
-                {localDeferral.customerName}
-              </Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="Customer Number">
-              <Text strong style={{ color: PRIMARY_BLUE }}>
-                {localDeferral.customerNumber}
-              </Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="Loan Type">
-              <Text strong style={{ color: PRIMARY_BLUE }}>
-                {localDeferral.loanType}
-              </Text>
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-
-        <Card
-          className="deferral-info-card"
-          size="small"
-          title={<span style={{ color: PRIMARY_BLUE }}>Deferral Details</span>}
-          style={{ marginBottom: 18 }}
-        >
-          <Descriptions size="middle" column={{ xs: 1, sm: 2, lg: 3 }}>
-            <Descriptions.Item label="Deferral Number">
-              <Text strong style={{ color: PRIMARY_BLUE }}>
-                {localDeferral.deferralNumber}
-              </Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="DCL No">
-              <Text strong style={{ color: PRIMARY_BLUE }}>
-                {localDeferral.dclNo || localDeferral.dclNumber}
-              </Text>
-            </Descriptions.Item>
-            {/* Extension Status placed next to DCL No for visibility */}
-            {localDeferral.extensionStatus && (
-              <Descriptions.Item label="Extension Status">
-                <Text strong style={{ color: PRIMARY_BLUE }}>
-                  {localDeferral.extensionStatus}
-                </Text>
-              </Descriptions.Item>
-            )}
-            {/* Show overall deferral status (hide for extension-application modal views) */}
-            {!overrideApprovals && headerTag !== "EXTENSION APPLICATION" && (
-              <Descriptions.Item label="Status">
-                {(() => {
-                  // If the deferral was closed/withdrawn by the RM, show Withdrawn explicitly
-                  const isWithdrawnLocal = Boolean(
-                    localDeferral?.closedByName ||
-                    localDeferral?.ClosedByName ||
-                    localDeferral?.closedAt ||
-                    localDeferral?.ClosedAt,
-                  );
-
-                  if (isWithdrawnLocal) {
-                    return (
-                      <Text strong style={{ color: ERROR_RED }}>
-                        Withdrawn
-                      </Text>
-                    );
-                  }
-
-                  const raw = (
-                    localDeferral.status ||
-                    localDeferral.deferralApprovalStatus ||
-                    "pending"
-                  ).toString();
-                  const key = raw.toLowerCase();
-                  const display = key
-                    .replace(/_/g, " ")
-                    .split(" ")
-                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                    .join(" ");
-                  let color = PRIMARY_BLUE;
-                  if (key.includes("approved")) color = SUCCESS_GREEN;
-                  else if (key.includes("rejected")) color = ERROR_RED;
-                  else if (key.includes("returned") || key.includes("rework"))
-                    color = WARNING_ORANGE;
-                  return (
-                    <Text strong style={{ color }}>
-                      {display}
-                    </Text>
-                  );
-                })()}
-              </Descriptions.Item>
-            )}
-
-            {/* Creator Status */}
-            <Descriptions.Item label="Creator Status">
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                {(() => {
-                  const creatorStatusRaw = overrideApprovals
-                    ? overrideApprovals.creatorApprovalStatus
-                    : localDeferral.creatorApprovalStatus;
-                  const creatorStatus = (creatorStatusRaw || "")
-                    .toString()
-                    .toLowerCase();
-
-                  const creatorHasDate = Boolean(
-                    localDeferral.creatorApprovalDate ||
-                    localDeferral.creatorApprovedAt ||
-                    localDeferral.creatorApprovedDate ||
-                    overrideApprovals?.creatorApprovalDate,
-                  );
-                  const creatorApprovedFlag =
-                    creatorHasDate ||
-                    creatorStatus === "approved" ||
-                    creatorStatus === "true" ||
-                    creatorStatus === true;
-
-                  if (creatorApprovedFlag) {
-                    return (
-                      <Text strong style={{ color: SUCCESS_GREEN }}>
-                        Approved
-                      </Text>
-                    );
-                  }
-
-                  const creatorRejected =
-                    creatorStatus === "rejected" ||
-                    creatorStatus === "false" ||
-                    creatorStatus === false;
-                  if (creatorRejected)
-                    return (
-                      <Text strong style={{ color: ERROR_RED }}>
-                        Rejected
-                      </Text>
-                    );
-
-                  return (
-                    <Text strong style={{ color: PRIMARY_BLUE }}>
-                      Pending
-                    </Text>
-                  );
-                })()}
-              </div>
-            </Descriptions.Item>
-
-            {/* Checker Status */}
-            <Descriptions.Item label="Checker Status">
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                {(() => {
-                  const checkerStatusRaw = overrideApprovals
-                    ? overrideApprovals.checkerApprovalStatus
-                    : localDeferral.checkerApprovalStatus;
-                  const checkerStatus = (checkerStatusRaw || "")
-                    .toString()
-                    .toLowerCase();
-
-                  const checkerHasDate = Boolean(
-                    localDeferral.checkerApprovalDate ||
-                    localDeferral.checkerApprovedAt ||
-                    localDeferral.checkerApprovedDate ||
-                    overrideApprovals?.checkerApprovalDate,
-                  );
-                  const checkerApprovedFlag =
-                    checkerHasDate ||
-                    checkerStatus === "approved" ||
-                    checkerStatus === "true" ||
-                    checkerStatus === true;
-
-                  if (checkerApprovedFlag) {
-                    return (
-                      <Text strong style={{ color: SUCCESS_GREEN }}>
-                        Approved
-                      </Text>
-                    );
-                  }
-
-                  const checkerRejected =
-                    checkerStatus === "rejected" ||
-                    checkerStatus === "false" ||
-                    checkerStatus === false;
-                  if (checkerRejected)
-                    return (
-                      <Text strong style={{ color: ERROR_RED }}>
-                        Rejected
-                      </Text>
-                    );
-
-                  return (
-                    <Text strong style={{ color: PRIMARY_BLUE }}>
-                      Pending
-                    </Text>
-                  );
-                })()}
-              </div>
-            </Descriptions.Item>
-
-            {/* Enhanced Approvers Status with Counts */}
-            <Descriptions.Item label="Approvers Status">
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}
-              >
-                <div>
-                  {(() => {
-                    let total = 0;
-                    let approved = 0;
-                    if (overrideApprovals && overrideApprovals.approvers) {
-                      total = overrideApprovals.approvers.length;
-                      approved = overrideApprovals.approvers.filter(
-                        (a) =>
-                          a.approvalStatus === "Approved" ||
-                          a.approved === true,
-                      ).length;
-                    } else {
-                      total = stats.total;
-                      approved = stats.approved;
-                    }
-
-                    if (total === 0) {
-                      return (
-                        <Text strong style={{ color: PRIMARY_BLUE }}>
-                          No approvers
-                        </Text>
-                      );
-                    }
-                    if (approved === total) {
-                      return (
-                        <Text strong style={{ color: SUCCESS_GREEN }}>
-                          All Approved
-                        </Text>
-                      );
-                    }
-                    return (
-                      <Text
-                        strong
-                        style={{ color: PRIMARY_BLUE }}
-                      >{`${approved} of ${total} Approved`}</Text>
-                    );
-                  })()}
+                      {headerTag}
+                    </Tag>
+                  )}
                 </div>
+                <Button
+                  icon={<CloseOutlined />}
+                  onClick={onClose}
+                  size="small"
+                  type="default"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "rgba(255, 255, 255, 0.2)",
+                    borderColor: "rgba(255, 255, 255, 0.4)",
+                    color: "#fff",
+                    width: "32px",
+                    height: "32px",
+                    padding: 0,
+                  }}
+                />
               </div>
-            </Descriptions.Item>
 
-            {/* Loan Amount with threshold indicator */}
-            <Descriptions.Item label="Loan Amount">
+              {/* Body */}
               <div
-                style={{
-                  fontWeight: 500,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                }}
+                className="deferral-modal-body"
+                onClick={(e) => e.stopPropagation()}
               >
-                {(function () {
-                  // Primary extraction
-                  let { amountNumber, formattedAmount, classification } =
-                    getLoanDisplay(localDeferral || {});
+                {/* Real-time Status Alert */}
+                <DeferralStatusAlert
+                  deferral={localDeferral}
+                  hideApprovedStatus={!!overrideApprovals}
+                />
 
-                  // Fallback: check common nested places where loan amount may be stored
-                  if (!amountNumber) {
-                    const maybe =
-                      localDeferral?.requested?.loanAmount ||
-                      localDeferral?.request?.loanAmount ||
-                      localDeferral?.extension?.loanAmount ||
-                      (Array.isArray(localDeferral?.extensions) &&
-                        localDeferral.extensions[0]?.loanAmount) ||
-                      localDeferral?.requestedLoanAmount ||
-                      localDeferral?.loan_amount ||
-                      localDeferral?.requested_amount;
-                    const parsed =
-                      maybe != null
-                        ? Number(String(maybe).replace(/[^0-9.-]+/g, ""))
-                        : 0;
-                    if (Number.isFinite(parsed) && parsed > 0) {
-                      amountNumber = parsed;
-                      formattedAmount = `KSh ${parsed.toLocaleString()}`;
-                      classification =
-                        parsed < 75000000
-                          ? "below 75 million"
-                          : "above 75 million";
-                    }
+                <Card
+                  className="deferral-info-card"
+                  size="small"
+                  title={
+                    <span style={{ color: PRIMARY_BLUE }}>
+                      Customer Information
+                    </span>
                   }
+                  style={{ marginBottom: 18, marginTop: 24 }}
+                >
+                  <Descriptions size="middle" column={{ xs: 1, sm: 2, lg: 3 }}>
+                    <Descriptions.Item label="Customer Name">
+                      <Text strong style={{ color: PRIMARY_BLUE }}>
+                        {localDeferral.customerName}
+                      </Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Customer Number">
+                      <Text strong style={{ color: PRIMARY_BLUE }}>
+                        {localDeferral.customerNumber}
+                      </Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Loan Type">
+                      <Text strong style={{ color: PRIMARY_BLUE }}>
+                        {localDeferral.loanType}
+                      </Text>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
 
-                  if (!amountNumber)
-                    return (
-                      <span style={{ color: PRIMARY_BLUE }}>Not specified</span>
-                    );
-
-                  // Only show the classification as plain text (remove boxed tags)
-                  return (
-                    <>
-                      {classification === "above 75 million" ? (
-                        <Text strong style={{ color: ERROR_RED }}>
-                          {"Above 75 million"}
-                        </Text>
-                      ) : (
+                <Card
+                  className="deferral-info-card"
+                  size="small"
+                  title={
+                    <span style={{ color: PRIMARY_BLUE }}>
+                      Deferral Details
+                    </span>
+                  }
+                  style={{ marginBottom: 18 }}
+                >
+                  <Descriptions size="middle" column={{ xs: 1, sm: 2, lg: 3 }}>
+                    <Descriptions.Item label="Deferral Number">
+                      <Text strong style={{ color: PRIMARY_BLUE }}>
+                        {localDeferral.deferralNumber}
+                      </Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="DCL No">
+                      <Text strong style={{ color: PRIMARY_BLUE }}>
+                        {localDeferral.dclNo || localDeferral.dclNumber}
+                      </Text>
+                    </Descriptions.Item>
+                    {/* Extension Status placed next to DCL No for visibility */}
+                    {localDeferral.extensionStatus && (
+                      <Descriptions.Item label="Extension Status">
                         <Text strong style={{ color: PRIMARY_BLUE }}>
-                          {"Below 75 million"}
+                          {localDeferral.extensionStatus}
                         </Text>
+                      </Descriptions.Item>
+                    )}
+                    {/* Show overall deferral status (hide for extension-application modal views) */}
+                    {!overrideApprovals &&
+                      headerTag !== "EXTENSION APPLICATION" && (
+                        <Descriptions.Item label="Status">
+                          {(() => {
+                            // If the deferral was closed/withdrawn by the RM, show Withdrawn explicitly
+                            const isWithdrawnLocal = Boolean(
+                              localDeferral?.closedByName ||
+                              localDeferral?.ClosedByName ||
+                              localDeferral?.closedAt ||
+                              localDeferral?.ClosedAt,
+                            );
+
+                            if (isWithdrawnLocal) {
+                              return (
+                                <Text strong style={{ color: ERROR_RED }}>
+                                  Withdrawn
+                                </Text>
+                              );
+                            }
+
+                            const raw = (
+                              localDeferral.status ||
+                              localDeferral.deferralApprovalStatus ||
+                              "pending"
+                            ).toString();
+                            const key = raw.toLowerCase();
+                            const display = key
+                              .replace(/_/g, " ")
+                              .split(" ")
+                              .map(
+                                (w) => w.charAt(0).toUpperCase() + w.slice(1),
+                              )
+                              .join(" ");
+                            let color = PRIMARY_BLUE;
+                            if (key.includes("approved")) color = SUCCESS_GREEN;
+                            else if (key.includes("rejected"))
+                              color = ERROR_RED;
+                            else if (
+                              key.includes("returned") ||
+                              key.includes("rework")
+                            )
+                              color = WARNING_ORANGE;
+                            return (
+                              <Text strong style={{ color }}>
+                                {display}
+                              </Text>
+                            );
+                          })()}
+                        </Descriptions.Item>
                       )}
-                    </>
-                  );
-                })()}
-              </div>
-            </Descriptions.Item>
 
-            {/* Days Sought and Deferral Due Date removed as requested */}
-
-            {/* Created At */}
-            <Descriptions.Item label="Created At">
-              <div>
-                <Text strong style={{ color: PRIMARY_BLUE }}>
-                  {dayjs(
-                    localDeferral.createdAt || localDeferral.requestedDate,
-                  ).format("DD MMM YYYY")}
-                </Text>
-              </div>
-            </Descriptions.Item>
-
-            {/* Show who withdrew/closed the deferral (if applicable) */}
-            {localDeferral.closedByName && (
-              <Descriptions.Item label="Withdrawn By">
-                <div>
-                  <Text strong style={{ color: ERROR_RED }}>
-                    {localDeferral.closedByName}
-                  </Text>
-                  {localDeferral.closedAt && (
-                    <div style={{ fontSize: 12, color: "#666" }}>
-                      {dayjs(localDeferral.closedAt).format("DD MMM YYYY")}
-                    </div>
-                  )}
-                </div>
-              </Descriptions.Item>
-            )}
-
-            {/* Extension-specific fields (if present) */}
-            {localDeferral.requestedDaysSought && (
-              <Descriptions.Item label="Requested Extension Days">
-                <Text strong style={{ color: PRIMARY_BLUE }}>
-                  {localDeferral.requestedDaysSought}
-                </Text>
-              </Descriptions.Item>
-            )}
-            {localDeferral.extensionCreatedAt && (
-              <Descriptions.Item label="Extension Application Date">
-                <Text strong style={{ color: PRIMARY_BLUE }}>
-                  {dayjs(localDeferral.extensionCreatedAt).format(
-                    "DD MMM YYYY",
-                  )}
-                </Text>
-              </Descriptions.Item>
-            )}
-            {/* extensionStatus moved next to DCL No above */}
-          </Descriptions>
-
-          <div
-            style={{
-              marginTop: 16,
-              paddingTop: 16,
-              borderTop: "1px solid #f0f0f0",
-            }}
-          >
-            <Text strong style={{ display: "block", marginBottom: 8 }}>
-              Document(s) to be deferred ({requestedDocs.length})
-            </Text>
-
-            {requestedDocs.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {requestedDocs.map((doc, idx) => {
-                  const docKey = normalizeDocKey(doc.name);
-                  const uploadedVersion = uploadedDocs.find((u) => {
-                    const targetKey = normalizeDocKey(u.documentTarget);
-                    if (targetKey) {
-                      return targetKey === docKey;
-                    }
-                    return (u.name || "")
-                      .toLowerCase()
-                      .includes((doc.name || "").toLowerCase());
-                  });
-                  const isUploaded = !!uploadedVersion;
-                  return (
-                    <div
-                      key={doc.id || idx}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "12px 16px",
-                        backgroundColor: isUploaded ? "#f6ffed" : "#fff7e6",
-                        borderRadius: 6,
-                        border: isUploaded
-                          ? "1px solid #b7eb8f"
-                          : "1px solid #ffd591",
-                      }}
-                    >
+                    {/* Creator Status */}
+                    <Descriptions.Item label="Creator Status">
                       <div
                         style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        {(() => {
+                          const creatorStatusRaw = overrideApprovals
+                            ? overrideApprovals.creatorApprovalStatus
+                            : localDeferral.creatorApprovalStatus;
+                          const creatorStatus = (creatorStatusRaw || "")
+                            .toString()
+                            .toLowerCase();
+
+                          const creatorHasDate = Boolean(
+                            localDeferral.creatorApprovalDate ||
+                            localDeferral.creatorApprovedAt ||
+                            localDeferral.creatorApprovedDate ||
+                            overrideApprovals?.creatorApprovalDate,
+                          );
+                          const creatorApprovedFlag =
+                            creatorHasDate ||
+                            creatorStatus === "approved" ||
+                            creatorStatus === "true" ||
+                            creatorStatus === true;
+
+                          if (creatorApprovedFlag) {
+                            return (
+                              <Text strong style={{ color: SUCCESS_GREEN }}>
+                                Approved
+                              </Text>
+                            );
+                          }
+
+                          const creatorRejected =
+                            creatorStatus === "rejected" ||
+                            creatorStatus === "false" ||
+                            creatorStatus === false;
+                          if (creatorRejected)
+                            return (
+                              <Text strong style={{ color: ERROR_RED }}>
+                                Rejected
+                              </Text>
+                            );
+
+                          return (
+                            <Text strong style={{ color: PRIMARY_BLUE }}>
+                              Pending
+                            </Text>
+                          );
+                        })()}
+                      </div>
+                    </Descriptions.Item>
+
+                    {/* Checker Status */}
+                    <Descriptions.Item label="Checker Status">
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        {(() => {
+                          const checkerStatusRaw = overrideApprovals
+                            ? overrideApprovals.checkerApprovalStatus
+                            : localDeferral.checkerApprovalStatus;
+                          const checkerStatus = (checkerStatusRaw || "")
+                            .toString()
+                            .toLowerCase();
+
+                          const checkerHasDate = Boolean(
+                            localDeferral.checkerApprovalDate ||
+                            localDeferral.checkerApprovedAt ||
+                            localDeferral.checkerApprovedDate ||
+                            overrideApprovals?.checkerApprovalDate,
+                          );
+                          const checkerApprovedFlag =
+                            checkerHasDate ||
+                            checkerStatus === "approved" ||
+                            checkerStatus === "true" ||
+                            checkerStatus === true;
+
+                          if (checkerApprovedFlag) {
+                            return (
+                              <Text strong style={{ color: SUCCESS_GREEN }}>
+                                Approved
+                              </Text>
+                            );
+                          }
+
+                          const checkerRejected =
+                            checkerStatus === "rejected" ||
+                            checkerStatus === "false" ||
+                            checkerStatus === false;
+                          if (checkerRejected)
+                            return (
+                              <Text strong style={{ color: ERROR_RED }}>
+                                Rejected
+                              </Text>
+                            );
+
+                          return (
+                            <Text strong style={{ color: PRIMARY_BLUE }}>
+                              Pending
+                            </Text>
+                          );
+                        })()}
+                      </div>
+                    </Descriptions.Item>
+
+                    {/* Enhanced Approvers Status with Counts */}
+                    <Descriptions.Item label="Approvers Status">
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                        }}
+                      >
+                        <div>
+                          {(() => {
+                            let total = 0;
+                            let approved = 0;
+                            if (
+                              overrideApprovals &&
+                              overrideApprovals.approvers
+                            ) {
+                              total = overrideApprovals.approvers.length;
+                              approved = overrideApprovals.approvers.filter(
+                                (a) =>
+                                  a.approvalStatus === "Approved" ||
+                                  a.approved === true,
+                              ).length;
+                            } else {
+                              total = stats.total;
+                              approved = stats.approved;
+                            }
+
+                            if (total === 0) {
+                              return (
+                                <Text strong style={{ color: PRIMARY_BLUE }}>
+                                  No approvers
+                                </Text>
+                              );
+                            }
+                            if (approved === total) {
+                              return (
+                                <Text strong style={{ color: SUCCESS_GREEN }}>
+                                  All Approved
+                                </Text>
+                              );
+                            }
+                            return (
+                              <Text
+                                strong
+                                style={{ color: PRIMARY_BLUE }}
+                              >{`${approved} of ${total} Approved`}</Text>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </Descriptions.Item>
+
+                    {/* Loan Amount with threshold indicator */}
+                    <Descriptions.Item label="Loan Amount">
+                      <div
+                        style={{
+                          fontWeight: 500,
                           display: "flex",
                           alignItems: "center",
                           gap: 12,
                         }}
                       >
-                        <FileDoneOutlined
-                          style={{
-                            color: isUploaded ? SUCCESS_GREEN : WARNING_ORANGE,
-                            fontSize: 16,
-                          }}
-                        />
-                        <div>
-                          <div
-                            style={{
-                              fontWeight: 500,
-                              fontSize: 14,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 8,
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 8,
-                              }}
-                            >
-                              <div>{doc.name}</div>
-                              <UniformTag
-                                color={isUploaded ? "green" : "orange"}
-                                text={isUploaded ? "Uploaded" : "Requested"}
-                              />
-                            </div>
-                            {/* Show requested days as a small tag when available (including 0) */}
-                            {(typeof doc.daysSought !== "undefined" ||
-                              typeof doc.requestedDaysSought !==
-                                "undefined") && (
-                              <div style={{ marginLeft: "auto" }}>
-                                <Tag
-                                  style={{
-                                    background: "#fff7e6",
-                                    border: "1px solid #ffd591",
-                                    color: "#ad6800",
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  {String(
-                                    typeof doc.daysSought !== "undefined"
-                                      ? doc.daysSought
-                                      : doc.requestedDaysSought,
-                                  )}{" "}
-                                  days
-                                </Tag>
-                              </div>
-                            )}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: "#666",
-                              marginTop: 4,
-                            }}
-                          >
-                            <b>Type:</b> {formatDeferralDocumentType(doc)}
-                          </div>
-                          {uploadedVersion && (
-                            <div
-                              style={{
-                                fontSize: 12,
-                                color: "#666",
-                                marginTop: 4,
-                              }}
-                            >
-                              Uploaded as: {uploadedVersion.name}{" "}
-                              {uploadedVersion.uploadDate
-                                ? `• ${dayjs(uploadedVersion.uploadDate).format("DD MMM YYYY HH:mm")}`
-                                : ""}
-                            </div>
-                          )}
-                          {/* Show per-document days and computed next due date (show '-' when not present) */}
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: "#444",
-                              marginTop: 6,
-                            }}
-                          >
-                            {(() => {
-                              const { days, nextDate } =
-                                resolveDocDaysAndDate(doc);
-                              const daysDisplay =
-                                typeof days !== "undefined" &&
-                                days !== null &&
-                                String(days).trim() !== ""
-                                  ? String(days)
-                                  : "-";
-                              const dateDisplay = nextDate
-                                ? dayjs(nextDate).format("DD MMM YYYY")
-                                : "-";
-                              return (
-                                <>
-                                  <strong>Requested days:</strong> {daysDisplay}{" "}
-                                  &nbsp; • &nbsp; <strong>New due date:</strong>{" "}
-                                  {dateDisplay}
-                                </>
-                              );
-                            })()}
-                          </div>
-                        </div>
-                      </div>
-                      <Space>
-                        {isUploaded &&
-                          uploadedVersion &&
-                          uploadedVersion.url && (
+                        {(function () {
+                          // Primary extraction
+                          let {
+                            amountNumber,
+                            formattedAmount,
+                            classification,
+                          } = getLoanDisplay(localDeferral || {});
+
+                          // Fallback: check common nested places where loan amount may be stored
+                          if (!amountNumber) {
+                            const maybe =
+                              localDeferral?.requested?.loanAmount ||
+                              localDeferral?.request?.loanAmount ||
+                              localDeferral?.extension?.loanAmount ||
+                              (Array.isArray(localDeferral?.extensions) &&
+                                localDeferral.extensions[0]?.loanAmount) ||
+                              localDeferral?.requestedLoanAmount ||
+                              localDeferral?.loan_amount ||
+                              localDeferral?.requested_amount;
+                            const parsed =
+                              maybe != null
+                                ? Number(
+                                    String(maybe).replace(/[^0-9.-]+/g, ""),
+                                  )
+                                : 0;
+                            if (Number.isFinite(parsed) && parsed > 0) {
+                              amountNumber = parsed;
+                              formattedAmount = `KSh ${parsed.toLocaleString()}`;
+                              classification =
+                                parsed < 75000000
+                                  ? "below 75 million"
+                                  : "above 75 million";
+                            }
+                          }
+
+                          if (!amountNumber)
+                            return (
+                              <span style={{ color: PRIMARY_BLUE }}>
+                                Not specified
+                              </span>
+                            );
+
+                          // Only show the classification as plain text (remove boxed tags)
+                          return (
                             <>
-                              <Button
-                                type="text"
-                                icon={<EyeOutlined />}
-                                onClick={() =>
-                                  openFileInNewTab(uploadedVersion.url)
-                                }
-                                size="small"
-                              >
-                                View
-                              </Button>
-                              <Button
-                                type="text"
-                                icon={<DownloadOutlined />}
-                                onClick={() => {
-                                  downloadFile(
-                                    uploadedVersion.url,
-                                    uploadedVersion.name,
-                                  );
-                                  message.success(
-                                    `Downloading ${uploadedVersion.name}...`,
-                                  );
-                                }}
-                                size="small"
-                              >
-                                Download
-                              </Button>
+                              {classification === "above 75 million" ? (
+                                <Text strong style={{ color: ERROR_RED }}>
+                                  {"Above 75 million"}
+                                </Text>
+                              ) : (
+                                <Text strong style={{ color: PRIMARY_BLUE }}>
+                                  {"Below 75 million"}
+                                </Text>
+                              )}
                             </>
-                          )}
-                      </Space>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <Text type="secondary">Not specified</Text>
-            )}
-          </div>
+                          );
+                        })()}
+                      </div>
+                    </Descriptions.Item>
 
-          {localDeferral.deferralDescription && (
-            <div
-              style={{
-                marginTop: 16,
-                paddingTop: 16,
-                borderTop: "1px solid #f0f0f0",
-              }}
-            >
-              <Text strong style={{ display: "block", marginBottom: 8 }}>
-                Deferral Description
-              </Text>
-              <div
-                style={{
-                  padding: 12,
-                  backgroundColor: "#f8f9fa",
-                  borderRadius: 6,
-                  border: "1px solid #e8e8e8",
-                }}
-              >
-                <Text>{localDeferral.deferralDescription}</Text>
-              </div>
-            </div>
-          )}
-        </Card>
+                    {/* Days Sought and Deferral Due Date removed as requested */}
 
-        {/* Existing sections for Facilities, Documents, etc. */}
-        {localDeferral.facilities && localDeferral.facilities.length > 0 && (
-          <Card
-            size="small"
-            title={
-              <span style={{ color: PRIMARY_BLUE }}>
-                Facility Details ({localDeferral.facilities.length})
-              </span>
-            }
-            style={{ marginBottom: 18 }}
-          >
-            <Table
-              dataSource={localDeferral.facilities}
-              columns={facilityColumns}
-              pagination={false}
-              size="small"
-              rowKey={(r) =>
-                r.facilityNumber ||
-                r._id ||
-                `facility-${Math.random().toString(36).slice(2)}`
-              }
-              scroll={{ x: 600 }}
-            />
-          </Card>
-        )}
+                    {/* Created At */}
+                    <Descriptions.Item label="Created At">
+                      <div>
+                        <Text strong style={{ color: PRIMARY_BLUE }}>
+                          {dayjs(
+                            localDeferral.createdAt ||
+                              localDeferral.requestedDate,
+                          ).format("DD MMM YYYY")}
+                        </Text>
+                      </div>
+                    </Descriptions.Item>
 
-        {/* DCL Upload Section */}
-        <Card
-          size="small"
-          title={
-            <span style={{ color: PRIMARY_BLUE }}>
-              Mandatory: DCL Upload {dclDocs.length > 0 ? "✓" : ""}
-            </span>
-          }
-          style={{ marginBottom: 18 }}
-        >
-          {dclDocs.length > 0 ? (
-            <>
-              <List
-                size="small"
-                dataSource={dclDocs}
-                renderItem={(doc) => (
-                  <List.Item
-                    actions={[
-                      doc.url ? (
-                        <Button
-                          key="view"
-                          type="link"
-                          onClick={() => openFileInNewTab(doc.url)}
-                          size="small"
-                        >
-                          View
-                        </Button>
-                      ) : null,
-                      doc.url ? (
-                        <Button
-                          key="download"
-                          type="link"
-                          onClick={() => {
-                            downloadFile(doc.url, doc.name);
-                            message.success(`Downloading ${doc.name}...`);
-                          }}
-                          size="small"
-                        >
-                          Download
-                        </Button>
-                      ) : null,
-                    ].filter(Boolean)}
-                  >
-                    <List.Item.Meta
-                      avatar={getFileIcon(doc.type)}
-                      title={
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <span style={{ fontWeight: 500 }}>{doc.name}</span>
-                          <Tag color="red" style={{ fontSize: 10 }}>
-                            DCL Document
-                          </Tag>
-                        </div>
-                      }
-                      description={
-                        <div style={{ fontSize: 12, color: "#666" }}>
-                          {doc.size && (
-                            <span>
-                              {doc.size > 1024
-                                ? `${(doc.size / 1024).toFixed(2)} MB`
-                                : `${doc.size} KB`}
-                            </span>
-                          )}{" "}
-                          {doc.uploadDate && (
-                            <span style={{ marginLeft: 8 }}>
-                              Uploaded:{" "}
-                              {dayjs(doc.uploadDate).format(
-                                "DD MMM YYYY HH:mm",
+                    {/* Show who withdrew/closed the deferral (if applicable) */}
+                    {localDeferral.closedByName && (
+                      <Descriptions.Item label="Withdrawn By">
+                        <div>
+                          <Text strong style={{ color: ERROR_RED }}>
+                            {localDeferral.closedByName}
+                          </Text>
+                          {localDeferral.closedAt && (
+                            <div style={{ fontSize: 12, color: "#666" }}>
+                              {dayjs(localDeferral.closedAt).format(
+                                "DD MMM YYYY",
                               )}
-                            </span>
-                          )}{" "}
-                          {!doc.url && (
-                            <div
-                              style={{
-                                marginTop: 6,
-                                color: "#8c8c8c",
-                                fontSize: 12,
-                              }}
-                            >
-                              Preview not available
                             </div>
                           )}
                         </div>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
-            </>
-          ) : (
-            <div
-              style={{
-                textAlign: "center",
-                padding: 12,
-                color: WARNING_ORANGE,
-              }}
-            >
-              <UploadOutlined
-                style={{ fontSize: 18, marginBottom: 6, color: WARNING_ORANGE }}
-              />
-              <div>No DCL document uploaded</div>
-              <Text
-                type="secondary"
-                style={{ fontSize: 12, display: "block", marginTop: 4 }}
-              >
-                DCL document is required for submission
-              </Text>
-            </div>
-          )}
-        </Card>
-
-        {/* Additional Documents Section */}
-        <Card
-          size="small"
-          title={
-            <span style={{ color: PRIMARY_BLUE }}>
-              <PaperClipOutlined style={{ marginRight: 8 }} /> Additional
-              Documents ({uploadedDocs.length})
-            </span>
-          }
-          style={{ marginBottom: 18 }}
-        >
-          {uploadedDocs.length > 0 ? (
-            <>
-              <List
-                size="small"
-                dataSource={uploadedDocs}
-                renderItem={(doc) => (
-                  <List.Item
-                    actions={[
-                      doc.url ? (
-                        <Button
-                          key="view"
-                          type="link"
-                          onClick={() => openFileInNewTab(doc.url)}
-                          size="small"
-                        >
-                          View
-                        </Button>
-                      ) : null,
-                      doc.url ? (
-                        <Button
-                          key="download"
-                          type="link"
-                          onClick={() => {
-                            downloadFile(doc.url, doc.name);
-                            message.success(`Downloading ${doc.name}...`);
-                          }}
-                          size="small"
-                        >
-                          Download
-                        </Button>
-                      ) : null,
-                    ].filter(Boolean)}
-                  >
-                    <List.Item.Meta
-                      avatar={getFileIcon(doc.type)}
-                      title={
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <span style={{ fontWeight: 500 }}>{doc.name}</span>
-                          {doc.isAdditional && (
-                            <Tag color="cyan" style={{ fontSize: 10 }}>
-                              Additional
-                            </Tag>
-                          )}
-                        </div>
-                      }
-                      description={
-                        <div style={{ fontSize: 12, color: "#666" }}>
-                          {doc.size && (
-                            <span>
-                              {doc.size > 1024
-                                ? `${(doc.size / 1024).toFixed(2)} MB`
-                                : `${doc.size} KB`}
-                            </span>
-                          )}{" "}
-                          {doc.uploadDate && (
-                            <span style={{ marginLeft: 8 }}>
-                              Uploaded:{" "}
-                              {dayjs(doc.uploadDate).format(
-                                "DD MMM YYYY HH:mm",
-                              )}
-                            </span>
-                          )}{" "}
-                          {!doc.url && (
-                            <div
-                              style={{
-                                marginTop: 6,
-                                color: "#8c8c8c",
-                                fontSize: 12,
-                              }}
-                            >
-                              Preview not available
-                            </div>
-                          )}
-                        </div>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
-            </>
-          ) : (
-            <div style={{ textAlign: "center", padding: 12, color: "#999" }}>
-              <PaperClipOutlined
-                style={{ fontSize: 18, marginBottom: 6, color: "#d9d9d9" }}
-              />
-              <div>No additional documents uploaded</div>
-              <Text
-                type="secondary"
-                style={{ fontSize: 12, display: "block", marginTop: 4 }}
-              >
-                You can upload additional supporting documents if needed
-              </Text>
-            </div>
-          )}
-        </Card>
-
-        {/* Enhanced Approval Flow Section */}
-        <Card
-          size="small"
-          title={
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-              }}
-            >
-              <span style={{ color: PRIMARY_BLUE, fontSize: 14 }}>
-                Approval Flow
-              </span>
-              {!readOnly &&
-                !isCompleted &&
-                !isApprovedStatus &&
-                !isFullyApproved &&
-                !allApproversApproved &&
-                !overrideApprovals && (
-                  <Space>
-                    {isEditingApprovers ? (
-                      <>
-                        <Popconfirm
-                          title="Confirm Approvers"
-                          description="Apply this approver flow change?"
-                          onConfirm={confirmApproverChanges}
-                          okText="Yes"
-                          cancelText="No"
-                          okButtonProps={{
-                            loading: savingApproverChanges,
-                            style: {
-                              background: PRIMARY_BLUE,
-                              borderColor: PRIMARY_BLUE,
-                            },
-                          }}
-                        >
-                          <Button
-                            size="small"
-                            type="primary"
-                            loading={savingApproverChanges}
-                            icon={<CheckCircleOutlined />}
-                            style={{
-                              background: PRIMARY_BLUE,
-                              borderColor: PRIMARY_BLUE,
-                              color: "#FFFFFF !important",
-                            }}
-                          >
-                            Confirm Approvers
-                          </Button>
-                        </Popconfirm>
-                        <Button
-                          size="small"
-                          onClick={cancelEditingApprovers}
-                          disabled={savingApproverChanges}
-                        >
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size="small"
-                        icon={<EditOutlined />}
-                        onClick={startEditingApprovers}
-                      >
-                        Edit Approvers
-                      </Button>
+                      </Descriptions.Item>
                     )}
-                  </Space>
-                )}
-            </div>
-          }
-          style={{
-            marginBottom: 18,
-            opacity: localDeferral.status === "rejected" ? 0.6 : 1,
-          }}
-        >
-          {localDeferral.status === "rejected" && (
-            <div
-              style={{
-                marginBottom: 16,
-                padding: 12,
-                backgroundColor: "#fff1f0",
-                border: `1px solid ${ERROR_RED}40`,
-                borderRadius: 6,
-                textAlign: "center",
-              }}
-            >
-              <ExclamationCircleOutlined
-                style={{ color: ERROR_RED, marginRight: 8 }}
-              />
-              <Text strong style={{ color: ERROR_RED }}>
-                This deferral has been rejected and cannot be further processed
-              </Text>
-            </div>
-          )}
-          {/* Approver List */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-              pointerEvents:
-                localDeferral.status === "rejected" ? "none" : "auto",
-            }}
-          >
-            {isEditingApprovers ? (
-              <>
-                {loadingAvailableApprovers ? (
-                  <div style={{ textAlign: "center", padding: 20 }}>
-                    <Spin tip="Loading approvers..." />
-                  </div>
-                ) : (
-                  <>
-                    {editableApproverSlots.map((slot, index) => {
-                      const isBoundarySlot =
-                        index === 0 ||
-                        index === editableApproverSlots.length - 1;
-                      const isLastSlot =
-                        index === editableApproverSlots.length - 1;
 
-                      return (
-                        <React.Fragment key={`editable-${index}`}>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "flex-start",
-                              gap: 10,
-                              padding: 12,
-                              border: slot.locked
-                                ? `1px solid ${SUCCESS_GREEN}`
-                                : "1px solid #e8e8e8",
-                              borderRadius: 8,
-                              background: slot.locked ? "#f6ffed" : "#fafafa",
-                            }}
-                          >
-                            <Badge
-                              count={index + 1}
-                              style={{ backgroundColor: PRIMARY_BLUE }}
-                            />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <Text
-                                strong
-                                style={{ display: "block", marginBottom: 8 }}
-                              >
-                                {slot.role || "Approver"}
-                              </Text>
-                              <Select
-                                style={{ width: "100%" }}
-                                placeholder="Select approver"
-                                value={slot.userId || undefined}
-                                onChange={(value) =>
-                                  updateEditableApprover(index, value)
-                                }
-                                disabled={slot.locked || savingApproverChanges}
-                                showSearch
-                                optionFilterProp="children"
-                              >
-                                {slot.userId &&
-                                  slot.userName &&
-                                  !availableApprovers.find(
-                                    (a) => a._id === slot.userId,
-                                  ) && (
-                                    <Option value={slot.userId}>
-                                      {slot.userName}
-                                    </Option>
-                                  )}
-                                {Array.isArray(availableApprovers) &&
-                                availableApprovers.length > 0 ? (
-                                  availableApprovers.map((approver) => (
-                                    <Option
-                                      key={approver._id}
-                                      value={approver._id}
-                                    >
-                                      {approver.name}
-                                      {approver.position
-                                        ? ` — ${approver.position}`
-                                        : ""}
-                                    </Option>
-                                  ))
-                                ) : (
-                                  <Option
-                                    key="no-approvers"
-                                    value="__no_approvers__"
-                                    disabled
-                                  >
-                                    No approvers available
-                                  </Option>
-                                )}
-                              </Select>
-                            </div>
-                            {slot.locked ? (
-                              <Tag
-                                color="success"
-                                icon={<CheckCircleOutlined />}
-                                style={{ marginTop: 2 }}
-                              >
-                                Approved (Locked)
-                              </Tag>
-                            ) : (
-                              <Button
-                                danger
-                                icon={<DeleteOutlined />}
-                                onClick={() => removeEditableApprover(index)}
-                                disabled={
-                                  savingApproverChanges ||
-                                  editableApproverSlots.length <= 1 ||
-                                  isBoundarySlot
-                                }
-                                title={
-                                  isBoundarySlot
-                                    ? "First and last approver roles are fixed"
-                                    : ""
-                                }
-                                style={{ marginTop: 2 }}
-                              />
-                            )}
-                          </div>
-
-                          {!isLastSlot && (
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <Button
-                                type="dashed"
-                                size="small"
-                                icon={<PlusOutlined />}
-                                onClick={() => addEditableApproverAt(index + 1)}
-                                disabled={savingApproverChanges}
-                              />
-                            </div>
+                    {/* Extension-specific fields (if present) */}
+                    {localDeferral.requestedDaysSought && (
+                      <Descriptions.Item label="Requested Extension Days">
+                        <Text strong style={{ color: PRIMARY_BLUE }}>
+                          {localDeferral.requestedDaysSought}
+                        </Text>
+                      </Descriptions.Item>
+                    )}
+                    {localDeferral.extensionCreatedAt && (
+                      <Descriptions.Item label="Extension Application Date">
+                        <Text strong style={{ color: PRIMARY_BLUE }}>
+                          {dayjs(localDeferral.extensionCreatedAt).format(
+                            "DD MMM YYYY",
                           )}
-                        </React.Fragment>
-                      );
-                    })}
+                        </Text>
+                      </Descriptions.Item>
+                    )}
+                    {/* extensionStatus moved next to DCL No above */}
+                  </Descriptions>
 
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Note: First and last approver roles are fixed. Use +
-                      buttons between approvers to add new slots. Approver names
-                      can still be changed for all slots.
+                  <div
+                    style={{
+                      marginTop: 16,
+                      paddingTop: 16,
+                      borderTop: "1px solid #f0f0f0",
+                    }}
+                  >
+                    <Text strong style={{ display: "block", marginBottom: 8 }}>
+                      Document(s) to be deferred ({requestedDocs.length})
                     </Text>
-                  </>
-                )}
-              </>
-            ) : (
-              (function () {
-                const approvers = [];
-                let hasApprovers = false;
 
-                // Use override approvers if provided (for extensions)
-                const approvalsToUse = overrideApprovals
-                  ? overrideApprovals.approvers
-                  : null;
-
-                // Debug: log the deferral data
-                console.log("Deferral approval data:", {
-                  approverFlow: localDeferral.approverFlow,
-                  approvers: localDeferral.approvers,
-                  overrideApprovers: approvalsToUse,
-                  currentApproverIndex: localDeferral.currentApproverIndex,
-                });
-
-                if (approvalsToUse && Array.isArray(approvalsToUse)) {
-                  // Use extension approvers - all should be pending
-                  hasApprovers = true;
-                  approvalsToUse.forEach((approver, index) => {
-                    const isApproved =
-                      approver.approved === true ||
-                      approver.approved === "true" ||
-                      approver.approvalStatus === "approved";
-                    const isRejected =
-                      approver.rejected === true ||
-                      approver.rejected === "true" ||
-                      approver.approvalStatus === "rejected";
-                    const isReturned =
-                      approver.returned === true ||
-                      approver.returned === "true" ||
-                      approver.approvalStatus === "returned_for_rework";
-                    const isCurrent = false; // will be computed after building the list
-
-                    approvers.push({
-                      ...approver,
-                      index,
-                      isApproved,
-                      isRejected,
-                      isReturned,
-                      isCurrent,
-                      approvalDate:
-                        approver.approvedAt ||
-                        approver.approvedDate ||
-                        approver.date,
-                      rejectionDate:
-                        approver.rejectedAt ||
-                        approver.rejectedDate ||
-                        approver.date,
-                      returnDate:
-                        approver.returnedAt ||
-                        approver.returnedDate ||
-                        approver.date,
-                      comment: approver.comment || "",
-                    });
-                  });
-                } else if (
-                  localDeferral.approverFlow &&
-                  Array.isArray(localDeferral.approverFlow)
-                ) {
-                  hasApprovers = true;
-                  localDeferral.approverFlow.forEach((approver, index) => {
-                    const isApproved =
-                      approver.approved === true ||
-                      approver.approved === "true";
-                    const isRejected =
-                      approver.rejected === true ||
-                      approver.rejected === "true";
-                    const isReturned =
-                      approver.returned === true ||
-                      approver.returned === "true";
-                    const isCurrent = false; // will be computed after building the list
-
-                    approvers.push({
-                      ...approver,
-                      index,
-                      isApproved,
-                      isRejected,
-                      isReturned,
-                      isCurrent,
-                      approvalDate:
-                        approver.approvedAt ||
-                        approver.approvedDate ||
-                        approver.date,
-                      rejectionDate:
-                        approver.rejectedAt ||
-                        approver.rejectedDate ||
-                        approver.date,
-                      returnDate:
-                        approver.returnedAt ||
-                        approver.returnedDate ||
-                        approver.date,
-                      comment: approver.comment || "",
-                    });
-                  });
-                } else if (
-                  localDeferral.approvers &&
-                  Array.isArray(localDeferral.approvers)
-                ) {
-                  hasApprovers = true;
-                  localDeferral.approvers.forEach((approver, index) => {
-                    const isApproved =
-                      approver.approved === true ||
-                      approver.approved === "true";
-                    const isRejected =
-                      approver.rejected === true ||
-                      approver.rejected === "true";
-                    const isReturned =
-                      approver.returned === true ||
-                      approver.returned === "true";
-                    const isCurrent = false; // will be computed after building the list
-
-                    approvers.push({
-                      ...approver,
-                      index,
-                      isApproved,
-                      isRejected,
-                      isReturned,
-                      isCurrent,
-                      approvalDate:
-                        approver.approvedAt ||
-                        approver.approvedDate ||
-                        approver.date,
-                      rejectionDate:
-                        approver.rejectedAt ||
-                        approver.rejectedDate ||
-                        approver.date,
-                      returnDate:
-                        approver.returnedAt ||
-                        approver.returnedDate ||
-                        approver.date,
-                      comment: approver.comment || "",
-                    });
-                  });
-                }
-
-                // Ensure only the first unapproved approver (if any) is marked as current
-                const firstUnapprovedIndex = approvers.findIndex(
-                  (a) => !a.isApproved && !a.isRejected && !a.isReturned,
-                );
-                if (firstUnapprovedIndex !== -1) {
-                  approvers.forEach((a, i) => {
-                    a.isCurrent =
-                      !a.isApproved &&
-                      !a.isRejected &&
-                      !a.isReturned &&
-                      i === firstUnapprovedIndex;
-                  });
-                } else {
-                  approvers.forEach((a) => {
-                    a.isCurrent = false;
-                  });
-                }
-
-                if (!hasApprovers) {
-                  return (
-                    <div
-                      style={{
-                        textAlign: "center",
-                        padding: 24,
-                        color: "#999",
-                      }}
-                    >
-                      <UserOutlined
+                    {requestedDocs.length > 0 ? (
+                      <div
                         style={{
-                          fontSize: 32,
-                          marginBottom: 12,
-                          color: "#d9d9d9",
-                        }}
-                      />
-                      <div>No approvers specified</div>
-                    </div>
-                  );
-                }
-
-                return approvers.map((approver, index) => {
-                  const approverName =
-                    typeof approver === "object"
-                      ? approver.name ||
-                        approver.user?.name ||
-                        approver.userId?.name ||
-                        approver.email ||
-                        approver.role ||
-                        String(approver)
-                      : typeof approver === "string" && approver.includes("@")
-                        ? approver.split("@")[0]
-                        : approver;
-
-                  return (
-                    <div
-                      key={index}
-                      style={{
-                        padding: "14px 16px",
-                        backgroundColor: approver.isApproved
-                          ? "#f6ffed"
-                          : approver.isRejected
-                            ? `${ERROR_RED}10`
-                            : approver.isReturned
-                              ? `${WARNING_ORANGE}10`
-                              : approver.isCurrent
-                                ? "#e6f7ff"
-                                : "#fafafa",
-                        borderRadius: 8,
-                        border: approver.isApproved
-                          ? `2px solid ${SUCCESS_GREEN}`
-                          : approver.isRejected
-                            ? `2px solid ${ERROR_RED}`
-                            : approver.isReturned
-                              ? `2px solid ${WARNING_ORANGE}`
-                              : approver.isCurrent
-                                ? `2px solid ${PRIMARY_BLUE}`
-                                : "1px solid #e8e8e8",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                      }}
-                    >
-                      <Badge
-                        count={index + 1}
-                        style={{
-                          backgroundColor: approver.isApproved
-                            ? SUCCESS_GREEN
-                            : approver.isRejected
-                              ? ERROR_RED
-                              : approver.isReturned
-                                ? WARNING_ORANGE
-                                : approver.isCurrent
-                                  ? PRIMARY_BLUE
-                                  : "#bfbfbf",
-                          fontSize: 13,
-                          height: 30,
-                          minWidth: 30,
                           display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontWeight: 600,
-                          borderRadius: "50%",
+                          flexDirection: "column",
+                          gap: 8,
                         }}
-                      />
-                      <div style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            marginBottom: 6,
-                          }}
-                        >
-                          <Text
-                            strong
-                            style={{ fontSize: 14, color: "#262626" }}
-                          >
-                            {approver.role || "Approver"}
-                          </Text>
-                          {approver.isApproved && (
-                            <UniformTag
-                              icon={<CheckCircleOutlined />}
-                              color="success"
-                              text="Approved"
-                            />
-                          )}
-                          {approver.isRejected && (
-                            <UniformTag
-                              icon={<CloseCircleOutlined />}
-                              color="error"
-                              text="Rejected"
-                            />
-                          )}
-                          {approver.isReturned && (
-                            <UniformTag
-                              icon={<ExclamationCircleOutlined />}
-                              color="warning"
-                              text="Returned"
-                            />
-                          )}
-                          {approver.isCurrent &&
-                            !approver.isApproved &&
-                            !approver.isRejected &&
-                            !approver.isReturned && (
-                              <UniformTag color="processing" text="Current" />
-                            )}
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <Avatar
-                            size={24}
-                            icon={<UserOutlined />}
-                            style={{
-                              backgroundColor: approver.isApproved
-                                ? SUCCESS_GREEN
-                                : approver.isCurrent
-                                  ? PRIMARY_BLUE
-                                  : "#8c8c8c",
-                            }}
-                          />
-                          <Text style={{ fontSize: 14, color: "#595959" }}>
-                            {approverName}
-                          </Text>
-                        </div>
-
-                        {approver.isRejected && approver.rejectionDate && (
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: ERROR_RED,
-                              marginTop: 2,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <CloseCircleOutlined style={{ fontSize: 11 }} />
-                            Rejected:{" "}
-                            {dayjs(approver.rejectionDate).format(
-                              "DD MMM YYYY HH:mm",
-                            )}
-                          </div>
-                        )}
-
-                        {approver.isReturned && approver.returnDate && (
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: WARNING_ORANGE,
-                              marginTop: 2,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <ExclamationCircleOutlined
-                              style={{ fontSize: 11 }}
-                            />
-                            Returned:{" "}
-                            {dayjs(approver.returnDate).format(
-                              "DD MMM YYYY HH:mm",
-                            )}
-                          </div>
-                        )}
-
-                        {approver.isCurrent &&
-                          !approver.isApproved &&
-                          !approver.isRejected &&
-                          !approver.isReturned &&
-                          localDeferral.status !== "rejected" && (
+                      >
+                        {requestedDocs.map((doc, idx) => {
+                          const docKey = normalizeDocKey(doc.name);
+                          const uploadedVersion = uploadedDocs.find((u) => {
+                            const targetKey = normalizeDocKey(u.documentTarget);
+                            if (targetKey) {
+                              return targetKey === docKey;
+                            }
+                            return (u.name || "")
+                              .toLowerCase()
+                              .includes((doc.name || "").toLowerCase());
+                          });
+                          const isUploaded = !!uploadedVersion;
+                          return (
                             <div
+                              key={doc.id || idx}
                               style={{
-                                fontSize: 12,
-                                color: PRIMARY_BLUE,
-                                marginTop: 2,
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 4,
-                              }}
-                            >
-                              Pending Approval
-                            </div>
-                          )}
-
-                        {approver.comment && (
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: "#666",
-                              marginTop: 4,
-                              fontStyle: "italic",
-                            }}
-                          >
-                            "{approver.comment}"
-                          </div>
-                        )}
-                      </div>
-
-                      {approver.isCurrent &&
-                        !approver.isApproved &&
-                        !approver.isRejected &&
-                        !approver.isReturned &&
-                        localDeferral.status !== "rejected" &&
-                        canSendReminder() && (
-                          <Popconfirm
-                            title="Send Reminder"
-                            description={`Send reminder email to ${approverName}?`}
-                            onConfirm={sendReminderToCurrentApprover}
-                            okText="Yes"
-                            cancelText="No"
-                            okButtonProps={{
-                              style: {
-                                background: PRIMARY_BLUE,
-                                borderColor: PRIMARY_BLUE,
-                              },
-                            }}
-                          >
-                            <Button
-                              type="link"
-                              size="small"
-                              icon={<MailOutlined />}
-                              loading={sendingReminder}
-                            >
-                              Remind
-                            </Button>
-                          </Popconfirm>
-                        )}
-                    </div>
-                  );
-                });
-              })()
-            )}
-          </div>
-        </Card>
-
-        <div style={{ marginTop: 24 }}>
-          <h4 style={{ color: PRIMARY_BLUE, marginBottom: 16 }}>
-            Comment Trail & History
-          </h4>
-          {(function renderHistory() {
-            const events = [];
-            const normalizeText = (value) =>
-              String(value || "")
-                .trim()
-                .toLowerCase();
-            const requester =
-              localDeferral.requestor?.name ||
-              localDeferral.requestedBy?.name ||
-              localDeferral.requestedBy?.fullName ||
-              localDeferral.rmName ||
-              localDeferral.rmRequestedBy?.name ||
-              localDeferral.createdBy?.name ||
-              localDeferral.createdByName ||
-              "RM";
-            const requesterRole =
-              localDeferral.requestor?.role ||
-              localDeferral.requestedBy?.role ||
-              "RM";
-            const requestDate =
-              localDeferral.requestedDate ||
-              localDeferral.createdAt ||
-              localDeferral.requestedAt;
-            const requestComment =
-              localDeferral.rmReason || "Deferral request submitted";
-
-            const normalizedRequestComment = normalizeText(requestComment);
-            const requestCommentExistsInComments =
-              Array.isArray(localDeferral.comments) &&
-              localDeferral.comments.some(
-                (c) =>
-                  normalizeText(c?.text || c?.comment) ===
-                  normalizedRequestComment,
-              );
-
-            const requestCommentExistsInHistory =
-              Array.isArray(localDeferral.history) &&
-              localDeferral.history.some(
-                (h) =>
-                  normalizeText(h?.comment || h?.notes || h?.message) ===
-                  normalizedRequestComment,
-              );
-
-            if (
-              !requestCommentExistsInComments &&
-              !requestCommentExistsInHistory
-            ) {
-              events.push({
-                user: requester,
-                userRole: requesterRole,
-                date: requestDate,
-                comment: requestComment,
-              });
-            }
-
-            // If an extension reason exists, treat it as an RM comment in the history
-            if (
-              localDeferral.extensionReason &&
-              String(localDeferral.extensionReason).trim()
-            ) {
-              const extNormalized = normalizeText(
-                localDeferral.extensionReason,
-              );
-              const extExistsInComments =
-                Array.isArray(localDeferral.comments) &&
-                localDeferral.comments.some(
-                  (c) => normalizeText(c?.text || c?.comment) === extNormalized,
-                );
-              const extExistsInHistory =
-                Array.isArray(localDeferral.history) &&
-                localDeferral.history.some(
-                  (h) =>
-                    normalizeText(h?.comment || h?.notes || h?.message) ===
-                    extNormalized,
-                );
-
-              if (!extExistsInComments && !extExistsInHistory) {
-                events.push({
-                  user: requester,
-                  userRole: requesterRole,
-                  date:
-                    localDeferral.extensionCreatedAt ||
-                    localDeferral.extensionCreatedAt ||
-                    requestDate,
-                  comment: localDeferral.extensionReason,
-                });
-              }
-            }
-
-            if (
-              localDeferral.comments &&
-              Array.isArray(localDeferral.comments) &&
-              localDeferral.comments.length > 0
-            ) {
-              localDeferral.comments.forEach((c) => {
-                const inferredRoleFromReturn =
-                  String(
-                    localDeferral.lastReturnedByRole || "",
-                  ).toLowerCase() === "creator"
-                    ? "CoCreator"
-                    : String(
-                          localDeferral.lastReturnedByRole || "",
-                        ).toLowerCase() === "checker"
-                      ? "CoChecker"
-                      : "";
-
-                const commentAuthorRole =
-                  c.author?.role ||
-                  c.authorRole ||
-                  c.role ||
-                  inferredRoleFromReturn ||
-                  requesterRole ||
-                  "System";
-
-                const commentAuthorName =
-                  c.author?.name ||
-                  c.authorName ||
-                  c.userName ||
-                  c.author?.email ||
-                  c.user?.name ||
-                  (inferredRoleFromReturn
-                    ? inferredRoleFromReturn
-                    : requester) ||
-                  "System";
-
-                events.push({
-                  user: commentAuthorName,
-                  userRole: commentAuthorRole,
-                  date: c.createdAt,
-                  comment: c.text || "",
-                });
-              });
-            }
-
-            if (
-              localDeferral.history &&
-              Array.isArray(localDeferral.history) &&
-              localDeferral.history.length > 0
-            ) {
-              localDeferral.history.forEach((h) => {
-                if (h.action === "moved") return;
-                const userName =
-                  h.user?.name || h.userName || h.user || "System";
-                const userRole =
-                  h.user?.role || h.userRole || h.role || "System";
-                events.push({
-                  user: userName,
-                  userRole: userRole,
-                  date: h.date || h.createdAt || h.timestamp || h.entryDate,
-                  comment: h.comment || h.notes || h.message || "",
-                });
-              });
-            }
-
-            const sorted = events.sort(
-              (a, b) => new Date(a.date || 0) - new Date(b.date || 0),
-            );
-            const seenEventKeys = new Set();
-            const deduped = sorted.filter((entry) => {
-              const key = [
-                normalizeText(entry.user),
-                normalizeText(entry.userRole),
-                String(entry.date || ""),
-                normalizeText(entry.comment),
-              ].join("|");
-
-              if (seenEventKeys.has(key)) {
-                return false;
-              }
-
-              seenEventKeys.add(key);
-              return true;
-            });
-
-            const formatUsername = (username) => {
-              if (!username) return "System";
-              return username.replace(/\s*\([^)]*\)\s*$/, "").trim();
-            };
-
-            const getRoleTag = (role) => {
-              let color = "blue";
-              const roleLower = (role || "").toLowerCase();
-              switch (roleLower) {
-                case "rm":
-                  color = "blue";
-                  break;
-                case "deferral management":
-                  color = "green";
-                  break;
-                case "creator":
-                case "cocreator":
-                case "co creator":
-                case "co_creator":
-                  color = "green";
-                  break;
-                case "checker":
-                case "cochecker":
-                case "co checker":
-                case "co_checker":
-                  color = "volcano";
-                  break;
-                case "system":
-                  color = "default";
-                  break;
-                default:
-                  color = "blue";
-              }
-              return (
-                <UniformTag
-                  color={color}
-                  text={roleLower.replace(/_/g, " ")}
-                  uppercase
-                  maxChars={14}
-                  style={{ marginLeft: 8 }}
-                />
-              );
-            };
-
-            return (
-              <div className="max-h-52 overflow-y-auto">
-                <List
-                  dataSource={deduped}
-                  itemLayout="horizontal"
-                  renderItem={(item, idx) => {
-                    const normalizeRole = (value) =>
-                      String(value || "")
-                        .trim()
-                        .toLowerCase();
-                    const isPlaceholderApprover = (value) => {
-                      const v = normalizeRole(value);
-                      return v === "approver" || v === "approval";
-                    };
-
-                    const returnedByRole = String(
-                      localDeferral.lastReturnedByRole || "",
-                    )
-                      .trim()
-                      .toLowerCase();
-                    const inferredRoleFromReturn =
-                      returnedByRole === "creator"
-                        ? "CoCreator"
-                        : returnedByRole === "checker"
-                          ? "CoChecker"
-                          : "";
-
-                    const matchedComment = Array.isArray(localDeferral.comments)
-                      ? localDeferral.comments.find(
-                          (c) =>
-                            normalizeText(c?.text || c?.comment) ===
-                              normalizeText(item.comment) &&
-                            String(
-                              c?.author?.name || c?.authorName || "",
-                            ).trim(),
-                        )
-                      : null;
-
-                    const rawRole = item.userRole;
-                    const rawName = item.user;
-
-                    const normalizedRoleLabel =
-                      isPlaceholderApprover(rawRole) && inferredRoleFromReturn
-                        ? inferredRoleFromReturn
-                        : rawRole;
-
-                    const normalizedName =
-                      String(rawName || "")
-                        .trim()
-                        .toLowerCase() === "approver" && matchedComment
-                        ? matchedComment.author?.name ||
-                          matchedComment.authorName ||
-                          rawName
-                        : String(rawName || "")
-                              .trim()
-                              .toLowerCase() === "approver" &&
-                            inferredRoleFromReturn
-                          ? inferredRoleFromReturn
-                          : rawName;
-
-                    const roleLabel = normalizedRoleLabel || "System";
-                    const name = formatUsername(normalizedName) || "System";
-                    const text = item.comment || "No comment provided";
-                    const timestamp = item.date;
-                    return (
-                      <List.Item key={idx}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            width: "100%",
-                            alignItems: "flex-start",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "flex-start",
-                              gap: 10,
-                              flex: 1,
-                              minWidth: 0,
-                            }}
-                          >
-                            <Avatar
-                              icon={<UserOutlined />}
-                              style={{ backgroundColor: PRIMARY_BLUE }}
-                            />
-                            <div
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 4,
-                                minWidth: 0,
-                                flex: 1,
+                                justifyContent: "space-between",
+                                padding: "12px 16px",
+                                backgroundColor: "#ffffff",
+                                borderRadius: 6,
+                                border: "1px solid #e5e7eb",
                               }}
                             >
                               <div
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  gap: 8,
-                                  flexWrap: "nowrap",
-                                  minWidth: 0,
+                                  gap: 12,
                                 }}
                               >
-                                <b
+                                <FileDoneOutlined
                                   style={{
-                                    fontSize: 14,
                                     color: PRIMARY_BLUE,
-                                    display: "inline-block",
-                                    width: 120,
-                                    minWidth: 120,
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
+                                    fontSize: 16,
+                                  }}
+                                />
+                                <div>
+                                  <div
+                                    style={{
+                                      fontWeight: 500,
+                                      fontSize: 14,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 8,
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 8,
+                                      }}
+                                    >
+                                      <div>{doc.name}</div>
+                                      <UniformTag
+                                        color="blue"
+                                        text={
+                                          isUploaded ? "Uploaded" : "Requested"
+                                        }
+                                      />
+                                    </div>
+                                    {/* Show requested days as a small tag when available (including 0) */}
+                                    {(typeof doc.daysSought !== "undefined" ||
+                                      typeof doc.requestedDaysSought !==
+                                        "undefined") && (
+                                      <div style={{ marginLeft: "auto" }}>
+                                        <Tag
+                                          style={{
+                                            background: "#ffffff",
+                                            border: "1px solid #d9d9d9",
+                                            color: "#000000",
+                                            fontWeight: 600,
+                                          }}
+                                        >
+                                          {String(
+                                            typeof doc.daysSought !==
+                                              "undefined"
+                                              ? doc.daysSought
+                                              : doc.requestedDaysSought,
+                                          )}{" "}
+                                          days
+                                        </Tag>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: 12,
+                                      color: "#666",
+                                      marginTop: 4,
+                                    }}
+                                  >
+                                    <b>Type:</b>{" "}
+                                    {formatDeferralDocumentType(doc)}
+                                  </div>
+                                  {uploadedVersion && (
+                                    <div
+                                      style={{
+                                        fontSize: 12,
+                                        color: "#666",
+                                        marginTop: 4,
+                                      }}
+                                    >
+                                      Uploaded as: {uploadedVersion.name}{" "}
+                                      {uploadedVersion.uploadDate
+                                        ? `• ${dayjs(uploadedVersion.uploadDate).format("DD MMM YYYY HH:mm")}`
+                                        : ""}
+                                    </div>
+                                  )}
+                                  {/* Show per-document days and computed next due date (show '-' when not present) */}
+                                  <div
+                                    style={{
+                                      fontSize: 12,
+                                      color: "#444",
+                                      marginTop: 6,
+                                    }}
+                                  >
+                                    {(() => {
+                                      const { days, nextDate } =
+                                        resolveDocDaysAndDate(doc);
+                                      const daysDisplay =
+                                        typeof days !== "undefined" &&
+                                        days !== null &&
+                                        String(days).trim() !== ""
+                                          ? String(days)
+                                          : "-";
+                                      const dateDisplay = nextDate
+                                        ? dayjs(nextDate).format("DD MMM YYYY")
+                                        : "-";
+                                      return (
+                                        <>
+                                          <strong>Requested days:</strong>{" "}
+                                          {daysDisplay} &nbsp; • &nbsp;{" "}
+                                          <strong>New due date:</strong>{" "}
+                                          {dateDisplay}
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+                              </div>
+                              <Space>
+                                {isUploaded &&
+                                  uploadedVersion &&
+                                  uploadedVersion.url && (
+                                    <>
+                                      <Button
+                                        type="text"
+                                        icon={<EyeOutlined />}
+                                        onClick={() =>
+                                          openFileInNewTab(uploadedVersion.url)
+                                        }
+                                        size="small"
+                                      >
+                                        View
+                                      </Button>
+                                      <Button
+                                        type="text"
+                                        icon={<DownloadOutlined />}
+                                        onClick={() => {
+                                          downloadFile(
+                                            uploadedVersion.url,
+                                            uploadedVersion.name,
+                                          );
+                                          message.success(
+                                            `Downloading ${uploadedVersion.name}...`,
+                                          );
+                                        }}
+                                        size="small"
+                                      >
+                                        Download
+                                      </Button>
+                                    </>
+                                  )}
+                              </Space>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <Text type="secondary">Not specified</Text>
+                    )}
+                  </div>
+
+                  {localDeferral.deferralDescription && (
+                    <div
+                      style={{
+                        marginTop: 16,
+                        paddingTop: 16,
+                        borderTop: "1px solid #f0f0f0",
+                      }}
+                    >
+                      <Text
+                        strong
+                        style={{ display: "block", marginBottom: 8 }}
+                      >
+                        Deferral Description
+                      </Text>
+                      <div
+                        style={{
+                          padding: 12,
+                          backgroundColor: "#f8f9fa",
+                          borderRadius: 6,
+                          border: "1px solid #e8e8e8",
+                        }}
+                      >
+                        <Text>{localDeferral.deferralDescription}</Text>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+
+                {/* Existing sections for Facilities, Documents, etc. */}
+                {localDeferral.facilities &&
+                  localDeferral.facilities.length > 0 && (
+                    <Card
+                      size="small"
+                      title={
+                        <span style={{ color: PRIMARY_BLUE }}>
+                          Facility Details ({localDeferral.facilities.length})
+                        </span>
+                      }
+                      style={{ marginBottom: 18 }}
+                    >
+                      <Table
+                        dataSource={localDeferral.facilities}
+                        columns={facilityColumns}
+                        pagination={false}
+                        size="small"
+                        rowKey={(r) =>
+                          r.facilityNumber ||
+                          r._id ||
+                          `facility-${Math.random().toString(36).slice(2)}`
+                        }
+                        scroll={{ x: 600 }}
+                      />
+                    </Card>
+                  )}
+
+                {/* DCL Upload Section */}
+                <Card
+                  size="small"
+                  title={
+                    <span style={{ color: PRIMARY_BLUE }}>
+                      Mandatory: DCL Upload {dclDocs.length > 0 ? "✓" : ""}
+                    </span>
+                  }
+                  style={{ marginBottom: 18 }}
+                >
+                  {dclDocs.length > 0 ? (
+                    <>
+                      <List
+                        size="small"
+                        dataSource={dclDocs}
+                        renderItem={(doc) => (
+                          <List.Item
+                            actions={[
+                              doc.url ? (
+                                <Button
+                                  key="view"
+                                  type="link"
+                                  onClick={() => openFileInNewTab(doc.url)}
+                                  size="small"
+                                >
+                                  View
+                                </Button>
+                              ) : null,
+                              doc.url ? (
+                                <Button
+                                  key="download"
+                                  type="link"
+                                  onClick={() => {
+                                    downloadFile(doc.url, doc.name);
+                                    message.success(
+                                      `Downloading ${doc.name}...`,
+                                    );
+                                  }}
+                                  size="small"
+                                >
+                                  Download
+                                </Button>
+                              ) : null,
+                            ].filter(Boolean)}
+                          >
+                            <List.Item.Meta
+                              avatar={getFileIcon(doc.type)}
+                              title={
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
                                   }}
                                 >
-                                  {name}
-                                </b>
-                                {roleLabel && getRoleTag(roleLabel)}
-                              </div>
-                              <span
-                                style={{ color: "#4a4a4a", display: "block" }}
+                                  <span style={{ fontWeight: 500 }}>
+                                    {doc.name}
+                                  </span>
+                                  <Tag color="red" style={{ fontSize: 10 }}>
+                                    DCL Document
+                                  </Tag>
+                                </div>
+                              }
+                              description={
+                                <div style={{ fontSize: 12, color: "#666" }}>
+                                  {doc.size && (
+                                    <span>
+                                      {doc.size > 1024
+                                        ? `${(doc.size / 1024).toFixed(2)} MB`
+                                        : `${doc.size} KB`}
+                                    </span>
+                                  )}{" "}
+                                  {doc.uploadDate && (
+                                    <span style={{ marginLeft: 8 }}>
+                                      Uploaded:{" "}
+                                      {dayjs(doc.uploadDate).format(
+                                        "DD MMM YYYY HH:mm",
+                                      )}
+                                    </span>
+                                  )}{" "}
+                                  {!doc.url && (
+                                    <div
+                                      style={{
+                                        marginTop: 6,
+                                        color: "#8c8c8c",
+                                        fontSize: 12,
+                                      }}
+                                    >
+                                      Preview not available
+                                    </div>
+                                  )}
+                                </div>
+                              }
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    </>
+                  ) : (
+                    <div
+                      style={{
+                        textAlign: "center",
+                        padding: 12,
+                        color: WARNING_ORANGE,
+                      }}
+                    >
+                      <UploadOutlined
+                        style={{
+                          fontSize: 18,
+                          marginBottom: 6,
+                          color: WARNING_ORANGE,
+                        }}
+                      />
+                      <div>No DCL document uploaded</div>
+                      <Text
+                        type="secondary"
+                        style={{ fontSize: 12, display: "block", marginTop: 4 }}
+                      >
+                        DCL document is required for submission
+                      </Text>
+                    </div>
+                  )}
+                </Card>
+
+                {/* Additional Documents Section */}
+                <Card
+                  size="small"
+                  title={
+                    <span style={{ color: PRIMARY_BLUE }}>
+                      <PaperClipOutlined style={{ marginRight: 8 }} />{" "}
+                      Additional Documents ({uploadedDocs.length})
+                    </span>
+                  }
+                  style={{ marginBottom: 18 }}
+                >
+                  {uploadedDocs.length > 0 ? (
+                    <>
+                      <List
+                        size="small"
+                        dataSource={uploadedDocs}
+                        renderItem={(doc) => (
+                          <List.Item
+                            actions={[
+                              doc.url ? (
+                                <Button
+                                  key="view"
+                                  type="link"
+                                  onClick={() => openFileInNewTab(doc.url)}
+                                  size="small"
+                                >
+                                  View
+                                </Button>
+                              ) : null,
+                              doc.url ? (
+                                <Button
+                                  key="download"
+                                  type="link"
+                                  onClick={() => {
+                                    downloadFile(doc.url, doc.name);
+                                    message.success(
+                                      `Downloading ${doc.name}...`,
+                                    );
+                                  }}
+                                  size="small"
+                                >
+                                  Download
+                                </Button>
+                              ) : null,
+                            ].filter(Boolean)}
+                          >
+                            <List.Item.Meta
+                              avatar={getFileIcon(doc.type)}
+                              title={
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                  }}
+                                >
+                                  <span style={{ fontWeight: 500 }}>
+                                    {doc.name}
+                                  </span>
+                                  {doc.isAdditional && (
+                                    <Tag color="cyan" style={{ fontSize: 10 }}>
+                                      Additional
+                                    </Tag>
+                                  )}
+                                </div>
+                              }
+                              description={
+                                <div style={{ fontSize: 12, color: "#666" }}>
+                                  {doc.size && (
+                                    <span>
+                                      {doc.size > 1024
+                                        ? `${(doc.size / 1024).toFixed(2)} MB`
+                                        : `${doc.size} KB`}
+                                    </span>
+                                  )}{" "}
+                                  {doc.uploadDate && (
+                                    <span style={{ marginLeft: 8 }}>
+                                      Uploaded:{" "}
+                                      {dayjs(doc.uploadDate).format(
+                                        "DD MMM YYYY HH:mm",
+                                      )}
+                                    </span>
+                                  )}{" "}
+                                  {!doc.url && (
+                                    <div
+                                      style={{
+                                        marginTop: 6,
+                                        color: "#8c8c8c",
+                                        fontSize: 12,
+                                      }}
+                                    >
+                                      Preview not available
+                                    </div>
+                                  )}
+                                </div>
+                              }
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    </>
+                  ) : (
+                    <div
+                      style={{
+                        textAlign: "center",
+                        padding: 12,
+                        color: "#999",
+                      }}
+                    >
+                      <PaperClipOutlined
+                        style={{
+                          fontSize: 18,
+                          marginBottom: 6,
+                          color: "#d9d9d9",
+                        }}
+                      />
+                      <div>No additional documents uploaded</div>
+                      <Text
+                        type="secondary"
+                        style={{ fontSize: 12, display: "block", marginTop: 4 }}
+                      >
+                        You can upload additional supporting documents if needed
+                      </Text>
+                    </div>
+                  )}
+                </Card>
+
+                {/* Enhanced Approval Flow Section */}
+                <Card
+                  size="small"
+                  title={
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        width: "100%",
+                      }}
+                    >
+                      <span style={{ color: PRIMARY_BLUE, fontSize: 14 }}>
+                        Approval Flow
+                      </span>
+                      {!readOnly &&
+                        !isCompleted &&
+                        !isApprovedStatus &&
+                        !isFullyApproved &&
+                        !allApproversApproved &&
+                        !overrideApprovals && (
+                          <Space>
+                            {isEditingApprovers ? (
+                              <>
+                                <Popconfirm
+                                  title="Confirm Approvers"
+                                  description="Apply this approver flow change?"
+                                  onConfirm={confirmApproverChanges}
+                                  okText="Yes"
+                                  cancelText="No"
+                                  okButtonProps={{
+                                    loading: savingApproverChanges,
+                                    style: {
+                                      background: PRIMARY_BLUE,
+                                      borderColor: PRIMARY_BLUE,
+                                    },
+                                  }}
+                                >
+                                  <Button
+                                    size="small"
+                                    type="primary"
+                                    loading={savingApproverChanges}
+                                    icon={<CheckCircleOutlined />}
+                                    style={{
+                                      background: PRIMARY_BLUE,
+                                      borderColor: PRIMARY_BLUE,
+                                      color: "#FFFFFF !important",
+                                    }}
+                                  >
+                                    Confirm Approvers
+                                  </Button>
+                                </Popconfirm>
+                                <Button
+                                  size="small"
+                                  onClick={cancelEditingApprovers}
+                                  disabled={savingApproverChanges}
+                                >
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                size="small"
+                                icon={<EditOutlined />}
+                                onClick={startEditingApprovers}
                               >
-                                {text}
-                              </span>
-                            </div>
-                          </div>
-                          <div style={{ fontSize: 12, color: "#777" }}>
-                            {timestamp
-                              ? dayjs(timestamp).format("M/D/YY, h:mm A")
-                              : ""}
-                          </div>
-                        </div>
-                      </List.Item>
-                    );
+                                Edit Approvers
+                              </Button>
+                            )}
+                          </Space>
+                        )}
+                    </div>
+                  }
+                  style={{
+                    marginBottom: 18,
+                    opacity: localDeferral.status === "rejected" ? 0.6 : 1,
                   }}
-                />
+                >
+                  {localDeferral.status === "rejected" && (
+                    <div
+                      style={{
+                        marginBottom: 16,
+                        padding: 12,
+                        backgroundColor: "#fff1f0",
+                        border: `1px solid ${ERROR_RED}40`,
+                        borderRadius: 6,
+                        textAlign: "center",
+                      }}
+                    >
+                      <ExclamationCircleOutlined
+                        style={{ color: ERROR_RED, marginRight: 8 }}
+                      />
+                      <Text strong style={{ color: ERROR_RED }}>
+                        This deferral has been rejected and cannot be further
+                        processed
+                      </Text>
+                    </div>
+                  )}
+                  {/* Approver List */}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
+                      pointerEvents:
+                        localDeferral.status === "rejected" ? "none" : "auto",
+                    }}
+                  >
+                    {isEditingApprovers ? (
+                      <>
+                        {loadingAvailableApprovers ? (
+                          <div style={{ textAlign: "center", padding: 20 }}>
+                            <Spin tip="Loading approvers..." />
+                          </div>
+                        ) : (
+                          <>
+                            {editableApproverSlots.map((slot, index) => {
+                              const isBoundarySlot =
+                                index === 0 ||
+                                index === editableApproverSlots.length - 1;
+                              const isLastSlot =
+                                index === editableApproverSlots.length - 1;
+
+                              return (
+                                <React.Fragment key={`editable-${index}`}>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "flex-start",
+                                      gap: 10,
+                                      padding: 12,
+                                      border: slot.locked
+                                        ? `1px solid ${SUCCESS_GREEN}`
+                                        : "1px solid #e8e8e8",
+                                      borderRadius: 8,
+                                      background: slot.locked
+                                        ? "#f6ffed"
+                                        : "#fafafa",
+                                    }}
+                                  >
+                                    <Badge
+                                      count={index + 1}
+                                      style={{ backgroundColor: PRIMARY_BLUE }}
+                                    />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <Text
+                                        strong
+                                        style={{
+                                          display: "block",
+                                          marginBottom: 8,
+                                        }}
+                                      >
+                                        {slot.role || "Approver"}
+                                      </Text>
+                                      <Select
+                                        style={{ width: "100%" }}
+                                        placeholder="Select approver"
+                                        value={slot.userId || undefined}
+                                        onChange={(value) =>
+                                          updateEditableApprover(index, value)
+                                        }
+                                        disabled={
+                                          slot.locked || savingApproverChanges
+                                        }
+                                        showSearch
+                                        optionFilterProp="children"
+                                      >
+                                        {slot.userId &&
+                                          slot.userName &&
+                                          !availableApprovers.find(
+                                            (a) => a._id === slot.userId,
+                                          ) && (
+                                            <Option value={slot.userId}>
+                                              {slot.userName}
+                                            </Option>
+                                          )}
+                                        {Array.isArray(availableApprovers) &&
+                                        availableApprovers.length > 0 ? (
+                                          availableApprovers.map((approver) => (
+                                            <Option
+                                              key={approver._id}
+                                              value={approver._id}
+                                            >
+                                              {approver.name}
+                                              {approver.position
+                                                ? ` — ${approver.position}`
+                                                : ""}
+                                            </Option>
+                                          ))
+                                        ) : (
+                                          <Option
+                                            key="no-approvers"
+                                            value="__no_approvers__"
+                                            disabled
+                                          >
+                                            No approvers available
+                                          </Option>
+                                        )}
+                                      </Select>
+                                    </div>
+                                    {slot.locked ? (
+                                      <Tag
+                                        color="success"
+                                        icon={<CheckCircleOutlined />}
+                                        style={{ marginTop: 2 }}
+                                      >
+                                        Approved (Locked)
+                                      </Tag>
+                                    ) : (
+                                      <Button
+                                        danger
+                                        icon={<DeleteOutlined />}
+                                        onClick={() =>
+                                          removeEditableApprover(index)
+                                        }
+                                        disabled={
+                                          savingApproverChanges ||
+                                          editableApproverSlots.length <= 1 ||
+                                          isBoundarySlot
+                                        }
+                                        title={
+                                          isBoundarySlot
+                                            ? "First and last approver roles are fixed"
+                                            : ""
+                                        }
+                                        style={{ marginTop: 2 }}
+                                      />
+                                    )}
+                                  </div>
+
+                                  {!isLastSlot && (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <Button
+                                        type="dashed"
+                                        size="small"
+                                        icon={<PlusOutlined />}
+                                        onClick={() =>
+                                          addEditableApproverAt(index + 1)
+                                        }
+                                        disabled={savingApproverChanges}
+                                      />
+                                    </div>
+                                  )}
+                                </React.Fragment>
+                              );
+                            })}
+
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              Note: First and last approver roles are fixed. Use
+                              + buttons between approvers to add new slots.
+                              Approver names can still be changed for all slots.
+                            </Text>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      (function () {
+                        const approvers = [];
+                        let hasApprovers = false;
+
+                        // Use override approvers if provided (for extensions)
+                        const approvalsToUse = overrideApprovals
+                          ? overrideApprovals.approvers
+                          : null;
+
+                        // Debug: log the deferral data
+                        console.log("Deferral approval data:", {
+                          approverFlow: localDeferral.approverFlow,
+                          approvers: localDeferral.approvers,
+                          overrideApprovers: approvalsToUse,
+                          currentApproverIndex:
+                            localDeferral.currentApproverIndex,
+                        });
+
+                        if (approvalsToUse && Array.isArray(approvalsToUse)) {
+                          // Use extension approvers - all should be pending
+                          hasApprovers = true;
+                          approvalsToUse.forEach((approver, index) => {
+                            const isApproved =
+                              approver.approved === true ||
+                              approver.approved === "true" ||
+                              approver.approvalStatus === "approved";
+                            const isRejected =
+                              approver.rejected === true ||
+                              approver.rejected === "true" ||
+                              approver.approvalStatus === "rejected";
+                            const isReturned =
+                              approver.returned === true ||
+                              approver.returned === "true" ||
+                              approver.approvalStatus === "returned_for_rework";
+                            const isCurrent = false; // will be computed after building the list
+
+                            approvers.push({
+                              ...approver,
+                              index,
+                              isApproved,
+                              isRejected,
+                              isReturned,
+                              isCurrent,
+                              approvalDate:
+                                approver.approvedAt ||
+                                approver.approvedDate ||
+                                approver.date,
+                              rejectionDate:
+                                approver.rejectedAt ||
+                                approver.rejectedDate ||
+                                approver.date,
+                              returnDate:
+                                approver.returnedAt ||
+                                approver.returnedDate ||
+                                approver.date,
+                              comment: approver.comment || "",
+                            });
+                          });
+                        } else if (
+                          localDeferral.approverFlow &&
+                          Array.isArray(localDeferral.approverFlow)
+                        ) {
+                          hasApprovers = true;
+                          localDeferral.approverFlow.forEach(
+                            (approver, index) => {
+                              const isApproved =
+                                approver.approved === true ||
+                                approver.approved === "true";
+                              const isRejected =
+                                approver.rejected === true ||
+                                approver.rejected === "true";
+                              const isReturned =
+                                approver.returned === true ||
+                                approver.returned === "true";
+                              const isCurrent = false; // will be computed after building the list
+
+                              approvers.push({
+                                ...approver,
+                                index,
+                                isApproved,
+                                isRejected,
+                                isReturned,
+                                isCurrent,
+                                approvalDate:
+                                  approver.approvedAt ||
+                                  approver.approvedDate ||
+                                  approver.date,
+                                rejectionDate:
+                                  approver.rejectedAt ||
+                                  approver.rejectedDate ||
+                                  approver.date,
+                                returnDate:
+                                  approver.returnedAt ||
+                                  approver.returnedDate ||
+                                  approver.date,
+                                comment: approver.comment || "",
+                              });
+                            },
+                          );
+                        } else if (
+                          localDeferral.approvers &&
+                          Array.isArray(localDeferral.approvers)
+                        ) {
+                          hasApprovers = true;
+                          localDeferral.approvers.forEach((approver, index) => {
+                            const isApproved =
+                              approver.approved === true ||
+                              approver.approved === "true";
+                            const isRejected =
+                              approver.rejected === true ||
+                              approver.rejected === "true";
+                            const isReturned =
+                              approver.returned === true ||
+                              approver.returned === "true";
+                            const isCurrent = false; // will be computed after building the list
+
+                            approvers.push({
+                              ...approver,
+                              index,
+                              isApproved,
+                              isRejected,
+                              isReturned,
+                              isCurrent,
+                              approvalDate:
+                                approver.approvedAt ||
+                                approver.approvedDate ||
+                                approver.date,
+                              rejectionDate:
+                                approver.rejectedAt ||
+                                approver.rejectedDate ||
+                                approver.date,
+                              returnDate:
+                                approver.returnedAt ||
+                                approver.returnedDate ||
+                                approver.date,
+                              comment: approver.comment || "",
+                            });
+                          });
+                        }
+
+                        // Ensure only the first unapproved approver (if any) is marked as current
+                        const firstUnapprovedIndex = approvers.findIndex(
+                          (a) =>
+                            !a.isApproved && !a.isRejected && !a.isReturned,
+                        );
+                        if (firstUnapprovedIndex !== -1) {
+                          approvers.forEach((a, i) => {
+                            a.isCurrent =
+                              !a.isApproved &&
+                              !a.isRejected &&
+                              !a.isReturned &&
+                              i === firstUnapprovedIndex;
+                          });
+                        } else {
+                          approvers.forEach((a) => {
+                            a.isCurrent = false;
+                          });
+                        }
+
+                        if (!hasApprovers) {
+                          return (
+                            <div
+                              style={{
+                                textAlign: "center",
+                                padding: 24,
+                                color: "#999",
+                              }}
+                            >
+                              <UserOutlined
+                                style={{
+                                  fontSize: 32,
+                                  marginBottom: 12,
+                                  color: "#d9d9d9",
+                                }}
+                              />
+                              <div>No approvers specified</div>
+                            </div>
+                          );
+                        }
+
+                        return approvers.map((approver, index) => {
+                          const approverName =
+                            typeof approver === "object"
+                              ? approver.name ||
+                                approver.user?.name ||
+                                approver.userId?.name ||
+                                approver.email ||
+                                approver.role ||
+                                String(approver)
+                              : typeof approver === "string" &&
+                                  approver.includes("@")
+                                ? approver.split("@")[0]
+                                : approver;
+
+                          return (
+                            <div
+                              key={index}
+                              style={{
+                                padding: "14px 16px",
+                                backgroundColor: approver.isApproved
+                                  ? "#f6ffed"
+                                  : approver.isRejected
+                                    ? `${ERROR_RED}10`
+                                    : approver.isReturned
+                                      ? `${WARNING_ORANGE}10`
+                                      : approver.isCurrent
+                                        ? "#e6f7ff"
+                                        : "#fafafa",
+                                borderRadius: 8,
+                                border: approver.isApproved
+                                  ? `2px solid ${SUCCESS_GREEN}`
+                                  : approver.isRejected
+                                    ? `2px solid ${ERROR_RED}`
+                                    : approver.isReturned
+                                      ? `2px solid ${WARNING_ORANGE}`
+                                      : approver.isCurrent
+                                        ? `2px solid ${PRIMARY_BLUE}`
+                                        : "1px solid #e8e8e8",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 14,
+                              }}
+                            >
+                              <Badge
+                                count={index + 1}
+                                style={{
+                                  backgroundColor: approver.isApproved
+                                    ? SUCCESS_GREEN
+                                    : approver.isRejected
+                                      ? ERROR_RED
+                                      : approver.isReturned
+                                        ? WARNING_ORANGE
+                                        : approver.isCurrent
+                                          ? PRIMARY_BLUE
+                                          : "#bfbfbf",
+                                  fontSize: 13,
+                                  height: 30,
+                                  minWidth: 30,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontWeight: 600,
+                                  borderRadius: "50%",
+                                }}
+                              />
+                              <div style={{ flex: 1 }}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    marginBottom: 6,
+                                  }}
+                                >
+                                  <Text
+                                    strong
+                                    style={{ fontSize: 14, color: "#262626" }}
+                                  >
+                                    {approver.role || "Approver"}
+                                  </Text>
+                                  {approver.isApproved && (
+                                    <UniformTag
+                                      icon={<CheckCircleOutlined />}
+                                      color="success"
+                                      text="Approved"
+                                    />
+                                  )}
+                                  {approver.isRejected && (
+                                    <UniformTag
+                                      icon={<CloseCircleOutlined />}
+                                      color="error"
+                                      text="Rejected"
+                                    />
+                                  )}
+                                  {approver.isReturned && (
+                                    <UniformTag
+                                      icon={<ExclamationCircleOutlined />}
+                                      color="warning"
+                                      text="Returned"
+                                    />
+                                  )}
+                                  {approver.isCurrent &&
+                                    !approver.isApproved &&
+                                    !approver.isRejected &&
+                                    !approver.isReturned && (
+                                      <UniformTag
+                                        color="processing"
+                                        text="Current"
+                                      />
+                                    )}
+                                </div>
+
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                  }}
+                                >
+                                  <Avatar
+                                    size={24}
+                                    icon={<UserOutlined />}
+                                    style={{
+                                      backgroundColor: approver.isApproved
+                                        ? SUCCESS_GREEN
+                                        : approver.isCurrent
+                                          ? PRIMARY_BLUE
+                                          : "#8c8c8c",
+                                    }}
+                                  />
+                                  <Text
+                                    style={{ fontSize: 14, color: "#595959" }}
+                                  >
+                                    {approverName}
+                                  </Text>
+                                </div>
+
+                                {approver.isRejected &&
+                                  approver.rejectionDate && (
+                                    <div
+                                      style={{
+                                        fontSize: 12,
+                                        color: ERROR_RED,
+                                        marginTop: 2,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 4,
+                                      }}
+                                    >
+                                      <CloseCircleOutlined
+                                        style={{ fontSize: 11 }}
+                                      />
+                                      Rejected:{" "}
+                                      {dayjs(approver.rejectionDate).format(
+                                        "DD MMM YYYY HH:mm",
+                                      )}
+                                    </div>
+                                  )}
+
+                                {approver.isReturned && approver.returnDate && (
+                                  <div
+                                    style={{
+                                      fontSize: 12,
+                                      color: WARNING_ORANGE,
+                                      marginTop: 2,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 4,
+                                    }}
+                                  >
+                                    <ExclamationCircleOutlined
+                                      style={{ fontSize: 11 }}
+                                    />
+                                    Returned:{" "}
+                                    {dayjs(approver.returnDate).format(
+                                      "DD MMM YYYY HH:mm",
+                                    )}
+                                  </div>
+                                )}
+
+                                {approver.isCurrent &&
+                                  !approver.isApproved &&
+                                  !approver.isRejected &&
+                                  !approver.isReturned &&
+                                  localDeferral.status !== "rejected" && (
+                                    <div
+                                      style={{
+                                        fontSize: 12,
+                                        color: PRIMARY_BLUE,
+                                        marginTop: 2,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 4,
+                                      }}
+                                    >
+                                      Pending Approval
+                                    </div>
+                                  )}
+
+                                {approver.comment && (
+                                  <div
+                                    style={{
+                                      fontSize: 12,
+                                      color: "#666",
+                                      marginTop: 4,
+                                      fontStyle: "italic",
+                                    }}
+                                  >
+                                    "{approver.comment}"
+                                  </div>
+                                )}
+                              </div>
+
+                              {approver.isCurrent &&
+                                !approver.isApproved &&
+                                !approver.isRejected &&
+                                !approver.isReturned &&
+                                localDeferral.status !== "rejected" &&
+                                canSendReminder() && (
+                                  <Popconfirm
+                                    title="Send Reminder"
+                                    description={`Send reminder email to ${approverName}?`}
+                                    onConfirm={sendReminderToCurrentApprover}
+                                    okText="Yes"
+                                    cancelText="No"
+                                    okButtonProps={{
+                                      style: {
+                                        background: PRIMARY_BLUE,
+                                        borderColor: PRIMARY_BLUE,
+                                      },
+                                    }}
+                                  >
+                                    <Button
+                                      type="link"
+                                      size="small"
+                                      icon={<MailOutlined />}
+                                      loading={sendingReminder}
+                                    >
+                                      Remind
+                                    </Button>
+                                  </Popconfirm>
+                                )}
+                            </div>
+                          );
+                        });
+                      })()
+                    )}
+                  </div>
+                </Card>
+
+                <div style={{ marginTop: 24 }}>
+                  <h4 style={{ color: PRIMARY_BLUE, marginBottom: 16 }}>
+                    Comment Trail & History
+                  </h4>
+                  {(function renderHistory() {
+                    const events = [];
+                    const normalizeText = (value) =>
+                      String(value || "")
+                        .trim()
+                        .toLowerCase();
+                    const requester =
+                      localDeferral.requestor?.name ||
+                      localDeferral.requestedBy?.name ||
+                      localDeferral.requestedBy?.fullName ||
+                      localDeferral.rmName ||
+                      localDeferral.rmRequestedBy?.name ||
+                      localDeferral.createdBy?.name ||
+                      localDeferral.createdByName ||
+                      "RM";
+                    const requesterRole =
+                      localDeferral.requestor?.role ||
+                      localDeferral.requestedBy?.role ||
+                      "RM";
+                    const requestDate =
+                      localDeferral.requestedDate ||
+                      localDeferral.createdAt ||
+                      localDeferral.requestedAt;
+                    const requestComment =
+                      localDeferral.rmReason || "Deferral request submitted";
+
+                    const normalizedRequestComment =
+                      normalizeText(requestComment);
+                    const requestCommentExistsInComments =
+                      Array.isArray(localDeferral.comments) &&
+                      localDeferral.comments.some(
+                        (c) =>
+                          normalizeText(c?.text || c?.comment) ===
+                          normalizedRequestComment,
+                      );
+
+                    const requestCommentExistsInHistory =
+                      Array.isArray(localDeferral.history) &&
+                      localDeferral.history.some(
+                        (h) =>
+                          normalizeText(
+                            h?.comment || h?.notes || h?.message,
+                          ) === normalizedRequestComment,
+                      );
+
+                    if (
+                      !requestCommentExistsInComments &&
+                      !requestCommentExistsInHistory
+                    ) {
+                      events.push({
+                        user: requester,
+                        userRole: requesterRole,
+                        date: requestDate,
+                        comment: requestComment,
+                      });
+                    }
+
+                    // If an extension reason exists, treat it as an RM comment in the history
+                    if (
+                      localDeferral.extensionReason &&
+                      String(localDeferral.extensionReason).trim()
+                    ) {
+                      const extNormalized = normalizeText(
+                        localDeferral.extensionReason,
+                      );
+                      const extExistsInComments =
+                        Array.isArray(localDeferral.comments) &&
+                        localDeferral.comments.some(
+                          (c) =>
+                            normalizeText(c?.text || c?.comment) ===
+                            extNormalized,
+                        );
+                      const extExistsInHistory =
+                        Array.isArray(localDeferral.history) &&
+                        localDeferral.history.some(
+                          (h) =>
+                            normalizeText(
+                              h?.comment || h?.notes || h?.message,
+                            ) === extNormalized,
+                        );
+
+                      if (!extExistsInComments && !extExistsInHistory) {
+                        events.push({
+                          user: requester,
+                          userRole: requesterRole,
+                          date:
+                            localDeferral.extensionCreatedAt ||
+                            localDeferral.extensionCreatedAt ||
+                            requestDate,
+                          comment: localDeferral.extensionReason,
+                        });
+                      }
+                    }
+
+                    if (
+                      localDeferral.comments &&
+                      Array.isArray(localDeferral.comments) &&
+                      localDeferral.comments.length > 0
+                    ) {
+                      localDeferral.comments.forEach((c) => {
+                        const inferredRoleFromReturn =
+                          String(
+                            localDeferral.lastReturnedByRole || "",
+                          ).toLowerCase() === "creator"
+                            ? "CoCreator"
+                            : String(
+                                  localDeferral.lastReturnedByRole || "",
+                                ).toLowerCase() === "checker"
+                              ? "CoChecker"
+                              : "";
+
+                        const commentAuthorRole =
+                          c.author?.role ||
+                          c.authorRole ||
+                          c.role ||
+                          inferredRoleFromReturn ||
+                          requesterRole ||
+                          "System";
+
+                        const commentAuthorName =
+                          c.author?.name ||
+                          c.authorName ||
+                          c.userName ||
+                          c.author?.email ||
+                          c.user?.name ||
+                          (inferredRoleFromReturn
+                            ? inferredRoleFromReturn
+                            : requester) ||
+                          "System";
+
+                        events.push({
+                          user: commentAuthorName,
+                          userRole: commentAuthorRole,
+                          date: c.createdAt,
+                          comment: c.text || "",
+                        });
+                      });
+                    }
+
+                    if (
+                      localDeferral.history &&
+                      Array.isArray(localDeferral.history) &&
+                      localDeferral.history.length > 0
+                    ) {
+                      localDeferral.history.forEach((h) => {
+                        if (h.action === "moved") return;
+                        const userName =
+                          h.user?.name || h.userName || h.user || "System";
+                        const userRole =
+                          h.user?.role || h.userRole || h.role || "System";
+                        events.push({
+                          user: userName,
+                          userRole: userRole,
+                          date:
+                            h.date || h.createdAt || h.timestamp || h.entryDate,
+                          comment: h.comment || h.notes || h.message || "",
+                        });
+                      });
+                    }
+
+                    const sorted = events.sort(
+                      (a, b) => new Date(a.date || 0) - new Date(b.date || 0),
+                    );
+                    const seenEventKeys = new Set();
+                    const deduped = sorted.filter((entry) => {
+                      const key = [
+                        normalizeText(entry.user),
+                        normalizeText(entry.userRole),
+                        String(entry.date || ""),
+                        normalizeText(entry.comment),
+                      ].join("|");
+
+                      if (seenEventKeys.has(key)) {
+                        return false;
+                      }
+
+                      seenEventKeys.add(key);
+                      return true;
+                    });
+
+                    const formatUsername = (username) => {
+                      if (!username) return "System";
+                      return username.replace(/\s*\([^)]*\)\s*$/, "").trim();
+                    };
+
+                    const getRoleTag = (role) => {
+                      let color = "blue";
+                      const roleLower = (role || "").toLowerCase();
+                      switch (roleLower) {
+                        case "rm":
+                          color = "blue";
+                          break;
+                        case "deferral management":
+                          color = "green";
+                          break;
+                        case "creator":
+                        case "cocreator":
+                        case "co creator":
+                        case "co_creator":
+                          color = "green";
+                          break;
+                        case "checker":
+                        case "cochecker":
+                        case "co checker":
+                        case "co_checker":
+                          color = "volcano";
+                          break;
+                        case "system":
+                          color = "default";
+                          break;
+                        default:
+                          color = "blue";
+                      }
+                      return (
+                        <UniformTag
+                          color={color}
+                          text={roleLower.replace(/_/g, " ")}
+                          uppercase
+                          maxChars={14}
+                          style={{ marginLeft: 8 }}
+                        />
+                      );
+                    };
+
+                    return (
+                      <div className="max-h-52 overflow-y-auto">
+                        <List
+                          className="deferral-comments-list"
+                          dataSource={deduped}
+                          itemLayout="horizontal"
+                          renderItem={(item, idx) => {
+                            const normalizeRole = (value) =>
+                              String(value || "")
+                                .trim()
+                                .toLowerCase();
+                            const isPlaceholderApprover = (value) => {
+                              const v = normalizeRole(value);
+                              return v === "approver" || v === "approval";
+                            };
+
+                            const returnedByRole = String(
+                              localDeferral.lastReturnedByRole || "",
+                            )
+                              .trim()
+                              .toLowerCase();
+                            const inferredRoleFromReturn =
+                              returnedByRole === "creator"
+                                ? "CoCreator"
+                                : returnedByRole === "checker"
+                                  ? "CoChecker"
+                                  : "";
+
+                            const matchedComment = Array.isArray(
+                              localDeferral.comments,
+                            )
+                              ? localDeferral.comments.find(
+                                  (c) =>
+                                    normalizeText(c?.text || c?.comment) ===
+                                      normalizeText(item.comment) &&
+                                    String(
+                                      c?.author?.name || c?.authorName || "",
+                                    ).trim(),
+                                )
+                              : null;
+
+                            const rawRole = item.userRole;
+                            const rawName = item.user;
+
+                            const normalizedRoleLabel =
+                              isPlaceholderApprover(rawRole) &&
+                              inferredRoleFromReturn
+                                ? inferredRoleFromReturn
+                                : rawRole;
+
+                            const normalizedName =
+                              String(rawName || "")
+                                .trim()
+                                .toLowerCase() === "approver" && matchedComment
+                                ? matchedComment.author?.name ||
+                                  matchedComment.authorName ||
+                                  rawName
+                                : String(rawName || "")
+                                      .trim()
+                                      .toLowerCase() === "approver" &&
+                                    inferredRoleFromReturn
+                                  ? inferredRoleFromReturn
+                                  : rawName;
+
+                            const roleLabel = normalizedRoleLabel || "System";
+                            const name =
+                              formatUsername(normalizedName) || "System";
+                            const text = item.comment || "No comment provided";
+                            const timestamp = item.date;
+                            return (
+                              <List.Item key={idx} style={{ paddingBottom: 8 }}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    width: "100%",
+                                    gap: 8,
+                                    flexWrap: "wrap",
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  <Avatar
+                                    icon={<UserOutlined />}
+                                    style={{
+                                      backgroundColor: PRIMARY_BLUE,
+                                      flexShrink: 0,
+                                      width: 28,
+                                      height: 28,
+                                      fontSize: 12,
+                                    }}
+                                  />
+                                  <b
+                                    className="comment-author"
+                                    style={{
+                                      fontSize: 12,
+                                      color: PRIMARY_BLUE,
+                                      whiteSpace: "nowrap",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      maxWidth: 100,
+                                    }}
+                                  >
+                                    {name}
+                                  </b>
+                                  {roleLabel && (
+                                    <span style={{ flexShrink: 0 }}>
+                                      {getRoleTag(roleLabel)}
+                                    </span>
+                                  )}
+                                  <span
+                                    className="comment-text"
+                                    style={{
+                                      color: "#4a4a4a",
+                                      fontSize: 12,
+                                      flex: 1,
+                                      minWidth: 150,
+                                    }}
+                                  >
+                                    {text}
+                                  </span>
+                                  <span
+                                    className="comment-timestamp"
+                                    style={{
+                                      fontSize: 11,
+                                      color: "#999",
+                                      whiteSpace: "nowrap",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {timestamp
+                                      ? dayjs(timestamp).format(
+                                          "M/D/YY, h:mm A",
+                                        )
+                                      : ""}
+                                  </span>
+                                </div>
+                              </List.Item>
+                            );
+                          }}
+                        />
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
-            );
-          })()}
+
+              {/* Footer */}
+              <div className="deferral-modal-footer">
+                {readOnly ? (
+                  <>
+                    <Button
+                      type="primary"
+                      onClick={downloadDeferralAsPDF}
+                      loading={actionLoading}
+                      icon={<FilePdfOutlined />}
+                      style={{
+                        marginRight: "auto",
+                        backgroundColor: "#164679 !important",
+                        borderColor: "#164679 !important",
+                        color: "#fff !important",
+                      }}
+                    >
+                      Download as PDF
+                    </Button>
+                    <Button
+                      onClick={onClose}
+                      style={{ color: "#000 !important" }}
+                    >
+                      Close
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="primary"
+                      onClick={downloadDeferralAsPDF}
+                      loading={actionLoading}
+                      icon={<FilePdfOutlined />}
+                      style={{
+                        marginRight: "auto",
+                        backgroundColor: "#164679 !important",
+                        borderColor: "#164679 !important",
+                        color: "#fff !important",
+                      }}
+                    >
+                      Download as PDF
+                    </Button>
+
+                    {isReturnedForRework && (
+                      <Button
+                        type="primary"
+                        onClick={handleReturnForRework}
+                        style={{
+                          backgroundColor: `${WARNING_ORANGE} !important`,
+                          borderColor: `${WARNING_ORANGE} !important`,
+                          color: "#FFFFFF !important",
+                        }}
+                        icon={<ReloadOutlined />}
+                      >
+                        Resubmit for Review
+                      </Button>
+                    )}
+
+                    {!isApprovedStatus && !isFullyApproved && !isCompleted && (
+                      <Button
+                        type="default"
+                        onClick={handleWithdrawRequest}
+                        loading={loadingWithdraw}
+                        style={{
+                          backgroundColor: `${ERROR_RED} !important`,
+                          borderColor: `${ERROR_RED} !important`,
+                          color: "white !important",
+                        }}
+                      >
+                        Withdraw Request
+                      </Button>
+                    )}
+
+                    {(status === "deferral_approved" ||
+                      status === "approved") &&
+                      !localDeferral?.extensionStatus && (
+                        <Button
+                          type="primary"
+                          onClick={() => handleApplyForExtension(localDeferral)}
+                          style={{
+                            backgroundColor: `${PRIMARY_BLUE} !important`,
+                            borderColor: `${PRIMARY_BLUE} !important`,
+                            color: "white !important",
+                          }}
+                        >
+                          Apply Extension
+                        </Button>
+                      )}
+
+                    {(status === "deferral_approved" ||
+                      status === "approved") && (
+                      <Button
+                        type="primary"
+                        onClick={handleOpenCloseRequest}
+                        style={{
+                          backgroundColor: `${PRIMARY_BLUE} !important`,
+                          borderColor: `${PRIMARY_BLUE} !important`,
+                          color: "white !important",
+                        }}
+                      >
+                        Close Deferral
+                      </Button>
+                    )}
+
+                    <Button
+                      onClick={onClose}
+                      style={{ color: "#000 !important" }}
+                    >
+                      Close
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      </Modal>
+      </>
     </>
   );
 };

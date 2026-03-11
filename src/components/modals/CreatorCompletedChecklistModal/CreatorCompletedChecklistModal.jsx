@@ -153,7 +153,16 @@ const CreatorCompletedChecklistModal = ({
 
     return (
       <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-        <Button key="close" onClick={onClose} style={{ color: "#333333" }}>
+        <Button
+          key="close"
+          onClick={onClose}
+          style={{
+            color: "#333333",
+            backgroundColor: "#ffffff",
+            borderColor: "#d9d9d9",
+            fontWeight: 600,
+          }}
+        >
           Close
         </Button>
         {isCompletedOrApproved && (

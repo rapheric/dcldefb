@@ -772,10 +772,17 @@ export const generateChecklistPDF = (
       console.log('💬 [PDF] Total comments:', allComments.length);
     }
 
+    // Helper to clean message text by removing role prefix labels
+    const cleanMessageText = (message) => {
+      if (!message || typeof message !== 'string') return message;
+      // Remove common role prefixes like "RM Comment:", "Co-Creator Comment:", "Checker Comment:", etc.
+      return message.replace(/^(RM|Co-Creator|Checker|Creator|Approver|System)\s+(Comment|Message|Note):\s*/i, '').trim();
+    };
+
     const commentRows = allComments.map((comment, idx) => {
       const dateStr = comment.createdAt ? dayjs(comment.createdAt).format('DD/MM/YYYY HH:mm') : 'N/A';
       const userName = comment.author?.name || comment.createdBy?.name || comment.user?.name || comment.userName || comment.name || 'N/A';
-      const message = comment.content || comment.text || comment.comment || comment.message || '';
+      const message = cleanMessageText(comment.content || comment.text || comment.comment || comment.message || '');
       
       return [dateStr, userName, message];
     });

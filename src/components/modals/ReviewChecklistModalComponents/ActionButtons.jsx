@@ -228,6 +228,7 @@ const ActionButtons = ({
             checklist={{
               ...checklist,
               rmName:
+                checklist?.assignedToRM?.name ||
                 checklist?.rmName ||
                 auth?.user?.name ||
                 auth?.user?.username ||

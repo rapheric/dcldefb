@@ -21,12 +21,27 @@ const getRoleTag = (role) => {
 };
 
 /* ---------------------------
+   Clean message text helper
+   Removes role prefix labels (e.g., "RM Comment:", "Creator Comment:", etc.)
+---------------------------- */
+const cleanMessageText = (message) => {
+  if (!message || typeof message !== "string") return message;
+  // Remove common role prefixes like "RM Comment:", "Co-Creator Comment:", "Checker Comment:", etc.
+  return message
+    .replace(
+      /^(RM|Co-Creator|Checker|Creator|Approver|System)\s+(Comment|Message|Note):\s*/i,
+      "",
+    )
+    .trim();
+};
+
+/* ---------------------------
    System message detector
    (COMPREHENSIVE - removes ALL auto-generated messages)
 ---------------------------- */
 const isSystemGeneratedMessage = (text = "") => {
   if (!text) return true;
-  
+
   const message = text.toLowerCase().trim();
 
   // EXTENSIVE list of system-generated message patterns
@@ -42,34 +57,34 @@ const isSystemGeneratedMessage = (text = "") => {
     "submitted for",
     "sent to",
     "assigned to",
-    
+
     // Auto-activity logs
     "document uploaded",
     "checklist created",
     "draft saved",
     "revived from",
-    
+
     // Co-Creator workflow messages
     "submitted to co-checker",
     "submitted to co",
     "submitted to rm",
     "checklist updated",
     "documents updated",
-    
+
     // RM workflow messages
     "submitted back to co-creator",
     "returned to co-creator",
-    
+
     // Checker workflow messages
     "sent for approval",
     "approved checklist",
     "rejected checklist",
-    
+
     // Supporting docs
     "supporting document",
     "document reference",
     "file uploaded",
-    
+
     // Status change patterns
     "status changed",
     "status: ",
@@ -92,7 +107,9 @@ const CommentHistory = ({ comments = [], isLoading }) => {
     console.log("📝 CommentHistory - Is Loading:", isLoading);
     if (comments && comments.length > 0) {
       comments.forEach((c, idx) => {
-        console.log(`   [${idx}] Message: "${c.message || c.comment}" | Role: ${c.userId?.role || c.role} | ID: ${c._id || c.id}`);
+        console.log(
+          `   [${idx}] Message: "${c.message || c.comment}" | Role: ${c.userId?.role || c.role} | ID: ${c._id || c.id}`,
+        );
       });
     }
   }, [comments, isLoading]);
@@ -223,9 +240,9 @@ const CommentHistory = ({ comments = [], isLoading }) => {
               minWidth: 100,
               maxWidth: 300,
             }}
-            title={item.message || item.comment}
+            title={cleanMessageText(item.message || item.comment)}
           >
-            {item.message || item.comment}
+            {cleanMessageText(item.message || item.comment)}
           </div>
 
           {/* Time - Show both created and updated timestamps */}
@@ -242,7 +259,9 @@ const CommentHistory = ({ comments = [], isLoading }) => {
               {formatDateTime(item.createdAt || item.timestamp)}
             </div>
             {item.updatedAt && item.updatedAt !== item.createdAt && (
-              <div style={{ fontSize: "9px", color: "#b0b0b0", lineHeight: "1.3" }}>
+              <div
+                style={{ fontSize: "9px", color: "#b0b0b0", lineHeight: "1.3" }}
+              >
                 Updated: {formatDateTime(item.updatedAt)}
               </div>
             )}

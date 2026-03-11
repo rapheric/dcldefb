@@ -41,24 +41,93 @@ const CompletedChecklistModal = ({
       skip: !checklist?.id && !checklist?._id,
     });
 
+  // Filter out system-generated comments - keep only user-typed comments
+  const isSystemGeneratedMessage = (text = "") => {
+    if (!text) return true;
+    const message = text.toLowerCase().trim();
+    const systemPatterns = [
+      "submitted to",
+      "returned to",
+      "approved by",
+      "rejected by",
+      "completed",
+      "status updated",
+      "initiated",
+      "submitted for",
+      "sent to",
+      "assigned to",
+      "document uploaded",
+      "checklist created",
+      "draft saved",
+      "revived from",
+      "submitted to co-checker",
+      "submitted to co",
+      "submitted to rm",
+      "checklist updated",
+      "documents updated",
+      "submitted back to co-creator",
+      "returned to co-creator",
+      "sent for approval",
+      "approved checklist",
+      "rejected checklist",
+      "supporting document",
+      "document reference",
+      "file uploaded",
+      "status changed",
+      "status: ",
+      "checklist status",
+      "has been",
+      "document",
+    ];
+    return systemPatterns.some((pattern) => message.includes(pattern));
+  };
+
+  // Filter comments to show only user-typed comments (exclude system and RM comments)
+  const userComments = React.useMemo(() => {
+    if (!comments || !Array.isArray(comments)) return [];
+    return comments.filter((item) => {
+      const role = (item.userId?.role || item.role || "").toLowerCase();
+      const message = item.message || item.comment || "";
+      const isSystem = isSystemGeneratedMessage(message);
+      const isEmpty = !message.trim();
+
+      // Keep only real user comments - exclude system, RM, and auto-generated
+      if (role === "system") return false;
+      if (role === "rm") return false; // Exclude RM comments
+      if (isSystem) return false;
+      if (isEmpty) return false;
+      return true;
+    });
+  }, [comments]);
+
   // Debug logging
   React.useEffect(() => {
     console.log("🔍 CompletedChecklistModal - Checklist data:", checklist);
+    console.log("� RM Assigned:", checklist?.assignedToRM);
+    console.log("👤 RM ID:", checklist?.assignedToRMId);
+    console.log("👤 RM Name:", checklist?.assignedToRM?.name || "Not found");
     console.log("📋 Documents from hook:", docs);
     console.log("📊 Document counts:", documentCounts);
 
-    // Also debug comments
+    // Debug comments
     const checklistId = checklist?.id || checklist?._id;
     console.log(
       "✅ CompletedChecklistModal - Checklist ID for comments:",
       checklistId,
     );
     console.log("✅ Comments Loading:", commentsLoading);
-    console.log("✅ Comments Data:", comments);
-    if (comments && Array.isArray(comments)) {
-      console.log(`✅ Total comments fetched: ${comments.length}`);
-    }
-  }, [checklist, docs, documentCounts, comments, commentsLoading]);
+    console.log("✅ Total raw comments:", comments?.length || 0);
+    console.log("✅ User comments (filtered):", userComments.length);
+    console.log("✅ Raw comments data:", comments);
+    console.log("✅ Filtered user comments:", userComments);
+  }, [
+    checklist,
+    docs,
+    documentCounts,
+    comments,
+    commentsLoading,
+    userComments,
+  ]);
 
   // Use the PDF generator hook
   const { isGenerating, progress, generatePDF } = usePDFGenerator();
@@ -114,7 +183,7 @@ const CompletedChecklistModal = ({
         documents: preparedDocs,
         supportingDocs: supportingDocs || [],
         creatorComment: checklist?.creatorComment || "",
-        comments: comments || [],
+        comments: userComments || [],
         onProgress: (percent) => {
           console.log(`PDF Generation Progress: ${percent}%`);
         },
@@ -371,7 +440,7 @@ const CompletedChecklistModal = ({
                   <DocumentSummary documentCounts={documentCounts} />
                   <DocumentsTable docs={docs} checklist={checklist} />
                   <CommentHistorySection
-                    comments={comments}
+                    comments={userComments}
                     commentsLoading={commentsLoading}
                   />
                 </>
@@ -393,7 +462,10 @@ const CompletedChecklistModal = ({
                 key="close"
                 onClick={onClose}
                 style={{
+                  background: PRIMARY_BLUE,
+                  borderColor: PRIMARY_BLUE,
                   color: "#ffffff !important",
+                  fontWeight: 600,
                 }}
               >
                 Close

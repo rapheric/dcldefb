@@ -45,7 +45,19 @@ export const generateChecklistPDF = async ({
         return systemLogPatterns.some(pattern => pattern.test(message));
       };
       
-      const normalizedComments = rawComments.filter(comment => !isSystemLog(comment.message));
+      // Clean message text by removing role prefix labels (e.g., "RM Comment:", "Creator Comment:", etc.)
+      const cleanMessageText = (message) => {
+        if (!message || typeof message !== 'string') return message;
+        // Remove common role prefixes like "RM Comment:", "Co-Creator Comment:", "Checker Comment:", etc.
+        return message.replace(/^(RM|Co-Creator|Checker|Creator|Approver|System)\s+(Comment|Message|Note):\s*/i, '').trim();
+      };
+      
+      const normalizedComments = rawComments
+        .filter(comment => !isSystemLog(comment.message))
+        .map(comment => ({
+          ...comment,
+          message: cleanMessageText(comment.message || comment.comment)
+        }));
       
       console.log('📄 Starting PDF generation...');
       console.log('📝 Raw activity logs:', rawComments.length, 'total');
@@ -139,7 +151,7 @@ export const generateChecklistPDF = async ({
           head: [],
           body: [
             ['Customer Name', checklist?.customerName || 'N/A', 'Customer Number', checklist?.customerNumber || 'N/A'],
-            ['Loan Type', checklist?.loanType || 'N/A', 'RM Name', checklist?.rmName || 'N/A'],
+            ['Loan Type', checklist?.loanType || 'N/A', 'RM Name', checklist?.assignedToRM?.name || checklist?.rmName || 'N/A'],
             ['Status', checklist?.status || 'N/A', 'Created Date', checklist?.createdAt ? format(new Date(checklist.createdAt), 'dd/MM/yyyy') : 'N/A'],
           ],
           theme: 'plain',

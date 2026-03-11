@@ -1252,6 +1252,7 @@ const RmReviewChecklistModal = ({
                   ...checklist,
                   dclNo: checklist?.dclNo || checklist?._id,
                   rmName:
+                    checklist?.assignedToRM?.name ||
                     checklist?.rmName ||
                     auth?.user?.name ||
                     auth?.user?.username ||

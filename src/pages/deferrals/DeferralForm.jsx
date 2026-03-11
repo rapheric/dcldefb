@@ -2016,10 +2016,12 @@ export default function DeferralForm({ userId, onSuccess }) {
                           <div style={{ fontWeight: 600 }}>{docName}</div>
                           <div style={{ marginTop: 4 }}>
                             <Tag
-                              color={
-                                docType === "Primary" ? "purple" : "orange"
-                              }
-                              style={{ margin: 0 }}
+                              style={{
+                                margin: 0,
+                                backgroundColor: "#ffffff",
+                                color: "#000000",
+                                border: "1px solid #d9d9d9",
+                              }}
                             >
                               {docType}
                             </Tag>
@@ -2049,8 +2051,12 @@ export default function DeferralForm({ userId, onSuccess }) {
                           }}
                         >
                           <Tag
-                            color={uploaded ? "green" : "orange"}
-                            style={{ alignSelf: "center" }}
+                            style={{
+                              alignSelf: "center",
+                              backgroundColor: "#ffffff",
+                              color: "#000000",
+                              border: "1px solid #d9d9d9",
+                            }}
                           >
                             {uploaded ? "Uploaded" : "Requested"}
                           </Tag>
