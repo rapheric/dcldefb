@@ -560,7 +560,10 @@ const ReviewChecklistModal = ({
             {/* Header */}
             <div
               className="bg-linear-to-r from-blue-600 to-blue-800 text-white"
-              style={{ background: PRIMARY_BLUE }}
+              style={{
+                background: PRIMARY_BLUE,
+                borderRadius: "12px 12px 0 0",
+              }}
             >
               <div
                 style={{
@@ -602,9 +605,6 @@ const ReviewChecklistModal = ({
                   style={{ display: "flex", alignItems: "center", gap: "8px" }}
                 >
                   <Button
-                    icon={
-                      showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />
-                    }
                     onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
                     size="small"
                     style={{

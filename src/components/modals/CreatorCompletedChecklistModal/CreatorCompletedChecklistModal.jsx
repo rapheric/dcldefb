@@ -371,7 +371,7 @@ const CreatorCompletedChecklistModal = ({
                     height: "32px",
                   }}
                 >
-                  View Documents
+                  <span style={{ color: "#ffffff" }}>View Documents</span>
                   {docs.filter(
                     (d) => d.fileUrl || d.category === "Supporting Documents",
                   ).length > 0 && (

@@ -1,5 +1,6 @@
 import React from "react";
 import { Table, Select, Input, Button, Collapse, Tag, Typography } from "antd";
+import { STATUS_COLORS } from "../../utils/constants";
 
 const { Panel } = Collapse;
 const { Option } = Select;
@@ -15,27 +16,14 @@ const actionToStatus = {
   deferred: "deferred",
 };
 
-// Status color mapping
+// Status color mapping - using consistent colors from constants
 const getStatusColor = (status) => {
   const statusLower = (status || "").toLowerCase();
-  switch (statusLower) {
-    case "submitted":
-      return { bg: "#52c41a", text: "#fff" }; // Green
-    case "pendingrm":
-      return { bg: "#ff4d4f", text: "#fff" }; // Red
-    case "pendingco":
-      return { bg: "#ff4d4f", text: "#fff" }; // Red
-    case "tbo":
-      return { bg: "#faad14", text: "#fff" }; // Amber
-    case "sighted":
-      return { bg: "#52c41a", text: "#fff" }; // Green
-    case "waived":
-      return { bg: "#b5d334", text: "#333" }; // Lime
-    case "deferred":
-      return { bg: "#faad14", text: "#fff" }; // Amber
-    default:
-      return { bg: "#d9d9d9", text: "#333" }; // Gray default
-  }
+  const colorObj = STATUS_COLORS[statusLower] || STATUS_COLORS.default;
+  return {
+    bg: colorObj.bg,
+    text: colorObj.color,
+  };
 };
 
 // Template for a new document

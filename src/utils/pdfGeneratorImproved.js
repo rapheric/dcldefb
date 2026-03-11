@@ -68,7 +68,14 @@ export const generateChecklistPDF = async ({
       // Set default font to courier (gothic century style)
       doc.setFont('courier', 'normal');
 
-      // Add NCBA logo
+      // Define consistent margins for entire PDF
+      const MARGIN_LEFT = 15;
+      const MARGIN_RIGHT = 15;
+      const PAGE_WIDTH = 210;
+      const USABLE_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT; // 180mm
+      const MARGIN_RIGHT_POS = PAGE_WIDTH - MARGIN_RIGHT;
+
+      // Add NCBA logo - aligned to right margin
       try {
         // Check if logo exists and is a string
         if (ncbaLogoPNG) {
@@ -81,7 +88,7 @@ export const generateChecklistPDF = async ({
           // For simplicity, we'll try to add it directly
           // If it fails, we'll continue without logo
           try {
-            doc.addImage(ncbaLogoPNG, 'PNG', 155, 10, 40, 15);
+            doc.addImage(ncbaLogoPNG, 'PNG', MARGIN_RIGHT_POS - 40, 10, 40, 15);
             console.log('✅ Logo added successfully');
           } catch (imgError) {
             console.warn('⚠️ Could not add logo directly, continuing without it:', imgError);
@@ -102,17 +109,17 @@ export const generateChecklistPDF = async ({
       // Document number and date
       doc.setFontSize(10);
       doc.setFont('courier', 'normal');
-      doc.setTextColor(100, 100, 100);
+      doc.setTextColor(40, 40, 40); // Body text color - darker for visibility
       
       const dclNo = checklist?.dclNo || checklist?._id || 'N/A';
       const today = format(new Date(), 'dd/MM/yyyy');
       
-      doc.text(`DCL No: ${dclNo}`, 15, 30);
-      doc.text(`Generated: ${today}`, 15, 36);
+      doc.text(`DCL No: ${dclNo}`, MARGIN_LEFT, 30);
+      doc.text(`Generated: ${today}`, MARGIN_LEFT, 36);
 
       // Horizontal line
       doc.setDrawColor(200, 200, 200);
-      doc.line(15, 40, 195, 40);
+      doc.line(MARGIN_LEFT, 40, MARGIN_RIGHT_POS, 40);
 
       // Checklist Information Section
       let yPos = 50;
@@ -120,7 +127,7 @@ export const generateChecklistPDF = async ({
       doc.setFontSize(14);
       doc.setFont('courier', 'bold');
       doc.setTextColor(22, 70, 121); // PRIMARY_BLUE
-      doc.text('Checklist Information', 15, yPos);
+      doc.text('Checklist Information', MARGIN_LEFT, yPos);
       
       yPos += 8;
 
@@ -138,30 +145,39 @@ export const generateChecklistPDF = async ({
           theme: 'plain',
           styles: {
             fontSize: 10,
-            cellPadding: 4,
+            cellPadding: 3,
             lineColor: [220, 220, 220],
             lineWidth: 0.1,
+            textColor: [40, 40, 40],
           },
-        columnStyles: {
-          0: { fontStyle: 'bold', cellWidth: 40 },
-          1: { cellWidth: 55 },
-          2: { fontStyle: 'bold', cellWidth: 40 },
-          3: { cellWidth: 55 },
-        },
-        margin: { left: 15, right: 15 },
+          bodyStyles: {
+            textColor: [40, 40, 40],
+            cellPadding: 3,
+          },
+          columnStyles: {
+            0: { cellWidth: 44, fontStyle: 'bold', textColor: [40, 40, 40] },
+            1: { cellWidth: 46, textColor: [40, 40, 40] },
+            2: { cellWidth: 44, fontStyle: 'bold', textColor: [40, 40, 40] },
+            3: { cellWidth: 46, textColor: [40, 40, 40] },
+          },
+          margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
+          didDrawCell: (data) => {
+            // Make label cells (even columns) have light blue background
+            if (data.column.index % 2 === 0 && data.section === 'body') {
+              data.cell.styles.fillColor = [230, 240, 250]; // Light blue background
+              data.cell.styles.textColor = [22, 70, 121]; // Blue text for labels
+            }
+          },
         });
-        
-        yPos = doc.lastAutoTable.finalY + 10;
-      } else {
-        console.warn('autoTable not available, skipping info table');
-        yPos += 30;
+
+        yPos = doc.lastAutoTable.finalY + 8;
       }
 
-      // Progress/Summary Section
-      doc.setFontSize(12);
+      // Document Summary Section
+      doc.setFontSize(14);
       doc.setFont('courier', 'bold');
       doc.setTextColor(22, 70, 121); // PRIMARY_BLUE
-      doc.text('Document Summary', 15, yPos);
+      doc.text('Document Summary', MARGIN_LEFT, yPos);
       yPos += 6;
 
       const totalDocs = documents.length || 0;
@@ -172,16 +188,16 @@ export const generateChecklistPDF = async ({
       
       doc.setFontSize(9);
       doc.setFont('courier', 'normal');
-      doc.setTextColor(50, 50, 50);
+      doc.setTextColor(40, 40, 40); // Darker text for better visibility
       const progressText = `Total Documents: ${totalDocs} | Completed: ${completedDocs} | Progress: ${progressPercent}%`;
-      doc.text(progressText, 15, yPos);
+      doc.text(progressText, MARGIN_LEFT, yPos);
       yPos += 8;
 
       // Documents Section
       doc.setFontSize(14);
       doc.setFont('courier', 'bold');
       doc.setTextColor(22, 70, 121); // PRIMARY_BLUE
-      doc.text('Required Documents', 15, yPos);
+      doc.text('Required Documents', MARGIN_LEFT, yPos);
       
       yPos += 8;
 
@@ -206,9 +222,9 @@ export const generateChecklistPDF = async ({
           theme: 'grid',
           styles: {
             fontSize: 7,
-            cellPadding: 1.5,
-            lineColor: [22, 70, 121], // PRIMARY_BLUE grid lines
-            textColor: [50, 50, 50],
+            cellPadding: 2,
+            lineColor: [22, 70, 121],
+            textColor: [40, 40, 40], // Darker text for better visibility
             valign: 'top',
             overflow: 'linebreak',
             font: 'courier',
@@ -222,17 +238,17 @@ export const generateChecklistPDF = async ({
             lineColor: [22, 70, 121],
           },
           columnStyles: {
-            0: { cellWidth: 22 },
-            1: { cellWidth: 26 },
-            2: { cellWidth: 18 },
-            3: { cellWidth: 15 },
-            4: { cellWidth: 18 },
-            5: { cellWidth: 22 },
-            6: { cellWidth: 14 },
-            7: { cellWidth: 18 },
-            8: { cellWidth: 18 },
+            0: { cellWidth: 23 },
+            1: { cellWidth: 27 },
+            2: { cellWidth: 19 },
+            3: { cellWidth: 16 },
+            4: { cellWidth: 19 },
+            5: { cellWidth: 23 },
+            6: { cellWidth: 15 },
+            7: { cellWidth: 19 },
+            8: { cellWidth: 19 },
           },
-          margin: { left: 15, right: 15 },
+          margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
         });
         yPos = doc.lastAutoTable.finalY + 10;
       } else {
@@ -244,7 +260,7 @@ export const generateChecklistPDF = async ({
         doc.setFontSize(14);
         doc.setFont('courier', 'bold');
         doc.setTextColor(22, 70, 121); // PRIMARY_BLUE
-        doc.text('Supporting Documents', 15, yPos);
+        doc.text('Supporting Documents', MARGIN_LEFT, yPos);
         
         yPos += 8;
 
@@ -263,8 +279,9 @@ export const generateChecklistPDF = async ({
             theme: 'grid',
             styles: {
               fontSize: 7,
-              cellPadding: 1.5,
+              cellPadding: 2,
               lineColor: [22, 70, 121],
+              textColor: [40, 40, 40], // Body text color - darker for visibility
               font: 'courier',
             },
             headStyles: {
@@ -275,12 +292,12 @@ export const generateChecklistPDF = async ({
               font: 'courier',
             },
             columnStyles: {
-              0: { cellWidth: 12 },
-              1: { cellWidth: 50 },
-              2: { cellWidth: 30 },
-              3: { cellWidth: 30 },
+              0: { cellWidth: 14 },
+              1: { cellWidth: 62 },
+              2: { cellWidth: 40 },
+              3: { cellWidth: 48 },
             },
-            margin: { left: 15, right: 15 },
+            margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
           });
           yPos = doc.lastAutoTable.finalY + 10;
         } else {
@@ -295,7 +312,7 @@ export const generateChecklistPDF = async ({
         doc.setFontSize(14);
         doc.setFont('courier', 'bold');
         doc.setTextColor(22, 70, 121); // PRIMARY_BLUE
-        doc.text('Comment Trail', 15, yPos);
+        doc.text('Comment Trail', MARGIN_LEFT, yPos);
         
         yPos += 8;
 
@@ -318,10 +335,11 @@ export const generateChecklistPDF = async ({
             theme: 'grid',
             styles: {
               fontSize: 7,
-              cellPadding: 1.5,
+              cellPadding: 2,
               overflow: 'linebreak',
               font: 'courier',
               lineColor: [22, 70, 121],
+              textColor: [40, 40, 40], // Body text color - darker for visibility
             },
             headStyles: {
               fillColor: [22, 70, 121], // PRIMARY_BLUE
@@ -331,11 +349,11 @@ export const generateChecklistPDF = async ({
               font: 'courier',
             },
             columnStyles: {
-              0: { cellWidth: 40 },
-              1: { cellWidth: 35 },
-              2: { cellWidth: 96 },
+              0: { cellWidth: 42 },
+              1: { cellWidth: 40 },
+              2: { cellWidth: 98 },
             },
-            margin: { left: 15, right: 15 },
+            margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
           });
           yPos = doc.lastAutoTable.finalY + 10;
         } else {
@@ -348,16 +366,16 @@ export const generateChecklistPDF = async ({
         doc.setFontSize(12);
         doc.setFont('courier', 'bold');
         doc.setTextColor(22, 70, 121); // PRIMARY_BLUE
-        doc.text('Creator Comment:', 15, yPos);
+        doc.text('Creator Comment:', MARGIN_LEFT, yPos);
         
         yPos += 6;
         
         doc.setFontSize(9);
         doc.setFont('courier', 'normal');
-        doc.setTextColor(50, 50, 50);
+        doc.setTextColor(40, 40, 40);
         
-        const splitComment = doc.splitTextToSize(creatorComment, 170);
-        doc.text(splitComment, 15, yPos);
+        const splitComment = doc.splitTextToSize(creatorComment, USABLE_WIDTH);
+        doc.text(splitComment, MARGIN_LEFT, yPos);
         
         yPos += splitComment.length * 5 + 5;
       }
@@ -370,7 +388,7 @@ export const generateChecklistPDF = async ({
         doc.setTextColor(150, 150, 150);
         doc.text(
           `Page ${i} of ${pageCount} • NCBA Bank • Confidential`,
-          doc.internal.pageSize.width / 2,
+          PAGE_WIDTH / 2,
           doc.internal.pageSize.height - 10,
           { align: 'center' }
         );

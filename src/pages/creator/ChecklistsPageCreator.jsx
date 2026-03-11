@@ -347,6 +347,11 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
           overflow-y: auto;
         }
         
+        .close-icon-white .anticon {
+          color: #ffffff !important;
+          font-size: 16px;
+        }
+        
         /* Responsive adjustments */
         @media (min-width: 768px) and (max-width: 1099px) {
           .create-dcl-modal-overlay {
@@ -429,11 +434,12 @@ const ChecklistsPage = ({ open, onClose, draftId: initialDraftId = null }) => {
                     justifyContent: "center",
                     background: "rgba(255, 255, 255, 0.2)",
                     borderColor: "rgba(255, 255, 255, 0.4)",
-                    color: "#fff",
+                    color: "#ffffff",
                     width: "32px",
                     height: "32px",
                     padding: 0,
                   }}
+                  className="close-icon-white"
                 />
               </div>
             </div>

@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import dayjs from "dayjs";
 import { getStatusColor, hexToRGB } from "./statusColors";
+import ncbaLogoPNG from '../assets/ncbabanklogo.png';
 
 // ============================================
 // PROFESSIONAL COLOR PALETTE
@@ -567,211 +568,263 @@ export const generateChecklistPDF = (
   options = { save: true }
 ) => {
   const doc = new jsPDF("p", "mm", "a4");
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 15;
-  const colWidth = (pageWidth - 3 * margin) / 2;
-  let yPosition = 50;
+  const PAGE_WIDTH = doc.internal.pageSize.getWidth();
+  const PRIMARY_BLUE = [22, 70, 121];
+  const MARGIN_LEFT = 15;
+  const MARGIN_RIGHT = 15;
+  const MARGIN_RIGHT_POS = PAGE_WIDTH - MARGIN_RIGHT;
+  const USABLE_WIDTH = 180;
+  
+  let yPos = 15;
 
-  addProfessionalHeader(doc, "Checklist Document", checklist?.dclNo || "DCL");
-  doc.setTextColor(...COLORS.text);
-
-  // Two-Column Layout: Checklist Information (Left) and Document Statistics (Right)
-  const leftColX = margin;
-  const rightColX = margin + colWidth + margin;
-  let leftY = 50;
-  let rightY = 50;
-
-  // === LEFT COLUMN: Checklist Information ===
-  doc.setTextColor(...COLORS.primary);
-  doc.setFontSize(10);
-  doc.setFont(undefined, "bold");
-  doc.text("Checklist Information", leftColX, leftY);
-  leftY += 7;
-
-  doc.setFont(undefined, "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.text);
-
-  const checklistInfo = [
-    ["Checklist No:", checklist?.dclNo || "N/A"],
-    ["Customer Number:", checklist?.customerNumber || "N/A"],
-    ["Customer Name:", checklist?.customerName || "N/A"],
-    ["Loan Type:", checklist?.loanType || "N/A"],
-    ["IBPS Number:", checklist?.ibpsNo || "N/A"],
-    ["Status:", checklist?.status || "N/A"],
-    ["Created By:", checklist?.createdBy?.name || "N/A"],
-    ["Assigned RM:", checklist?.assignedToRM?.name || "N/A"],
-    ["Created At:", dayjs(checklist?.createdAt).format("DD MMM YYYY HH:mm")],
-  ];
-
-  checklistInfo.forEach(([label, value]) => {
-    if (leftY > pageWidth) {
-      // Page break handling
-      doc.addPage();
-      leftY = 20;
+  // Add NCBA logo - aligned to right margin
+  try {
+    if (ncbaLogoPNG) {
+      try {
+        doc.addImage(ncbaLogoPNG, 'PNG', MARGIN_RIGHT_POS - 40, 10, 40, 15);
+        console.log('✅ Logo added successfully');
+      } catch (imgError) {
+        console.warn('⚠️ Could not add logo directly, continuing without it:', imgError);
+      }
+    } else {
+      console.warn('⚠️ No logo found, continuing without it');
     }
-    doc.setFont(undefined, "bold");
-    doc.text(label, leftColX, leftY);
-    doc.setFont(undefined, "normal");
-    const labelWidth = 35;
-    doc.text(String(value).substring(0, 25), leftColX + labelWidth, leftY, { maxWidth: colWidth - labelWidth - 2 });
-    leftY += 5;
-  });
+  } catch (logoError) {
+    console.warn('⚠️ Could not add logo, continuing without it:', logoError);
+  }
 
-  // === RIGHT COLUMN: Document Statistics ===
-  doc.setFont(undefined, "bold");
+  // Header with title and date
+  doc.setFontSize(20);
+  doc.setFont('courier', 'bold');
+  doc.setTextColor(...PRIMARY_BLUE);
+  doc.text('Document Checklist', PAGE_WIDTH / 2, 18, { align: 'center' });
+
+  // Document number and date
   doc.setFontSize(10);
-  doc.setTextColor(...COLORS.primary);
-  doc.text("Document Statistics", rightColX, rightY);
-  rightY += 7;
+  doc.setFont('courier', 'normal');
+  doc.setTextColor(40, 40, 40);
+  
+  const dclNo = checklist?.dclNo || checklist?._id || 'N/A';
+  const today = dayjs().format('DD/MM/YYYY');
+  
+  doc.text(`DCL No: ${dclNo}`, MARGIN_LEFT, 30);
+  doc.text(`Generated: ${today}`, MARGIN_LEFT, 36);
 
-  doc.setFont(undefined, "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.text);
+  // Horizontal line
+  doc.setDrawColor(...PRIMARY_BLUE);
+  doc.setLineWidth(0.5);
+  doc.line(MARGIN_LEFT, 38, MARGIN_RIGHT_POS, 38);
+  
+  yPos = 45;
 
-  const stats = [
-    ["Total Documents:", documentStats?.total || 0],
-    ["Submitted:", documentStats?.submitted || 0],
-    ["Pending (RM):", documentStats?.pendingFromRM || 0],
-    ["Pending (Co):", documentStats?.pendingFromCo || 0],
-    ["Sighted:", documentStats?.sighted || 0],
-    ["Deferred:", documentStats?.deferred || 0],
-    ["Waived:", documentStats?.waived || 0],
-    ["TBO:", documentStats?.tbo || 0],
-    ["Completion:", `${documentStats?.progressPercent || 0}%`],
-  ];
-
-  stats.forEach(([label, value]) => {
-    if (rightY > pageWidth) {
-      doc.addPage();
-      rightY = 20;
-    }
-    doc.setFont(undefined, "bold");
-    doc.text(label, rightColX, rightY);
-    doc.setFont(undefined, "normal");
-    doc.text(String(value), rightColX + 35, rightY);
-    rightY += 5;
-  });
-
-  // Move to next section after both columns
-  yPosition = Math.max(leftY, rightY) + 8;
-
-  // Documents Table
-  if (docs && docs.length > 0) {
-    yPosition += 5;
-    const documentData = docs.map((doc_item) => [
-      (doc_item.documentName || "N/A").substring(0, 30),
-      doc_item.category || "N/A",
-      doc_item.status || "N/A",
-      doc_item.submittedBy?.name || doc_item.submittedBy || "N/A",
-      doc_item.expiryDate ? dayjs(doc_item.expiryDate).format("DD MMM YYYY") : (doc_item.submittedAt ? dayjs(doc_item.submittedAt).format("DD MMM YYYY") : "N/A"),
-      doc_item.comment || doc_item.remarks || "",
-    ]);
-
-    autoTable(doc, {
-      head: [["Document Name", "Category", "Status", "Submitted By", "Date", "Comments"]],
-      body: documentData,
-      startY: yPosition,
-      margin: margin,
+  // Checklist Information Table
+  if (typeof doc.autoTable === 'function') {
+    doc.autoTable({
+      startY: yPos,
+      head: [],
+      body: [
+        ['Customer Name', checklist?.customerName || 'N/A', 'Customer Number', checklist?.customerNumber || 'N/A'],
+        ['Loan Type', checklist?.loanType || 'N/A', 'RM Name', checklist?.rmName || checklist?.assignedToRM?.name || 'N/A'],
+        ['Status', checklist?.status || 'N/A', 'Created Date', dayjs(checklist?.createdAt).format("DD/MM/YYYY") || 'N/A'],
+      ],
+      theme: 'plain',
       styles: {
-        fontSize: 7.5,
-        cellPadding: 2,
-        overflow: "linebreak",
-        textColor: COLORS.text,
-      },
-      headStyles: {
-        fillColor: COLORS.secondary,
-        textColor: COLORS.white,
-        fontStyle: "bold",
-        fontSize: 8,
-      },
-      alternateRowStyles: {
-        fillColor: COLORS.light,
+        fontSize: 10,
+        cellPadding: 3,
+        lineColor: [220, 220, 220],
+        lineWidth: 0.1,
+        textColor: [40, 40, 40],
+        font: 'courier',
       },
       bodyStyles: {
-        lineColor: COLORS.border,
-        lineWidth: 0.3,
+        textColor: [40, 40, 40],
+        cellPadding: 3,
       },
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 18 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 40 },
+        0: { cellWidth: 44, fontStyle: 'bold', textColor: [40, 40, 40] },
+        1: { cellWidth: 46, textColor: [40, 40, 40] },
+        2: { cellWidth: 44, fontStyle: 'bold', textColor: [40, 40, 40] },
+        3: { cellWidth: 46, textColor: [40, 40, 40] },
       },
+      margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
       didDrawCell: (data) => {
-        // Apply status colors to status column (column index 2)
-        if (data.column.index === 2 && data.row.section === "body") {
-          const status = data.cell.text[0];
-          const statusColor = getStatusColor(status);
-          const bgRGB = hexToRGB(statusColor.bgColor);
-          const textRGB = hexToRGB(statusColor.textColor);
-          
-          // Apply background color
-          doc.setFillColor(...bgRGB);
-          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, "F");
-          
-          // Apply text color
-          doc.setTextColor(...textRGB);
-          
-          // Redraw text with colored background
-          doc.setFont(undefined, "normal");
-          doc.text(status, data.cell.x + 2, data.cell.y + data.cell.height / 2 + 1.5, {
-            maxWidth: data.cell.width - 4,
-            align: "left",
-            baseline: "middle",
-          });
+        if (data.column.index % 2 === 0 && data.section === 'body') {
+          data.cell.styles.fillColor = [230, 240, 250];
+          data.cell.styles.textColor = PRIMARY_BLUE;
         }
       },
     });
-    yPosition = doc.lastAutoTable.finalY + 5;
+
+    yPos = doc.lastAutoTable.finalY + 8;
+  }
+
+  // Document Summary Section
+  doc.setFontSize(14);
+  doc.setFont('courier', 'bold');
+  doc.setTextColor(...PRIMARY_BLUE);
+  doc.text('Document Summary', MARGIN_LEFT, yPos);
+  yPos += 6;
+
+  doc.setFontSize(9);
+  doc.setFont('courier', 'normal');
+  doc.setTextColor(40, 40, 40);
+
+  const totalDocs = docs.length || 0;
+  const completedDocs = docs.filter(d => 
+    ['submitted', 'sighted', 'waived', 'tbo'].includes((d.status || '').toLowerCase())
+  ).length || 0;
+  const progressPercent = totalDocs > 0 ? Math.round((completedDocs / totalDocs) * 100) : 0;
+  
+  const summaryText = `Total Documents: ${totalDocs} | Completed: ${completedDocs} | Progress: ${progressPercent}%`;
+  doc.text(summaryText, MARGIN_LEFT, yPos);
+  yPos += 6;
+
+  // Required Documents Table
+  if (docs && docs.length > 0) {
+    yPos += 2;
+    doc.setFontSize(11);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(...PRIMARY_BLUE);
+    doc.text('Required Documents', MARGIN_LEFT, yPos);
+    yPos += 6;
+
+    // Debug: Log document structure
+    if (docs && docs.length > 0) {
+      console.log('📋 [PDF] First document object:', docs[0]);
+      console.log('📋 [PDF] Total documents:', docs.length);
+    }
+
+    const documentRows = docs.map((doc_item) => [
+      doc_item.documentName || doc_item.name || 'N/A',
+      doc_item.category || 'N/A',
+      doc_item.status || doc_item.coStatus || doc_item.action || 'N/A',
+      doc_item.deferralNo || doc_item.deferralNumber || '-',
+      doc_item.checkerStatus || doc_item.finalCheckerStatus || 'N/A',
+      doc_item.comment || doc_item.remarks || doc_item.coComment || '-',
+    ]);
+
+    if (typeof doc.autoTable === 'function') {
+      doc.autoTable({
+        startY: yPos,
+        head: [['Document Name', 'Category', 'Status', 'Deferral No', 'Checker Status', 'CO Comment']],
+        body: documentRows,
+        theme: 'grid',
+        styles: {
+          fontSize: 7,
+          cellPadding: 2,
+          overflow: 'linebreak',
+          font: 'courier',
+          lineColor: PRIMARY_BLUE,
+          textColor: [40, 40, 40],
+        },
+        headStyles: {
+          fillColor: PRIMARY_BLUE,
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 7,
+          font: 'courier',
+        },
+        columnStyles: {
+          0: { cellWidth: 32 },
+          1: { cellWidth: 22 },
+          2: { cellWidth: 18 },
+          3: { cellWidth: 16 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 72 },
+        },
+        margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
+        didDrawCell: (data) => {
+          // Color code Status column (index 2) and Checker Status column (index 4)
+          if ((data.column.index === 2 || data.column.index === 4) && data.row.section === 'body') {
+            const status = data.cell.text[0] || '';
+            const statusColor = getStatusColor(status);
+            if (statusColor) {
+              const bgRGB = hexToRGB(statusColor.bgColor);
+              const textRGB = hexToRGB(statusColor.textColor);
+              data.cell.styles.fillColor = bgRGB;
+              data.cell.styles.textColor = textRGB;
+            }
+          }
+        },
+      });
+      yPos = doc.lastAutoTable.finalY + 8;
+    }
   }
 
   // Comments Section
   const allComments = Array.isArray(comments) ? comments : (comments?.data ? comments.data : []);
   if (allComments && allComments.length > 0) {
-    // Check if we need a new page
-    if (yPosition > doc.internal.pageSize.getHeight() - 30) {
+    if (yPos > doc.internal.pageSize.getHeight() - 40) {
       doc.addPage();
-      yPosition = 20;
+      yPos = 15;
     }
 
-    yPosition += 3;
-    doc.setFont(undefined, "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(...COLORS.primary);
-    doc.text(`Comments Trail (${allComments.length} comments)`, margin, yPosition);
-    yPosition += 5;
+    yPos += 3;
+    doc.setFontSize(11);
+    doc.setFont('courier', 'bold');
+    doc.setTextColor(...PRIMARY_BLUE);
+    doc.text('Comment Trail', MARGIN_LEFT, yPos);
+    yPos += 6;
 
-    doc.setFont(undefined, "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...COLORS.text);
-    
-    allComments.forEach((comment, idx) => {
-      if (yPosition > doc.internal.pageSize.getHeight() - 10) {
-        doc.addPage();
-        yPosition = 20;
-      }
+    // Debug: Log comment structure
+    if (allComments && allComments.length > 0) {
+      console.log('💬 [PDF] First comment object:', allComments[0]);
+      console.log('💬 [PDF] Total comments:', allComments.length);
+    }
 
-      const author = comment.author?.name || comment.createdBy?.name || comment.userName || "Unknown";
-      const date = dayjs(comment.createdAt || comment.timestamp).format("DD MMM HH:mm");
-      const content = (comment.content || comment.text || comment.comment || comment.message || "").substring(0, 100);
+    const commentRows = allComments.map((comment, idx) => {
+      const dateStr = comment.createdAt ? dayjs(comment.createdAt).format('DD/MM/YYYY HH:mm') : 'N/A';
+      const userName = comment.author?.name || comment.createdBy?.name || comment.user?.name || comment.userName || comment.name || 'N/A';
+      const message = comment.content || comment.text || comment.comment || comment.message || '';
       
-      // Single line comment with truncation
-      const commentLine = `${idx + 1}. ${author} (${date}): ${content}`;
-      
-      doc.setTextColor(...COLORS.text);
-      doc.text(commentLine, margin + 1, yPosition, { 
-        maxWidth: pageWidth - 2 * margin - 2,
-        overflow: "linebreak"
-      });
-      
-      yPosition += 3;
+      return [dateStr, userName, message];
     });
+
+    if (typeof doc.autoTable === 'function') {
+      doc.autoTable({
+        startY: yPos,
+        head: [['Date', 'User', 'Comment']],
+        body: commentRows,
+        theme: 'grid',
+        styles: {
+          fontSize: 7,
+          cellPadding: 2,
+          overflow: 'linebreak',
+          font: 'courier',
+          lineColor: PRIMARY_BLUE,
+          textColor: [40, 40, 40],
+        },
+        headStyles: {
+          fillColor: PRIMARY_BLUE,
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 7,
+          font: 'courier',
+        },
+        columnStyles: {
+          0: { cellWidth: 42 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 98 },
+        },
+        margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
+      });
+      yPos = doc.lastAutoTable.finalY + 10;
+    }
   }
 
-  addProfessionalFooter(doc);
+  // Footer with page numbers
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Page ${i} of ${pageCount} • NCBA Bank • Confidential`,
+      PAGE_WIDTH / 2,
+      doc.internal.pageSize.height - 10,
+      { align: 'center' }
+    );
+  }
 
   // Download
   const filename = `Checklist_${checklist?.dclNo || "export"}_${dayjs().format("YYYYMMDD_HHmmss")}.pdf`;

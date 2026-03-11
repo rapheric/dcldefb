@@ -65,13 +65,11 @@ const ChecklistInfoCard = ({ checklist }) => {
         <Descriptions.Item label="Status">
           <Tag
             style={{
-              // backgroundColor: statusColorConfig.bgColor,
-              // color: statusColorConfig.textColor || statusColorConfig.color,
               borderColor: statusColorConfig.borderColor,
               fontWeight: 600,
-              fontSize: "13px",
+              fontSize: "12px",
               padding: "2px 5px",
-              lineHeight: "22px",
+              lineHeight: "18px",
               borderRadius: "4px",
               textTransform: "capitalize",
             }}

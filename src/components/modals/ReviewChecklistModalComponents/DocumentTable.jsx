@@ -132,16 +132,59 @@ const DocumentTable = ({
       dataIndex: "status",
       width: 100,
       render: (status, record) => {
-        const statusColor = getStatusColor(status);
         const statusLabel =
           status === "deferred" && record.deferralNo ? "Deferred" : status;
+
+        // Define colors for each status with better visibility
+        let bgColor = "#f5f5f5";
+        let textColor = "#000";
+        let borderColor = "#d9d9d9";
+
+        const normalizedStatus = String(status || "")
+          .toLowerCase()
+          .replace(/\s+/g, "");
+
+        if (
+          normalizedStatus.includes("submitted") ||
+          normalizedStatus.includes("sighted")
+        ) {
+          bgColor = "#FFF";
+          textColor = "#52C41A"; // Green
+          borderColor = "#52C41A";
+        } else if (
+          normalizedStatus.includes("deferred") ||
+          normalizedStatus.includes("waived") ||
+          normalizedStatus.includes("tbo")
+        ) {
+          bgColor = "#FFF";
+          textColor = "#FAAD14"; // Amber
+          borderColor = "#FAAD14";
+        } else if (normalizedStatus.includes("pending")) {
+          bgColor = "#FFEBE6";
+          textColor = "#FF4D4F"; // Red
+          borderColor = "#FF4D4F";
+        } else if (normalizedStatus.includes("approved")) {
+          bgColor = "#FFF";
+          textColor = "#52C41A"; // Green
+          borderColor = "#52C41A";
+        } else if (normalizedStatus.includes("rejected")) {
+          bgColor = "#FFF";
+          textColor = "#FF4D4F"; // Red
+          borderColor = "#FF4D4F";
+        }
 
         return (
           <Tooltip title={statusLabel}>
             <Tag
               className="status-tag"
-              color={statusColor.tag}
-              style={{ fontSize: 10 }}
+              style={{
+                backgroundColor: bgColor,
+                color: textColor,
+                borderColor: borderColor,
+                fontWeight: "600",
+                fontSize: 10,
+                textTransform: "lowercase",
+              }}
             >
               {statusLabel}
             </Tag>
@@ -174,9 +217,10 @@ const DocumentTable = ({
       width: 100,
       render: (checkerStatus) => {
         // Define colors for each status with better visibility
-        // approved: white background, green text
+        // approved/sighted: white background, green text
+        // waived/tbo/deferred: white background, amber text
         // rejected: white background, red text
-        // pending: red background, red text (consistent with other pending statuses)
+        // pending: red background, red text
         let bgColor = "#f5f5f5";
         let textColor = "#000";
         let borderColor = "#d9d9d9";
@@ -186,11 +230,30 @@ const DocumentTable = ({
           .toLowerCase()
           .replace(/\s+/g, "");
 
-        if (normalizedStatus.includes("approved")) {
+        if (
+          normalizedStatus.includes("approved") ||
+          normalizedStatus.includes("sighted")
+        ) {
           bgColor = "#FFF";
           textColor = "#52C41A"; // Green
           borderColor = "#52C41A";
-          label = "approved";
+          label = normalizedStatus.includes("approved")
+            ? "approved"
+            : "sighted";
+        } else if (
+          normalizedStatus.includes("waived") ||
+          normalizedStatus.includes("tbo") ||
+          normalizedStatus.includes("deferred")
+        ) {
+          bgColor = "#FFF";
+          textColor = "#FAAD14"; // Amber
+          borderColor = "#FAAD14";
+          const statusType = normalizedStatus.includes("waived")
+            ? "waived"
+            : normalizedStatus.includes("tbo")
+              ? "tbo"
+              : "deferred";
+          label = statusType;
         } else if (normalizedStatus.includes("rejected")) {
           bgColor = "#FFF";
           textColor = "#FF4D4F"; // Red
@@ -217,6 +280,7 @@ const DocumentTable = ({
                 fontWeight: "600",
                 textTransform: "lowercase",
                 fontSize: 10,
+                border: `1px solid ${borderColor}`,
               }}
             >
               {displayText}
