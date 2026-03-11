@@ -16,7 +16,13 @@ const Myqueue = ({ userId }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedChecklist, setSelectedChecklist] = useState(null);
 
-  const { data: rawData, isLoading, isFetching, error, refetch } = useGetChecklistsQuery();
+  const {
+    data: rawData,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useGetChecklistsQuery();
 
   // Normalize API response
   const checklists = useMemo(() => {
@@ -57,22 +63,96 @@ const Myqueue = ({ userId }) => {
   `;
 
   const columns = [
-    { title: "DCL No", dataIndex: "dclNo", width: 200, render: (text) => <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>{text}</span> },
-    { title: "Customer Number", dataIndex: "customerNumber", width: 180, render: (text) => <span style={{ color: SECONDARY_PURPLE }}>{text}</span> },
-
-    
-    { title: "Loan Type", dataIndex: "loanType", width: 140 },
-    { title: "Assigned RM", dataIndex: "assignedToRM", width: 120, render: (rm) => <span style={{ color: PRIMARY_BLUE, fontWeight: 500 }}>{rm?.name || "Not Assigned"}</span> },
-    { title: "# Docs", dataIndex: "documents", width: 80, align: "center", render: (docs) => <Tag color={LIGHT_YELLOW} style={{ fontSize: 12, borderRadius: 999, fontWeight: "bold", color: PRIMARY_BLUE, border: `1px solid ${HIGHLIGHT_GOLD}` }}>{Array.isArray(docs) ? docs.length : 0}</Tag> },
-    { title: "Status", dataIndex: "status", width: 120, render: (status) => {
-        let tagColor, tagText, bgColor;
-        if (status === "approved") { tagText = "Approved"; tagColor = ACCENT_LIME; bgColor = ACCENT_LIME; }
-        else if (status === "rejected") { tagText = "Rejected"; tagColor = HIGHLIGHT_GOLD; bgColor = HIGHLIGHT_GOLD; }
-        else { tagText = "In Progress"; tagColor = SECONDARY_PURPLE; bgColor = LIGHT_YELLOW; }
-        return <Tag color={tagColor} style={{ fontSize: 12, borderRadius: 999, fontWeight: "bold", padding: "4px 8px", color: PRIMARY_BLUE, backgroundColor: bgColor + "40", borderColor: bgColor }}>{tagText}</Tag>;
-      }
+    {
+      title: "DCL No",
+      dataIndex: "dclNo",
+      width: 200,
+      render: (text) => (
+        <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>{text}</span>
+      ),
     },
-    { title: "Actions", width: 100, render: (_, record) => <Button size="small" type="link" onClick={() => setSelectedChecklist(record)} style={{ color: SECONDARY_PURPLE, fontWeight: "bold", fontSize: 13, borderRadius: 6, "--antd-wave-shadow-color": ACCENT_LIME }}>View</Button> }
+    {
+      title: "Customer Number",
+      dataIndex: "customerNumber",
+      width: 180,
+      render: (text) => <span style={{ color: SECONDARY_PURPLE }}>{text}</span>,
+    },
+
+    { title: "Loan Type", dataIndex: "loanType", width: 140 },
+    {
+      title: "Assigned RM",
+      dataIndex: "assignedToRM",
+      width: 120,
+      render: (rm) => (
+        <span style={{ color: PRIMARY_BLUE, fontWeight: 500 }}>
+          {rm?.name || "Not Assigned"}
+        </span>
+      ),
+    },
+    {
+      title: "# Docs",
+      dataIndex: "documents",
+      width: 80,
+      align: "center",
+      render: (docs) => (Array.isArray(docs) ? docs.length : 0),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      width: 120,
+      render: (status) => {
+        let tagColor, tagText, bgColor;
+        if (status === "approved") {
+          tagText = "Approved";
+          tagColor = ACCENT_LIME;
+          bgColor = ACCENT_LIME;
+        } else if (status === "rejected") {
+          tagText = "Rejected";
+          tagColor = HIGHLIGHT_GOLD;
+          bgColor = HIGHLIGHT_GOLD;
+        } else {
+          tagText = "In Progress";
+          tagColor = SECONDARY_PURPLE;
+          bgColor = LIGHT_YELLOW;
+        }
+        return (
+          <Tag
+            color={tagColor}
+            style={{
+              fontSize: 12,
+              borderRadius: 999,
+              fontWeight: "bold",
+              padding: "4px 8px",
+              color: PRIMARY_BLUE,
+              backgroundColor: bgColor + "40",
+              borderColor: bgColor,
+            }}
+          >
+            {tagText}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: "Actions",
+      width: 100,
+      render: (_, record) => (
+        <Button
+          size="small"
+          type="link"
+          onClick={() => setSelectedChecklist(record)}
+          style={{
+            color: SECONDARY_PURPLE,
+            fontWeight: "bold",
+            fontSize: 13,
+            borderRadius: 6,
+            "--antd-wave-shadow-color": ACCENT_LIME,
+          }}
+        >
+          View
+        </Button>
+      ),
+    },
   ];
 
   const dataSource = Array.isArray(myChecklists) ? myChecklists : [];
@@ -81,23 +161,70 @@ const Myqueue = ({ userId }) => {
     <div style={{ padding: 16 }}>
       <style>{customTableStyles}</style>
 
-      {drawerOpen && <ChecklistsPage open={drawerOpen} onClose={() => { setDrawerOpen(false); refetch && refetch(); }} coCreatorId={userId} />}
+      {drawerOpen && (
+        <ChecklistsPage
+          open={drawerOpen}
+          onClose={() => {
+            setDrawerOpen(false);
+            refetch && refetch();
+          }}
+          coCreatorId={userId}
+        />
+      )}
 
       <Divider style={{ margin: "12px 0" }}>Assigned Checklists</Divider>
 
       {isLoading || isFetching ? (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: 24 }}>
-          <Spin tip="Loading checklists..."><div style={{ height: 40 }} /></Spin>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 24,
+          }}
+        >
+          <Spin tip="Loading checklists...">
+            <div style={{ height: 40 }} />
+          </Spin>
         </div>
       ) : error ? (
-        <Empty description="Failed to load checklists. Check console for details." style={{ padding: 24 }} />
+        <Empty
+          description="Failed to load checklists. Check console for details."
+          style={{ padding: 24 }}
+        />
       ) : dataSource.length === 0 ? (
-        <Empty description="No active checklists assigned." style={{ padding: 24 }} />
+        <Empty
+          description="No active checklists assigned."
+          style={{ padding: 24 }}
+        />
       ) : (
-        <Table columns={columns} dataSource={dataSource} rowKey={(record) => record._id || record.id} size="large" pagination={{ pageSize: 5, showSizeChanger: true, pageSizeOptions: ["5", "10", "20", "50"], position: ["bottomCenter"] }} rowClassName={(record, index) => (index % 2 === 0 ? "bg-white" : "bg-gray-50")} />
+        <Table
+          columns={columns}
+          dataSource={dataSource}
+          rowKey={(record) => record._id || record.id}
+          size="large"
+          pagination={{
+            pageSize: 5,
+            showSizeChanger: true,
+            pageSizeOptions: ["5", "10", "20", "50"],
+            position: ["bottomCenter"],
+          }}
+          rowClassName={(record, index) =>
+            index % 2 === 0 ? "bg-white" : "bg-gray-50"
+          }
+        />
       )}
 
-      {selectedChecklist && <CheckerReviewChecklistModal checklist={selectedChecklist} open={!!selectedChecklist} onClose={() => { setSelectedChecklist(null); refetch && refetch(); }} />}
+      {selectedChecklist && (
+        <CheckerReviewChecklistModal
+          checklist={selectedChecklist}
+          open={!!selectedChecklist}
+          onClose={() => {
+            setSelectedChecklist(null);
+            refetch && refetch();
+          }}
+        />
+      )}
     </div>
   );
 };

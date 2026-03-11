@@ -1499,9 +1499,7 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                           <ClockCircleOutlined style={{ fontSize: 11 }} />
                           Current Approver • Pending Approval
                           {localDeferral.slaExpiry && (
-                            <span
-                              style={{ marginLeft: 8, color: WARNING_ORANGE }}
-                            >
+                            <span style={{ marginLeft: 8, color: "#666" }}>
                               SLA:{" "}
                               {dayjs(localDeferral.slaExpiry).format(
                                 "DD MMM HH:mm",
@@ -1601,9 +1599,7 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
                             <ClockCircleOutlined style={{ fontSize: 11 }} />
                             Current Approver • Pending Approval
                             {localDeferral.slaExpiry && (
-                              <span
-                                style={{ marginLeft: 8, color: WARNING_ORANGE }}
-                              >
+                              <span style={{ marginLeft: 8, color: "#666" }}>
                                 SLA:{" "}
                                 {dayjs(localDeferral.slaExpiry).format(
                                   "DD MMM HH:mm",

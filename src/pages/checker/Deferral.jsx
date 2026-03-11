@@ -609,9 +609,7 @@ const DeferralStatusAlert = ({ deferral }) => {
             </span>
             <span
               style={{
-                color: dayjs(deferral.slaExpiry).isBefore(dayjs())
-                  ? ERROR_RED
-                  : PRIMARY_BLUE,
+                color: "#333",
               }}
             >
               {dayjs(deferral.slaExpiry).format("DD MMM YYYY HH:mm")}
@@ -2541,7 +2539,13 @@ const Deferrals = ({ userId }) => {
         s ? (
           <div
             style={{
-              color: dayjs(s).isBefore(dayjs()) ? ERROR_RED : PRIMARY_BLUE,
+              color: "#333",
+              backgroundColor: "#ffffff",
+              padding: "4px 8px",
+              borderRadius: 4,
+              border: "1px solid #d9d9d9",
+              display: "inline-block",
+              fontWeight: 500,
             }}
           >
             {dayjs(s).format("DD MMM YYYY HH:mm")}

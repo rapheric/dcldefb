@@ -356,14 +356,7 @@ const MyQueue = ({
         const daysLeft = dayjs(date).diff(dayjs(), "days");
         return (
           <Tag
-            color={
-              daysLeft <= 2
-                ? ERROR_RED
-                : daysLeft <= 5
-                  ? WARNING_ORANGE
-                  : SUCCESS_GREEN
-            }
-            style={{ fontWeight: "bold", fontSize: 11 }}
+            style={{ backgroundColor: '#ffffff', border: '1px solid #d9d9d9', color: '#333', fontWeight: 'bold', fontSize: 11 }}
           >
             {daysLeft > 0 ? `${daysLeft}d` : "Expired"}
           </Tag>
@@ -575,3 +568,5 @@ const MyQueue = ({
 };
 
 export default MyQueue;
+
+

@@ -551,9 +551,7 @@ const DeferralStatusAlert = ({ deferral, hideApprovedStatus }) => {
             </span>
             <span
               style={{
-                color: dayjs(deferral.slaExpiry).isBefore(dayjs())
-                  ? ERROR_RED
-                  : PRIMARY_BLUE,
+                color: "#333",
               }}
             >
               {dayjs(deferral.slaExpiry).format("DD MMM YYYY HH:mm")}
@@ -6179,31 +6177,28 @@ const DeferralPending = ({ userId = "rm_current" }) => {
         const daysLeft = dayjs(date).diff(dayjs(), "days");
         const hoursLeft = dayjs(date).diff(dayjs(), "hours");
 
-        let color = SUCCESS_GREEN;
         let text = `${daysLeft}d`;
 
         if (daysLeft <= 0 && hoursLeft <= 0) {
-          color = ERROR_RED;
           text = "Expired";
         } else if (daysLeft <= 0) {
-          color = ERROR_RED;
           text = `${hoursLeft}h`;
         } else if (daysLeft <= 1) {
-          color = ERROR_RED;
           text = `${daysLeft}d`;
         } else if (daysLeft <= 3) {
-          color = WARNING_ORANGE;
           text = `${daysLeft}d`;
         }
 
         return (
           <Tag
-            color={color}
+            color="#ffffff"
             style={{
               fontWeight: "bold",
               fontSize: 11,
               minWidth: 50,
               textAlign: "center",
+              color: "#333",
+              border: "1px solid #d9d9d9",
             }}
           >
             {text}

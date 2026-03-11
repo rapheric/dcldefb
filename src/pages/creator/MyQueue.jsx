@@ -292,19 +292,7 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
       render: (docs = []) => {
         const total =
           docs.reduce((sum, d) => sum + (d.docList?.length || 0), 0) || 0;
-
-        return (
-          <Tag
-            color={LIGHT_YELLOW}
-            style={{
-              fontWeight: "bold",
-              borderRadius: 999,
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-            }}
-          >
-            {total}
-          </Tag>
-        );
+        return total;
       },
     },
     {
@@ -315,13 +303,11 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
         const daysLeft = dayjs(date).diff(dayjs(), "days");
         return (
           <Tag
-            color={
-              daysLeft <= 2
-                ? ERROR_RED
-                : daysLeft <= 5
-                  ? WARNING_ORANGE
-                  : SUCCESS_GREEN
-            }
+            style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #d9d9d9",
+              color: "#333",
+            }}
           >
             {daysLeft > 0 ? `${daysLeft}d` : "Expired"}
           </Tag>

@@ -1349,17 +1349,13 @@ const Actioned = () => {
           return <div style={{ fontSize: 11, color: "#999" }}>N/A</div>;
 
         const hoursLeft = dayjs(date).diff(dayjs(), "hours");
-        let color = SUCCESS_GREEN;
         let text = `${Math.ceil(hoursLeft / 24)}d`;
 
         if (hoursLeft <= 0) {
-          color = ERROR_RED;
           text = "Expired";
         } else if (hoursLeft <= 24) {
-          color = ERROR_RED;
           text = `${hoursLeft}h`;
         } else if (hoursLeft <= 72) {
-          color = WARNING_ORANGE;
           text = `${Math.ceil(hoursLeft / 24)}d`;
         }
 
@@ -1368,10 +1364,11 @@ const Actioned = () => {
             style={{
               fontWeight: "bold",
               fontSize: 11,
-              color: "#fff",
-              backgroundColor: color,
+              color: "#333",
+              backgroundColor: "#ffffff",
               padding: "4px 8px",
               borderRadius: 4,
+              border: "1px solid #d9d9d9",
               display: "inline-block",
               minWidth: 60,
               textAlign: "center",

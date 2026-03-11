@@ -769,20 +769,7 @@ const CoChecklistPage = ({
           const docListCount = category.docList ? category.docList.length : 0;
           return total + docListCount;
         }, 0);
-        return (
-          <Tag
-            color={LIGHT_YELLOW}
-            style={{
-              fontSize: 12,
-              borderRadius: 999,
-              fontWeight: "bold",
-              color: PRIMARY_BLUE,
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-            }}
-          >
-            {totalDocCount}
-          </Tag>
-        );
+        return totalDocCount;
       },
     },
     {

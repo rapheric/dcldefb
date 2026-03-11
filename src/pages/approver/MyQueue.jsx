@@ -3621,28 +3621,26 @@ const MyQueue = () => {
         }
 
         const hoursLeft = dayjs(date).diff(dayjs(), "hours");
-        let color = SUCCESS_GREEN;
         let text = `${Math.ceil(hoursLeft / 24)}d`;
 
         if (hoursLeft <= 0) {
-          color = ERROR_RED;
           text = "Expired";
         } else if (hoursLeft <= 24) {
-          color = ERROR_RED;
           text = `${hoursLeft}h`;
         } else if (hoursLeft <= 72) {
-          color = WARNING_ORANGE;
+          text = `${Math.ceil(hoursLeft / 24)}d`;
         }
 
         return (
           <div
             style={{
-              color: color,
+              color: "#333",
               fontWeight: "bold",
               fontSize: 11,
-              padding: "2px 8px",
+              padding: "4px 8px",
               borderRadius: 4,
-              backgroundColor: `${color}10`,
+              backgroundColor: "#ffffff",
+              border: "1px solid #d9d9d9",
               display: "inline-block",
             }}
           >
