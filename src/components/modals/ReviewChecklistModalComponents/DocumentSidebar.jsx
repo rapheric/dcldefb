@@ -83,8 +83,17 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
               ? doc.fileUrl.split("/").pop()
               : "document.pdf",
             fileUrl: doc.fileUrl,
-            uploadedBy: doc.uploadedBy?.name || doc.uploadedBy || null,
-            uploadedByRole: doc.uploadedBy?.role || doc.uploadedByRole || null,
+            uploadedBy:
+              doc.uploadData?.uploadedBy?.name ||
+              doc.uploadData?.uploadedBy ||
+              doc.uploadedBy?.name ||
+              doc.uploadedBy ||
+              null,
+            uploadedByRole:
+              doc.uploadData?.uploadedByRole ||
+              doc.uploadedBy?.role ||
+              doc.uploadedByRole ||
+              null,
             uploadDate: doc.uploadDate || new Date().toISOString(),
             modifiedDate: doc.modifiedDate || new Date().toISOString(),
           }))
@@ -98,8 +107,8 @@ const DocumentSidebar = ({ documents, supportingDocs = [], open, onClose }) => {
           category: "Supporting Documents",
           fileName: doc.fileName || doc.name,
           fileUrl: doc.fileUrl,
-          uploadedBy: doc.uploadedBy?.name || doc.uploadedBy || "Unknown",
-          uploadedByRole: doc.uploadedByRole,
+          uploadedBy: doc.uploadedBy?.name || doc.uploadedBy || null,
+          uploadedByRole: doc.uploadedByRole || doc.uploadedBy?.role || null,
           uploadDate: doc.uploadedAt || new Date().toISOString(),
         }))
       : [];

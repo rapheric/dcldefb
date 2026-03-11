@@ -187,24 +187,30 @@ const Completed = () => {
       const response = await reviveChecklist(checklistId).unwrap();
 
       console.log("✅ [Completed.jsx] API Response:", response);
-      console.log("✅ [Completed.jsx] Full response data:", JSON.stringify(response, null, 2));
+      console.log(
+        "✅ [Completed.jsx] Full response data:",
+        JSON.stringify(response, null, 2),
+      );
 
       // Get the newly created checklist ID from the response - handle various response formats
-      const newChecklistId = 
+      const newChecklistId =
         response.newChecklistId ||
-        response.checklist?.id || 
+        response.checklist?.id ||
         response.checklist?._id ||
         response.data?.newChecklistId ||
         response.data?.id;
-      
-      const newDCLNumber = 
+
+      const newDCLNumber =
         response.newDCLNumber ||
         response.checklist?.dclNo ||
         response.data?.newDCL ||
         response.dclNo;
 
       if (!newChecklistId) {
-        console.error("❌ New checklist ID not found. Response structure:", Object.keys(response));
+        console.error(
+          "❌ New checklist ID not found. Response structure:",
+          Object.keys(response),
+        );
         throw new Error("New checklist ID not found in response");
       }
 
@@ -212,7 +218,9 @@ const Completed = () => {
       console.log("✅ [Completed.jsx] New DCL Number:", newDCLNumber);
 
       message.success({
-        content: response?.message || `Checklist revived successfully as ${newDCLNumber}!`,
+        content:
+          response?.message ||
+          `Checklist revived successfully as ${newDCLNumber}!`,
         key: "revive",
         duration: 3,
       });
@@ -259,16 +267,16 @@ const Completed = () => {
   };
 
   // ✅ Helper function to get assigned checker info
-const getCheckerInfo = (record) => {
-  // Priority: assignedToCoChecker → assignedChecker → checkerAssigned → coChecker
-  return (
-    record.assignedToCoChecker ||
-    record.assignedChecker ||
-    record.checkerAssigned ||
-    record.coChecker ||
-    null
-  );
-};
+  const getCheckerInfo = (record) => {
+    // Priority: assignedToCoChecker → assignedChecker → checkerAssigned → coChecker
+    return (
+      record.assignedToCoChecker ||
+      record.assignedChecker ||
+      record.checkerAssigned ||
+      record.coChecker ||
+      null
+    );
+  };
 
   /* ---------------- TABLE COLUMNS ---------------- */
   const columns = [
@@ -350,49 +358,49 @@ const getCheckerInfo = (record) => {
         </div>
       ),
     },
-     {
-         title: "Checker/Approver",
-         dataIndex: "assignedToCoChecker", // primary field to check for checker info
-         width: 160,
-         render: (checkerValue, record) => {
-           // 🔍 Debug: Log what we're getting
-           console.log("🔍 Checker Column Debug:", {
-             checkerValue,
-             record_assignedToCoChecker: record?.assignedToCoChecker,
-             record_assignedChecker: record?.assignedChecker,
-             record_approvedBy: record?.approvedBy,
-             record_checkerAssigned: record?.checkerAssigned,
-             record_checker: record?.checker,
-             allKeys: Object.keys(record || {}),
-           });
-           
-           // ✅ Use helper to get assigned checker info from various field names
-           const approver = getCheckerInfo(record);
-           
-           // ✅ Handle different possible name field variations
-           const checkerName = 
-             approver?.name || 
-             approver?.checkerName || 
-             approver?.fullName || 
-             approver?.userName ||
-             "Not Assigned";
-           
-           return (
-             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-               <UserOutlined style={{ color: PRIMARY_BLUE, fontSize: 12 }} />
-               <div
-                 style={{
-                   color: PRIMARY_BLUE,
-                   fontWeight: 600,
-                   fontSize: 13,
-                 }}
-               >
-                 {checkerName}
-               </div>
-             </div>
-           );
-         },
-       },
+    {
+      title: "Checker/Approver",
+      dataIndex: "assignedToCoChecker", // primary field to check for checker info
+      width: 160,
+      render: (checkerValue, record) => {
+        // 🔍 Debug: Log what we're getting
+        console.log("🔍 Checker Column Debug:", {
+          checkerValue,
+          record_assignedToCoChecker: record?.assignedToCoChecker,
+          record_assignedChecker: record?.assignedChecker,
+          record_approvedBy: record?.approvedBy,
+          record_checkerAssigned: record?.checkerAssigned,
+          record_checker: record?.checker,
+          allKeys: Object.keys(record || {}),
+        });
+
+        // ✅ Use helper to get assigned checker info from various field names
+        const approver = getCheckerInfo(record);
+
+        // ✅ Handle different possible name field variations
+        const checkerName =
+          approver?.name ||
+          approver?.checkerName ||
+          approver?.fullName ||
+          approver?.userName ||
+          "Not Assigned";
+
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <UserOutlined style={{ color: PRIMARY_BLUE, fontSize: 12 }} />
+            <div
+              style={{
+                color: PRIMARY_BLUE,
+                fontWeight: 600,
+                fontSize: 13,
+              }}
+            >
+              {checkerName}
+            </div>
+          </div>
+        );
+      },
+    },
     {
       title: "Docs",
       dataIndex: "documents",
@@ -404,22 +412,10 @@ const getCheckerInfo = (record) => {
             (total, category) => total + (category.docList?.length || 0),
             0,
           ) || 0;
-
         return (
-          <Tag
-            color={LIGHT_YELLOW}
-            style={{
-              fontSize: 11,
-              borderRadius: 999,
-              fontWeight: "bold",
-              color: PRIMARY_BLUE,
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-              minWidth: 28,
-              textAlign: "center",
-            }}
-          >
+          <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
             {totalDocs}
-          </Tag>
+          </span>
         );
       },
     },
@@ -489,7 +485,7 @@ const getCheckerInfo = (record) => {
   `;
 
   // Responsive padding
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 375;
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 375;
   const padding = isMobile ? "8px 2px" : "24px";
   const cardMargin = isMobile ? 8 : 12;
 

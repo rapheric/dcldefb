@@ -190,12 +190,12 @@ const MyQueue = ({
         style={{
           fontWeight: "bold",
           fontSize: 11,
-          padding: "6px 12px",
+          padding: "2px 8px",
           borderRadius: 4,
           border: `1.5px solid ${statusConfig.borderColor}`,
           color: isPending ? "#FF4D4F" : statusConfig.textColor,
           backgroundColor: statusConfig.bgColor,
-          minWidth: 85,
+          minWidth: 65,
           textAlign: "center",
         }}
       >
@@ -324,20 +324,9 @@ const MyQueue = ({
             0,
           ) || 0;
         return (
-          <Tag
-            color={LIGHT_YELLOW}
-            style={{
-              fontSize: 11,
-              borderRadius: 999,
-              fontWeight: "bold",
-              color: PRIMARY_PURPLE,
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-              minWidth: 28,
-              textAlign: "center",
-            }}
-          >
+          <span style={{ fontWeight: "bold", color: SECONDARY_BLUE }}>
             {totalDocs}
-          </Tag>
+          </span>
         );
       },
     },
@@ -355,9 +344,7 @@ const MyQueue = ({
       render: (date) => {
         const daysLeft = dayjs(date).diff(dayjs(), "days");
         return (
-          <Tag
-            style={{ backgroundColor: '#ffffff', border: '1px solid #d9d9d9', color: '#333', fontWeight: 'bold', fontSize: 11 }}
-          >
+          <Tag style={{ fontWeight: "bold", fontSize: 11 }}>
             {daysLeft > 0 ? `${daysLeft}d` : "Expired"}
           </Tag>
         );
@@ -568,5 +555,3 @@ const MyQueue = ({
 };
 
 export default MyQueue;
-
-

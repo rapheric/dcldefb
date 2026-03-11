@@ -1,27 +1,27 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { 
-  Button, 
-  Divider, 
-  Table, 
-  Tag, 
-  Spin, 
-  Empty, 
-  Card, 
-  Row, 
+import {
+  Button,
+  Divider,
+  Table,
+  Tag,
+  Spin,
+  Empty,
+  Card,
+  Row,
   Col,
   Input,
   Badge,
   Typography,
-  Space
+  Space,
 } from "antd";
-import { 
+import {
   SearchOutlined,
   FileTextOutlined,
   UserOutlined,
   CustomerServiceOutlined,
   ClockCircleOutlined,
   EyeOutlined,
-  EditOutlined
+  EditOutlined,
 } from "@ant-design/icons";
 import CreatorCompletedChecklistModal from "../../components/modals/CreatorCompletedChecklistModal";
 import dayjs from "dayjs";
@@ -47,7 +47,11 @@ const MOCK_CREATOR_QUEUE = [
     customerName: "Global Tech Ltd",
     loanType: "Technology Loan",
     title: "IT Infrastructure Upgrade",
-    assignedToRM: { _id: "rm1", name: "John Kamau", email: "john.k@ncba.co.ke" },
+    assignedToRM: {
+      _id: "rm1",
+      name: "John Kamau",
+      email: "john.k@ncba.co.ke",
+    },
     status: "draft",
     priority: "high",
     createdAt: "2024-12-20T09:30:00Z",
@@ -56,21 +60,21 @@ const MOCK_CREATOR_QUEUE = [
       {
         category: "Technical Documents",
         docList: [
-          { 
-            _id: "docq1_1", 
-            name: "Project Proposal", 
-            status: "pending", 
-            comment: "Need detailed budget" 
+          {
+            _id: "docq1_1",
+            name: "Project Proposal",
+            status: "pending",
+            comment: "Need detailed budget",
           },
-          { 
-            _id: "docq1_2", 
-            name: "Vendor Quotations", 
-            status: "pending", 
-            comment: "Waiting for 3 quotes" 
-          }
-        ]
-      }
-    ]
+          {
+            _id: "docq1_2",
+            name: "Vendor Quotations",
+            status: "pending",
+            comment: "Waiting for 3 quotes",
+          },
+        ],
+      },
+    ],
   },
   {
     _id: "q2",
@@ -79,7 +83,11 @@ const MOCK_CREATOR_QUEUE = [
     customerName: "Prime Construction Ltd",
     loanType: "Construction Loan",
     title: "Commercial Building - $2.5M",
-    assignedToRM: { _id: "rm2", name: "Sarah Wangui", email: "sarah.w@ncba.co.ke" },
+    assignedToRM: {
+      _id: "rm2",
+      name: "Sarah Wangui",
+      email: "sarah.w@ncba.co.ke",
+    },
     status: "pending_rm_review",
     priority: "high",
     createdAt: "2024-12-19T14:15:00Z",
@@ -88,21 +96,21 @@ const MOCK_CREATOR_QUEUE = [
       {
         category: "Construction Documents",
         docList: [
-          { 
-            _id: "docq2_1", 
-            name: "Architectural Plans", 
-            status: "submitted", 
-            comment: "Approved by RM" 
+          {
+            _id: "docq2_1",
+            name: "Architectural Plans",
+            status: "submitted",
+            comment: "Approved by RM",
           },
-          { 
-            _id: "docq2_2", 
-            name: "Building Permits", 
-            status: "pending", 
-            comment: "Application in progress" 
-          }
-        ]
-      }
-    ]
+          {
+            _id: "docq2_2",
+            name: "Building Permits",
+            status: "pending",
+            comment: "Application in progress",
+          },
+        ],
+      },
+    ],
   },
   {
     _id: "q3",
@@ -111,7 +119,11 @@ const MOCK_CREATOR_QUEUE = [
     customerName: "Fresh Farm Produce Ltd",
     loanType: "Agricultural Loan",
     title: "Greenhouse Expansion",
-    assignedToRM: { _id: "rm3", name: "Peter Kariuki", email: "peter.k@ncba.co.ke" },
+    assignedToRM: {
+      _id: "rm3",
+      name: "Peter Kariuki",
+      email: "peter.k@ncba.co.ke",
+    },
     status: "in_review",
     priority: "medium",
     createdAt: "2024-12-18T11:45:00Z",
@@ -120,21 +132,21 @@ const MOCK_CREATOR_QUEUE = [
       {
         category: "Agricultural Documents",
         docList: [
-          { 
-            _id: "docq3_1", 
-            name: "Land Title Deed", 
-            status: "sighted", 
-            comment: "Verified" 
+          {
+            _id: "docq3_1",
+            name: "Land Title Deed",
+            status: "sighted",
+            comment: "Verified",
           },
-          { 
-            _id: "docq3_2", 
-            name: "Market Analysis", 
-            status: "pending", 
-            comment: "In progress" 
-          }
-        ]
-      }
-    ]
+          {
+            _id: "docq3_2",
+            name: "Market Analysis",
+            status: "pending",
+            comment: "In progress",
+          },
+        ],
+      },
+    ],
   },
   {
     _id: "q4",
@@ -143,7 +155,11 @@ const MOCK_CREATOR_QUEUE = [
     customerName: "MediCare Equipment Ltd",
     loanType: "Medical Equipment Loan",
     title: "MRI Machine Purchase",
-    assignedToRM: { _id: "rm1", name: "John Kamau", email: "john.k@ncba.co.ke" },
+    assignedToRM: {
+      _id: "rm1",
+      name: "John Kamau",
+      email: "john.k@ncba.co.ke",
+    },
     status: "draft",
     priority: "low",
     createdAt: "2024-12-21T10:00:00Z",
@@ -152,16 +168,16 @@ const MOCK_CREATOR_QUEUE = [
       {
         category: "Medical Documents",
         docList: [
-          { 
-            _id: "docq4_1", 
-            name: "Equipment Specifications", 
-            status: "pending", 
-            comment: "Pending vendor details" 
-          }
-        ]
-      }
-    ]
-  }
+          {
+            _id: "docq4_1",
+            name: "Equipment Specifications",
+            status: "pending",
+            comment: "Pending vendor details",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 const MyQueue = ({ userId = "creator_current" }) => {
@@ -169,7 +185,7 @@ const MyQueue = ({ userId = "creator_current" }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mockData, setMockData] = useState([]);
-  
+
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
@@ -182,17 +198,20 @@ const MyQueue = ({ userId = "creator_current" }) => {
 
   const filteredData = useMemo(() => {
     let filtered = mockData;
-    
+
     if (searchText) {
-      filtered = filtered.filter(c => 
-        c.dclNo.toLowerCase().includes(searchText.toLowerCase()) ||
-        c.customerNumber.toLowerCase().includes(searchText.toLowerCase()) ||
-        c.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
-        c.loanType.toLowerCase().includes(searchText.toLowerCase()) ||
-        c.assignedToRM?.name?.toLowerCase().includes(searchText.toLowerCase())
+      filtered = filtered.filter(
+        (c) =>
+          c.dclNo.toLowerCase().includes(searchText.toLowerCase()) ||
+          c.customerNumber.toLowerCase().includes(searchText.toLowerCase()) ||
+          c.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
+          c.loanType.toLowerCase().includes(searchText.toLowerCase()) ||
+          c.assignedToRM?.name
+            ?.toLowerCase()
+            .includes(searchText.toLowerCase()),
       );
     }
-    
+
     return filtered;
   }, [mockData, searchText]);
 
@@ -209,109 +228,118 @@ const MyQueue = ({ userId = "creator_current" }) => {
   const getStatusConfig = (status) => {
     const configs = {
       draft: { color: "default", text: "Draft", icon: <EditOutlined /> },
-      pending_rm_review: { color: "processing", text: "Pending RM Review", icon: <ClockCircleOutlined /> },
+      pending_rm_review: {
+        color: "processing",
+        text: "Pending RM Review",
+        icon: <ClockCircleOutlined />,
+      },
       in_review: { color: "warning", text: "In Review", icon: <EyeOutlined /> },
       submitted: { color: "success", text: "Submitted", icon: <EyeOutlined /> },
-      completed: { color: "success", text: "Completed", icon: <EyeOutlined /> }
+      completed: { color: "success", text: "Completed", icon: <EyeOutlined /> },
     };
     return configs[status] || { color: "default", text: status, icon: null };
   };
 
   const columns = [
-    { 
-      title: "DCL No", 
-      dataIndex: "dclNo", 
+    {
+      title: "DCL No",
+      dataIndex: "dclNo",
       width: 140,
       fixed: "left",
       render: (text) => (
-        <div style={{ fontWeight: "bold", color: PRIMARY_BLUE, display: "flex", alignItems: "center", gap: 8 }}>
+        <div
+          style={{
+            fontWeight: "bold",
+            color: PRIMARY_BLUE,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
           <FileTextOutlined style={{ color: SECONDARY_PURPLE }} />
           {text}
         </div>
-      )
+      ),
     },
-    { 
-      title: "Customer Name", 
-      dataIndex: "customerName", 
+    {
+      title: "Customer Name",
+      dataIndex: "customerName",
       width: 160,
       render: (text) => (
-        <div style={{ 
-          fontWeight: 600, 
-          color: PRIMARY_BLUE,
-          display: "flex",
-          alignItems: "center",
-          gap: 6
-        }}>
+        <div
+          style={{
+            fontWeight: 600,
+            color: PRIMARY_BLUE,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
           <CustomerServiceOutlined style={{ fontSize: 12 }} />
           {text}
         </div>
-      )
+      ),
     },
-    { 
-      title: "Loan Type", 
-      dataIndex: "loanType", 
+    {
+      title: "Loan Type",
+      dataIndex: "loanType",
       width: 120,
       render: (text) => (
         <div style={{ fontSize: 12, color: "#666", fontWeight: 500 }}>
           {text}
         </div>
-      )
+      ),
     },
-    { 
-      title: "Assigned RM", 
-      dataIndex: "assignedToRM", 
+    {
+      title: "Assigned RM",
+      dataIndex: "assignedToRM",
       width: 140,
       render: (rm) => (
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <UserOutlined style={{ color: PRIMARY_BLUE, fontSize: 12 }} />
-          <span style={{ color: PRIMARY_BLUE, fontWeight: 500, fontSize: 13 }}>{rm?.name || "N/A"}</span>
+          <span style={{ color: PRIMARY_BLUE, fontWeight: 500, fontSize: 13 }}>
+            {rm?.name || "N/A"}
+          </span>
         </div>
-      )
+      ),
     },
-    { 
-      title: "Docs", 
-      dataIndex: "documents", 
-      width: 70, 
-      align: "center", 
+    {
+      title: "Docs",
+      dataIndex: "documents",
+      width: 70,
+      align: "center",
       render: (docs) => {
-        const totalDocs = docs?.reduce((total, category) => total + (category.docList?.length || 0), 0) || 0;
+        const totalDocs =
+          docs?.reduce(
+            (total, category) => total + (category.docList?.length || 0),
+            0,
+          ) || 0;
         return (
-          <Tag 
-            color={LIGHT_YELLOW} 
-            style={{ 
-              fontSize: 11, 
-              borderRadius: 999, 
-              fontWeight: "bold", 
-              color: PRIMARY_BLUE, 
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-              minWidth: 28,
-              textAlign: "center"
-            }}
-          >
+          <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
             {totalDocs}
-          </Tag>
+          </span>
         );
-      } 
+      },
     },
-    { 
-      title: "Created Date", 
-      dataIndex: "createdAt", 
+    {
+      title: "Created Date",
+      dataIndex: "createdAt",
       width: 120,
       render: (date) => (
         <div style={{ fontSize: 12, fontWeight: 500 }}>
-          {dayjs(date).format('DD/MM/YYYY')}
+          {dayjs(date).format("DD/MM/YYYY")}
         </div>
-      )
+      ),
     },
-    { 
-      title: "Status", 
-      dataIndex: "status", 
+    {
+      title: "Status",
+      dataIndex: "status",
       width: 140,
       fixed: "right",
       render: (status) => {
         const config = getStatusConfig(status);
         return (
-          <Tag 
+          <Tag
             color={config.color}
             style={{ fontWeight: "bold", fontSize: 11 }}
             icon={config.icon}
@@ -319,8 +347,8 @@ const MyQueue = ({ userId = "creator_current" }) => {
             {config.text}
           </Tag>
         );
-      }
-    }
+      },
+    },
   ];
 
   const customTableStyles = `
@@ -366,23 +394,31 @@ const MyQueue = ({ userId = "creator_current" }) => {
 
       {/* Header */}
       <Card
-        style={{ 
+        style={{
           marginBottom: 24,
           borderRadius: 8,
           boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          borderLeft: `4px solid ${ACCENT_LIME}`
+          borderLeft: `4px solid ${ACCENT_LIME}`,
         }}
         bodyStyle={{ padding: 16 }}
       >
         <Row justify="space-between" align="middle">
           <Col>
-            <h2 style={{ margin: 0, color: PRIMARY_BLUE, display: "flex", alignItems: "center", gap: 12 }}>
+            <h2
+              style={{
+                margin: 0,
+                color: PRIMARY_BLUE,
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
               My Checklists Queue
-              <Badge 
-                count={filteredData.length} 
-                style={{ 
+              <Badge
+                count={filteredData.length}
+                style={{
                   backgroundColor: ACCENT_LIME,
-                  fontSize: 12
+                  fontSize: 12,
                 }}
               />
             </h2>
@@ -392,10 +428,10 @@ const MyQueue = ({ userId = "creator_current" }) => {
           </Col>
           <Col>
             <Space>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 style={{ backgroundColor: PRIMARY_BLUE }}
-                onClick={() => window.location.href = '/creator/create'}
+                onClick={() => (window.location.href = "/creator/create")}
               >
                 + Create New Checklist
               </Button>
@@ -405,12 +441,12 @@ const MyQueue = ({ userId = "creator_current" }) => {
       </Card>
 
       {/* Filters */}
-      <Card 
-        style={{ 
+      <Card
+        style={{
           marginBottom: 16,
           background: "#fafafa",
           border: `1px solid ${PRIMARY_BLUE}20`,
-          borderRadius: 8
+          borderRadius: 8,
         }}
         size="small"
       >
@@ -425,11 +461,11 @@ const MyQueue = ({ userId = "creator_current" }) => {
               size="middle"
             />
           </Col>
-          
+
           <Col xs={24} sm={12} md={4}>
-            <Button 
+            <Button
               onClick={clearFilters}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
               size="middle"
             >
               Clear Filters
@@ -447,43 +483,53 @@ const MyQueue = ({ userId = "creator_current" }) => {
 
       {/* Table */}
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: 40 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 40,
+          }}
+        >
           <Spin tip="Loading your checklists..." />
         </div>
       ) : filteredData.length === 0 ? (
-        <Empty 
+        <Empty
           description={
             <div>
-              <p style={{ fontSize: 16, marginBottom: 8 }}>No checklists found</p>
-              <p style={{ color: "#999" }}>
-                {searchText 
-                  ? 'Try changing your search term' 
-                  : 'Create your first checklist to get started'}
+              <p style={{ fontSize: 16, marginBottom: 8 }}>
+                No checklists found
               </p>
-              <Button 
-                type="primary" 
+              <p style={{ color: "#999" }}>
+                {searchText
+                  ? "Try changing your search term"
+                  : "Create your first checklist to get started"}
+              </p>
+              <Button
+                type="primary"
                 style={{ marginTop: 16, backgroundColor: PRIMARY_BLUE }}
-                onClick={() => window.location.href = '/creator/create'}
+                onClick={() => (window.location.href = "/creator/create")}
               >
                 Create New Checklist
               </Button>
             </div>
-          } 
-          style={{ padding: 40 }} 
+          }
+          style={{ padding: 40 }}
         />
       ) : (
         <div className="creator-queue-table">
-          <Table 
-            columns={columns} 
-            dataSource={filteredData} 
+          <Table
+            columns={columns}
+            dataSource={filteredData}
             rowKey="_id"
             size="middle"
-            pagination={{ 
-              pageSize: 10, 
-              showSizeChanger: true, 
-              pageSizeOptions: ["10", "20", "50"], 
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50"],
               position: ["bottomCenter"],
-              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} checklists`
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} of ${total} checklists`,
             }}
             scroll={{ x: 1000 }}
             onRow={(record) => ({
@@ -497,22 +543,25 @@ const MyQueue = ({ userId = "creator_current" }) => {
       )}
 
       {/* Footer Info */}
-      <div style={{ 
-        marginTop: 24, 
-        padding: 16, 
-        background: "#f8f9fa", 
-        borderRadius: 8,
-        fontSize: 12,
-        color: "#666",
-        border: `1px solid ${PRIMARY_BLUE}10`
-      }}>
+      <div
+        style={{
+          marginTop: 24,
+          padding: 16,
+          background: "#f8f9fa",
+          borderRadius: 8,
+          fontSize: 12,
+          color: "#666",
+          border: `1px solid ${PRIMARY_BLUE}10`,
+        }}
+      >
         <Row justify="space-between" align="middle">
           <Col>
-            Report generated on: {dayjs().format('DD/MM/YYYY HH:mm:ss')}
+            Report generated on: {dayjs().format("DD/MM/YYYY HH:mm:ss")}
           </Col>
           <Col>
             <Text type="secondary">
-              Showing {filteredData.length} items • Data as of latest system update
+              Showing {filteredData.length} items • Data as of latest system
+              update
             </Text>
           </Col>
         </Row>
@@ -523,7 +572,7 @@ const MyQueue = ({ userId = "creator_current" }) => {
         <CreatorCompletedChecklistModal
           checklist={selectedChecklist}
           open={modalOpen}
-          onClose={() => { 
+          onClose={() => {
             setModalOpen(false);
             setSelectedChecklist(null);
             refetch();

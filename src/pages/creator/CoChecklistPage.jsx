@@ -769,7 +769,11 @@ const CoChecklistPage = ({
           const docListCount = category.docList ? category.docList.length : 0;
           return total + docListCount;
         }, 0);
-        return totalDocCount;
+        return (
+          <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
+            {totalDocCount}
+          </span>
+        );
       },
     },
     {
@@ -813,7 +817,7 @@ const CoChecklistPage = ({
               fontSize: 12,
               borderRadius: 999,
               fontWeight: "bold",
-              padding: "4px 8px",
+              padding: "2px 6px",
               color: "#5F0707",
               backgroundColor: `${bgColor}40`,
               borderColor: bgColor,

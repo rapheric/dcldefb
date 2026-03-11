@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, Row, Col, Input, DatePicker, Select, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
@@ -13,7 +12,10 @@ export default function ReportsFilters({
   clearFilters,
 }) {
   return (
-    <Card size="small" style={{ marginBottom: 12, background: "#fafafa", padding: "8px 12px" }}>
+    <Card
+      size="small"
+      style={{ marginBottom: 12, background: "#fafafa", padding: "8px 12px" }}
+    >
       <Row gutter={[12, 12]} align="middle" justify="space-between">
         {/* Left Section - Deferral Filter */}
         {activeTab !== "allDCLs" && (
@@ -46,23 +48,29 @@ export default function ReportsFilters({
               </Col>
               <Col>
                 <Select
-                  style={{ width: 150 }}
+                  style={{ width: 200 }}
                   placeholder="Filter by status"
                   value={filters.status}
-                  onChange={(value) => setFilters({ ...filters, status: value })}
+                  onChange={(value) =>
+                    setFilters({ ...filters, status: value })
+                  }
                   size="middle"
                 >
                   <Option value="">All Statuses</Option>
-                  <Option value="Completed">Completed</Option>
+                  <Option value="Pending">Pending</Option>
+                  <Option value="CoCreatorReview">Co-Creator Review</Option>
+                  <Option value="RMReview">RM Review</Option>
+                  <Option value="CoCheckerReview">Co-Checker Review</Option>
+                  <Option value="Approved">Approved</Option>
+                  <Option value="Rejected">Rejected</Option>
                   <Option value="Active">Active</Option>
+                  <Option value="Completed">Completed</Option>
+                  <Option value="Revived">Revived</Option>
                   <Option value="Deferred">Deferred</Option>
                 </Select>
               </Col>
               <Col>
-                <Button 
-                  onClick={clearFilters}
-                  size="middle"
-                >
+                <Button onClick={clearFilters} size="middle">
                   Clear
                 </Button>
               </Col>

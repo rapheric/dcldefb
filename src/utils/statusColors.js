@@ -62,43 +62,43 @@ export const STATUS_COLORS = {
   // RED - Pending statuses (action required)
   pending: {
     color: "#FF4D4F",      // Red
-    textColor: "#FFF",
+    textColor: "#CF1322",
     bgColor: "#FFEBE6",
     borderColor: "#FF4D4F",
   },
   pendingrm: {
     color: "#FF4D4F",      // Red
-    textColor: "#FFF",
+    textColor: "#CF1322",
     bgColor: "#FFEBE6",
     borderColor: "#FF4D4F",
   },
   pendingco: {
     color: "#FF4D4F",      // Red
-    textColor: "#FFF",
+    textColor: "#CF1322",
     bgColor: "#FFEBE6",
     borderColor: "#FF4D4F",
   },
   pending_rm: {
     color: "#FF4D4F",      // Red
-    textColor: "#FFF",
+    textColor: "#CF1322",
     bgColor: "#FFEBE6",
     borderColor: "#FF4D4F",
   },
   pending_co: {
     color: "#FF4D4F",      // Red
-    textColor: "#FFF",
+    textColor: "#CF1322",
     bgColor: "#FFEBE6",
     borderColor: "#FF4D4F",
   },
   "pending from rm": {
     color: "#FF4D4F",      // Red
-    textColor: "#FFF",
+    textColor: "#CF1322",
     bgColor: "#FFEBE6",
     borderColor: "#FF4D4F",
   },
   "pending from co": {
     color: "#FF4D4F",      // Red
-    textColor: "#FFF",
+    textColor: "#CF1322",
     bgColor: "#FFEBE6",
     borderColor: "#FF4D4F",
   },
@@ -156,13 +156,13 @@ export const STATUS_COLORS = {
   },
   "pending from customer": {
     color: "#FF4D4F",      // Red
-    textColor: "#FFF",
+    textColor: "#CF1322",
     bgColor: "#FFEBE6",
     borderColor: "#FF4D4F",
   },
   pending_from_customer: {
     color: "#FF4D4F",      // Red
-    textColor: "#FFF",
+    textColor: "#CF1322",
     bgColor: "#FFEBE6",
     borderColor: "#FF4D4F",
   },

@@ -49,7 +49,6 @@ const Completed = ({ userId }) => {
     refetch,
   } = useGetAllCoCreatorChecklistsQuery();
 
-
   const filteredData = useMemo(() => {
     if (!checklists) return [];
 
@@ -82,12 +81,12 @@ const Completed = ({ userId }) => {
         style={{
           fontWeight: "bold",
           fontSize: 10,
-          padding: "4px 8px",
+          padding: "2px 6px",
           borderRadius: 4,
           border: `1px solid ${statusConfig.borderColor}`,
           color: statusConfig.textColor,
           backgroundColor: statusConfig.bgColor,
-          minWidth: 80,
+          minWidth: 65,
           textAlign: "center",
         }}
       >
@@ -139,14 +138,14 @@ const Completed = ({ userId }) => {
             gap: 6,
           }}
         >
-         <UserOutlined style={{ color: SECONDARY_BLUE, fontSize: 12 }} />
+          <UserOutlined style={{ color: SECONDARY_BLUE, fontSize: 12 }} />
           {text}
         </div>
       ),
     },
 
     {
-      title: "IBPS No", 
+      title: "IBPS No",
       dataIndex: "ibpsNo",
       width: 120,
       render: (text) => (
@@ -212,22 +211,7 @@ const Completed = ({ userId }) => {
             (total, category) => total + (category.docList?.length || 0),
             0,
           ) || 0;
-        return (
-          <Tag
-            color={LIGHT_YELLOW}
-            style={{
-              fontSize: 11,
-              borderRadius: 999,
-              fontWeight: "bold",
-              color: PRIMARY_PURPLE,
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-              minWidth: 28,
-              textAlign: "center",
-            }}
-          >
-            {totalDocs}
-          </Tag>
-        );
+        return <Tag>{totalDocs}</Tag>;
       },
     },
     {

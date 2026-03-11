@@ -254,18 +254,17 @@ const CoChecklistPage = ({ userId }) => {
       render: (text) => <span style={{ color: SECONDARY_PURPLE }}>{text}</span>,
     },
 
-{
-  title: "IBPS No",
-  dataIndex: "ibpsNo",
-  width: 140,
-  render: (text) => (
-    <span style={{ color: SECONDARY_PURPLE, fontWeight: 500 }}>
-      {text || "N/A"}
-    </span>
-  ),
-},
+    {
+      title: "IBPS No",
+      dataIndex: "ibpsNo",
+      width: 140,
+      render: (text) => (
+        <span style={{ color: SECONDARY_PURPLE, fontWeight: 500 }}>
+          {text || "N/A"}
+        </span>
+      ),
+    },
 
-    
     { title: "Loan Type", dataIndex: "loanType", width: 140 },
     {
       title: "Assigned RM",
@@ -283,18 +282,9 @@ const CoChecklistPage = ({ userId }) => {
       width: 80,
       align: "center",
       render: (docs) => (
-        <Tag
-          color={LIGHT_YELLOW}
-          style={{
-            fontSize: 12,
-            borderRadius: 999,
-            fontWeight: "bold",
-            color: PRIMARY_BLUE,
-            border: `1px solid ${HIGHLIGHT_GOLD}`,
-          }}
-        >
+        <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
           {Array.isArray(docs) ? docs.length : 0}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -323,7 +313,7 @@ const CoChecklistPage = ({ userId }) => {
               fontSize: 12,
               borderRadius: 999,
               fontWeight: "bold",
-              padding: "4px 8px",
+              padding: "2px 6px",
               color: PRIMARY_BLUE,
               backgroundColor: bgColor + "40",
               borderColor: bgColor,

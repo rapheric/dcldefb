@@ -93,24 +93,13 @@ const MyQueuePage = () => {
       ),
     },
     {
-      title: "# Docs",
+      title: "Docs",
       dataIndex: "documents",
       width: 80,
       render: (docs) => {
         const totalDocs =
           docs?.reduce((sum, cat) => sum + (cat.docList?.length || 0), 0) || 0;
-        return (
-          <span
-            style={{
-              backgroundColor: "#f0f5ff",
-              padding: "2px 10px",
-              borderRadius: 12,
-              fontWeight: "bold",
-            }}
-          >
-            {totalDocs}
-          </span>
-        );
+        return <span>{totalDocs}</span>;
       },
     },
     {
@@ -132,7 +121,7 @@ const MyQueuePage = () => {
         return (
           <Tag
             color={isReview ? PENDING_ORANGE : SUCCESS_GREEN}
-            style={{ fontWeight: "bold" }}
+            style={{ fontWeight: "bold", padding: "2px 6px", fontSize: 11 }}
           >
             {isReview ? "Pending Review" : "Approved"}
           </Tag>
@@ -173,6 +162,28 @@ const MyQueuePage = () => {
 
   return (
     <div style={{ padding: 16 }}>
+      <style>{`
+        .my-queue-table {
+          background-color: white !important;
+        }
+        .my-queue-table .ant-table-cell {
+          background-color: white !important;
+        }
+        .my-queue-table .ant-table-tbody > tr > td {
+          background-color: transparent !important;
+        }
+        .my-queue-table .ant-table-tbody > tr:nth-child(n) > td:nth-child(6) {
+          background-color: transparent !important;
+          color: #000 !important;
+        }
+        .my-queue-table span[style*="fontWeight"] {
+          background-color: transparent !important;
+          color: #000 !important;
+        }
+        .my-queue-table .ant-badge {
+          display: none !important;
+        }
+      `}</style>
       <Divider style={{ margin: "12px 0" }}>
         🔍 My Review Queue ({pendingChecklists.length})
       </Divider>
@@ -188,6 +199,7 @@ const MyQueuePage = () => {
         />
       ) : (
         <Table
+          className="my-queue-table"
           columns={columns}
           dataSource={pendingChecklists}
           rowKey="_id"

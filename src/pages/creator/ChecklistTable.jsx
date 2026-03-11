@@ -54,18 +54,9 @@ const ChecklistTable = ({ data, onView }) => {
           return total + docListCount;
         }, 0);
         return (
-          <Tag
-            color={LIGHT_YELLOW}
-            style={{
-              fontSize: 12,
-              borderRadius: 999,
-              fontWeight: "bold",
-              color: PRIMARY_BLUE,
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-            }}
-          >
+          <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
             {totalDocCount}
-          </Tag>
+          </span>
         );
       },
     },
@@ -116,7 +107,7 @@ const ChecklistTable = ({ data, onView }) => {
               fontSize: 12,
               borderRadius: 999,
               fontWeight: "bold",
-              padding: "4px 8px",
+              padding: "2px 6px",
               color: "#5F0707",
               backgroundColor: `${bgColor}40`,
               borderColor: bgColor,

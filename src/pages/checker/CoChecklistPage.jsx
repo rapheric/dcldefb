@@ -94,7 +94,11 @@ const Myqueue = ({ userId }) => {
       dataIndex: "documents",
       width: 80,
       align: "center",
-      render: (docs) => (Array.isArray(docs) ? docs.length : 0),
+      render: (docs) => (
+        <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
+          {Array.isArray(docs) ? docs.length : 0}
+        </span>
+      ),
     },
     {
       title: "Status",
@@ -122,7 +126,7 @@ const Myqueue = ({ userId }) => {
               fontSize: 12,
               borderRadius: 999,
               fontWeight: "bold",
-              padding: "4px 8px",
+              padding: "2px 6px",
               color: PRIMARY_BLUE,
               backgroundColor: bgColor + "40",
               borderColor: bgColor,

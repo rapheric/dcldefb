@@ -3066,7 +3066,6 @@ const Deferrals = ({ userId }) => {
           backgroundColor: "#164679",
           borderColor: "#164679",
           color: "#fff !important",
-          color: "#fff !important",
         }}
       >
         Download as PDF

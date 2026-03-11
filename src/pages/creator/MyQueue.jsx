@@ -292,7 +292,11 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
       render: (docs = []) => {
         const total =
           docs.reduce((sum, d) => sum + (d.docList?.length || 0), 0) || 0;
-        return total;
+        return (
+          <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
+            {total}
+          </span>
+        );
       },
     },
     {
@@ -364,12 +368,12 @@ const Myqueue = ({ draftToRestore = null, setDraftToRestore = null }) => {
             style={{
               fontWeight: "bold",
               fontSize: 11,
-              padding: "6px 12px",
+              padding: "2px 8px",
               borderRadius: 4,
               border: `1.5px solid ${statusConfig.borderColor}`,
               color: statusConfig.textColor,
               backgroundColor: statusConfig.bgColor,
-              minWidth: 85,
+              minWidth: 65,
               textAlign: "center",
             }}
           >

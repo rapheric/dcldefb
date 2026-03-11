@@ -153,7 +153,7 @@ const CreatorCompletedChecklistModal = ({
 
     return (
       <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-        <Button key="close" onClick={onClose}>
+        <Button key="close" onClick={onClose} style={{ color: "#333333" }}>
           Close
         </Button>
         {isCompletedOrApproved && (
@@ -163,7 +163,12 @@ const CreatorCompletedChecklistModal = ({
             loading={isReviving}
             disabled={isReviving}
             onClick={handleReviveClick}
-            style={buttonStyles.revive}
+            style={{
+              background: "#164679 !important",
+              borderColor: "#164679 !important",
+              color: "#ffffff !important",
+              fontWeight: 600,
+            }}
           >
             Revive Checklist
           </Button>
@@ -174,7 +179,10 @@ const CreatorCompletedChecklistModal = ({
           loading={isGeneratingPDF}
           onClick={handleDownloadPDF}
           type="primary"
-          style={buttonStyles.download}
+          style={{
+            ...buttonStyles.download,
+            color: "#ffffff",
+          }}
         >
           Download as PDF
         </Button>
@@ -189,7 +197,7 @@ const CreatorCompletedChecklistModal = ({
         .creator-completed-modal-overlay {
           position: fixed;
           top: 65px;
-          left: var(--sidebar-width, 120px);
+          left: var(--sidebar-width, 150px);
           right: 0;
           bottom: 0;
           background-color: rgba(0, 0, 0, 0.5);
@@ -230,6 +238,31 @@ const CreatorCompletedChecklistModal = ({
           width: 100%;
         }
 
+        /* Close button */
+        .creator-completed-close-button {
+          background-color: #164679 !important;
+          color: white !important;
+          border: none !important;
+          padding: 0 !important;
+          width: 32px !important;
+          height: 32px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+        .creator-completed-close-button:hover {
+          background-color: #0f2a47 !important;
+          color: white !important;
+        }
+        .creator-completed-close-button:active {
+          background-color: #164679 !important;
+          color: white !important;
+        }
+        .creator-completed-close-button .anticon {
+          color: white !important;
+          font-size: 16px !important;
+        }
+
         /* Body styling */
         .creator-completed-modal-body {
           padding: 24px;
@@ -247,6 +280,30 @@ const CreatorCompletedChecklistModal = ({
           background: #f7f9fc;
           border-bottom-left-radius: 12px;
           border-bottom-right-radius: 12px;
+        }
+        
+        .creator-completed-modal-footer .ant-btn-default {
+          background-color: #ffffff !important;
+          border-color: #d9d9d9 !important;
+          color: #333333 !important;
+        }
+        
+        .creator-completed-modal-footer .ant-btn-default:hover {
+          background-color: #fafafa !important;
+          border-color: #b3b3b3 !important;
+          color: #333333 !important;
+        }
+        
+        .creator-completed-modal-footer .ant-btn-primary {
+          background-color: #164679 !important;
+          border-color: #164679 !important;
+          color: white !important;
+        }
+        
+        .creator-completed-modal-footer .ant-btn-primary:hover {
+          background-color: #0f2a47 !important;
+          border-color: #0f2a47 !important;
+          color: white !important;
         }
         
         /* Responsive adjustments */
@@ -299,18 +356,17 @@ const CreatorCompletedChecklistModal = ({
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
                 <Button
-                  icon={
-                    showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />
-                  }
                   onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
                   size="small"
+                  type="text"
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
-                    backgroundColor: "#164679",
-                    borderColor: "#164679",
-                    color: "#fff",
+                    backgroundColor: "#164679 !important",
+                    borderColor: "#164679 !important",
+                    border: "1px solid #164679 !important",
+                    color: "#ffffff !important",
                     padding: "4px 12px",
                     height: "32px",
                   }}
@@ -344,18 +400,8 @@ const CreatorCompletedChecklistModal = ({
                   icon={<CloseOutlined />}
                   onClick={onClose}
                   size="small"
-                  type="default"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "rgba(255, 255, 255, 0.2)",
-                    borderColor: "rgba(255, 255, 255, 0.4)",
-                    color: "#fff",
-                    width: "32px",
-                    height: "32px",
-                    padding: 0,
-                  }}
+                  type="text"
+                  className="creator-completed-close-button"
                 />
               </div>
             </div>

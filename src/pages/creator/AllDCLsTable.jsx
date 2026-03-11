@@ -101,7 +101,7 @@ const CHECKLIST_STATUS_META = {
 // ✅ Helper function to normalize status to lowercase with underscores
 const normalizeStatus = (status) => {
   if (!status) return null;
-  
+
   // Convert CamelCase to snake_case and lowercase
   return status
     .replace(/([A-Z])/g, "_$1")
@@ -121,7 +121,7 @@ const renderChecklistStatus = (status) => {
         border: `1px solid ${statusConfig.borderColor}`,
         color: statusConfig.textColor,
         backgroundColor: statusConfig.bgColor,
-        padding: "4px 8px",
+        padding: "2px 6px",
       }}
     >
       {status || "Unknown"}
@@ -200,14 +200,22 @@ export default function AllDCLsTable({ filters, onDataLoaded }) {
     }
   }, [data, onDataLoaded]);
 
-  const filtered = data.filter((d) =>
-    !filters.searchText
+  const filtered = data.filter((d) => {
+    // Filter by search text
+    const searchMatch = !filters.searchText
       ? true
       : d.dclNo?.toLowerCase().includes(filters.searchText.toLowerCase()) ||
         d.customerName
           ?.toLowerCase()
-          .includes(filters.searchText.toLowerCase()),
-  );
+          .includes(filters.searchText.toLowerCase());
+
+    // Filter by status
+    const statusMatch = !filters.status
+      ? true
+      : String(d.status).toLowerCase() === String(filters.status).toLowerCase();
+
+    return searchMatch && statusMatch;
+  });
 
   // Handle row click to open modal
   const handleRowClick = (record) => {
@@ -268,7 +276,7 @@ export default function AllDCLsTable({ filters, onDataLoaded }) {
             gap: 6,
           }}
         >
-           <UserOutlined style={{ color: PRIMARY_BLUE, fontSize: 12 }} />
+          <UserOutlined style={{ color: PRIMARY_BLUE, fontSize: 12 }} />
           {/* <CustomerServiceOutlined style={{ fontSize: 12 }} /> */}
           {text}
         </div>
@@ -319,18 +327,18 @@ export default function AllDCLsTable({ filters, onDataLoaded }) {
           record_checker: record?.checker,
           allKeys: Object.keys(record || {}),
         });
-        
+
         // ✅ Use helper to get assigned checker info from various field names
         const approver = getCheckerInfo(record);
-        
+
         // ✅ Handle different possible name field variations
-        const checkerName = 
-          approver?.name || 
-          approver?.checkerName || 
-          approver?.fullName || 
+        const checkerName =
+          approver?.name ||
+          approver?.checkerName ||
+          approver?.fullName ||
           approver?.userName ||
           "Not Assigned";
-        
+
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <UserOutlined style={{ color: PRIMARY_BLUE, fontSize: 12 }} />
@@ -360,20 +368,9 @@ export default function AllDCLsTable({ filters, onDataLoaded }) {
           ) || 0;
 
         return (
-          <Tag
-            color={LIGHT_YELLOW}
-            style={{
-              fontSize: 11,
-              borderRadius: 999,
-              fontWeight: "bold",
-              color: PRIMARY_BLUE,
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-              minWidth: 28,
-              textAlign: "center",
-            }}
-          >
+          <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
             {totalDocs}
-          </Tag>
+          </span>
         );
       },
     },

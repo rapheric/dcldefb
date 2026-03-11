@@ -138,12 +138,15 @@ const DocumentSidebar = ({ documents, open, onClose, supportingDocs = [] }) => {
                   uploadData.createdAt ||
                   uploadData.uploadDate ||
                   doc.uploadedAt;
+
+                // Extract uploadedBy with better fallback logic
                 const uploadedBy =
                   uploadData.uploadedBy?.name ||
                   uploadData.uploadedBy ||
                   doc.uploadedBy?.name ||
                   doc.uploadedBy ||
-                  "Unknown";
+                  null;
+
                 const role = uploadData.uploadedByRole || doc.uploadedByRole;
                 const fileUrl = uploadData.fileUrl || doc.fileUrl;
                 const roleStyle = getRoleColor(role);
@@ -207,34 +210,36 @@ const DocumentSidebar = ({ documents, open, onClose, supportingDocs = [] }) => {
                     </div>
 
                     {/* Uploader & Role */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 4,
-                      }}
-                    >
-                      <div style={{ fontSize: "9px", color: "#595959" }}>
-                        👤 {uploadedBy}
+                    {uploadedBy && (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginBottom: 4,
+                        }}
+                      >
+                        <div style={{ fontSize: "9px", color: "#595959" }}>
+                          👤 {uploadedBy}
+                        </div>
+                        {role && (
+                          <Tag
+                            style={{
+                              margin: 0,
+                              fontSize: "8px",
+                              padding: "0 5px",
+                              height: "16px",
+                              lineHeight: "16px",
+                              backgroundColor: roleStyle.bg,
+                              color: roleStyle.color,
+                              border: "none",
+                            }}
+                          >
+                            {roleStyle.text}
+                          </Tag>
+                        )}
                       </div>
-                      {role && (
-                        <Tag
-                          style={{
-                            margin: 0,
-                            fontSize: "8px",
-                            padding: "0 5px",
-                            height: "16px",
-                            lineHeight: "16px",
-                            backgroundColor: roleStyle.bg,
-                            color: roleStyle.color,
-                            border: "none",
-                          }}
-                        >
-                          {roleStyle.text}
-                        </Tag>
-                      )}
-                    </div>
+                    )}
 
                     {/* Action Buttons */}
                     {fileUrl && (

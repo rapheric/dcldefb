@@ -35,12 +35,11 @@ const DocumentsTable = ({ docs, checklist }) => {
       dataIndex: "name",
       width: 180,
       render: (text, record) => {
-        const docName = text || record.documentName || `Document ${record.docIdx + 1}`;
+        const docName =
+          text || record.documentName || `Document ${record.docIdx + 1}`;
         return (
           <Tooltip title={docName}>
-            <span style={{ fontSize: 11, color: "#333" }}>
-              {docName}
-            </span>
+            <span style={{ fontSize: 11, color: "#333" }}>{docName}</span>
           </Tooltip>
         );
       },
@@ -232,9 +231,9 @@ const DocumentsTable = ({ docs, checklist }) => {
                 )
               }
               style={{
-                backgroundColor: '#164679',
-                borderColor: '#164679',
-                color: '#fff',
+                backgroundColor: "#ffffff",
+                borderColor: "#d9d9d9",
+                color: "#164679",
                 borderRadius: 6,
               }}
             >

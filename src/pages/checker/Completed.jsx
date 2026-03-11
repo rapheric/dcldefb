@@ -99,9 +99,7 @@ const Completed = ({ userId }) => {
       width: 140,
       fixed: "left",
       render: (text) => (
-        <div style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
-          {text}
-        </div>
+        <div style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>{text}</div>
       ),
     },
     {
@@ -117,9 +115,7 @@ const Completed = ({ userId }) => {
       dataIndex: "customerName",
       width: 180,
       render: (text) => (
-        <span style={{ fontWeight: 600, color: PRIMARY_BLUE }}>
-          {text}
-        </span>
+        <span style={{ fontWeight: 600, color: PRIMARY_BLUE }}>{text}</span>
       ),
     },
     {
@@ -150,16 +146,9 @@ const Completed = ({ userId }) => {
         const total =
           docs.reduce((sum, cat) => sum + (cat.docList?.length || 0), 0) || 0;
         return (
-          <Tag
-            color={LIGHT_YELLOW}
-            style={{
-              fontWeight: "bold",
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-              color: PRIMARY_BLUE,
-            }}
-          >
+          <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
             {total}
-          </Tag>
+          </span>
         );
       },
     },
@@ -177,15 +166,31 @@ const Completed = ({ userId }) => {
       render: (status) => {
         const isApproved = status === "approved";
         const isApprovedRevisions = status === "approved_with_revisions";
-        const displayText = isApproved ? "Approved" : isApprovedRevisions ? "Approved (Revised)" : status;
+        const displayText = isApproved
+          ? "Approved"
+          : isApprovedRevisions
+            ? "Approved (Revised)"
+            : status;
 
         return (
           <Tag
             style={{
               fontWeight: "bold",
-              backgroundColor: isApproved ? "#f6ffed" : isApprovedRevisions ? "#e6f7ff" : undefined,
-              borderColor: isApproved ? SUCCESS_GREEN : isApprovedRevisions ? "#1890ff" : undefined,
-              color: isApproved ? SUCCESS_GREEN : isApprovedRevisions ? "#1890ff" : undefined,
+              backgroundColor: isApproved
+                ? "#f6ffed"
+                : isApprovedRevisions
+                  ? "#e6f7ff"
+                  : undefined,
+              borderColor: isApproved
+                ? SUCCESS_GREEN
+                : isApprovedRevisions
+                  ? "#1890ff"
+                  : undefined,
+              color: isApproved
+                ? SUCCESS_GREEN
+                : isApprovedRevisions
+                  ? "#1890ff"
+                  : undefined,
             }}
           >
             {displayText}

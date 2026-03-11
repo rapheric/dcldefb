@@ -132,26 +132,14 @@ const RmChecklistPage = ({ userId, mode = "queue" }) => {
       width: 80,
       align: "center",
       render: (docs = []) => {
-        // 1. Calculate the total count of individual documents
         const totalDocCount = docs.reduce((total, category) => {
-          // 2. Safely add the length of the nested docList to the running total
           const docListCount = category.docList ? category.docList.length : 0;
           return total + docListCount;
-        }, 0); // Start the accumulator at 0
-
+        }, 0);
         return (
-          <Tag
-            color={LIGHT_YELLOW}
-            style={{
-              fontSize: 12,
-              borderRadius: 999,
-              fontWeight: "bold",
-              color: PRIMARY_BLUE,
-              border: `1px solid ${HIGHLIGHT_GOLD}`,
-            }}
-          >
+          <span style={{ fontWeight: "bold", color: PRIMARY_BLUE }}>
             {totalDocCount}
-          </Tag>
+          </span>
         );
       },
     },
@@ -178,7 +166,7 @@ const RmChecklistPage = ({ userId, mode = "queue" }) => {
               fontSize: 12,
               borderRadius: 999,
               fontWeight: "bold",
-              padding: "4px 8px",
+              padding: "2px 6px",
               color: PRIMARY_BLUE,
               backgroundColor: bgColor + "40",
               borderColor: bgColor,

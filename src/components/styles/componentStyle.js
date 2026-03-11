@@ -58,9 +58,9 @@ export const buttonStyles = {
     borderColor: COLORS.PRIMARY_BLUE,
   },
   revive: {
-    background: COLORS.ACCENT_LIME,
-    borderColor: COLORS.ACCENT_LIME,
-    color: COLORS.PRIMARY_BLUE,
+    background: COLORS.PRIMARY_BLUE,
+    borderColor: COLORS.PRIMARY_BLUE,
+    color: '#ffffff',
     fontWeight: 600,
   },
   confirmRevive: {

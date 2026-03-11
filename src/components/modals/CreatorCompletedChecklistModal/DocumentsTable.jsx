@@ -1,8 +1,6 @@
 import { Table, Tag, Button, Tooltip } from "antd";
 import { COLORS, TABLE_CONFIG } from "./constants";
-import {
-  getCheckerStatusDisplay,
-} from "../../../utils/checklistConstants";
+import { getCheckerStatusDisplay } from "../../../utils/checklistConstants";
 import { formatDate } from "../../../utils/checklistUtils";
 import { formatStatusText } from "../../../utils/statusColors";
 import { tableStyles } from "../../styles/componentStyle";
@@ -61,10 +59,10 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
                 fontSize: 11,
                 color: COLORS.SECONDARY_PURPLE,
                 fontWeight: 500,
-                display: 'block',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                display: "block",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {text || "N/A"}
@@ -204,7 +202,12 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
                   display: "flex",
                   alignItems: "center",
                   gap: "4px",
-                  color: statusDisplay.color === "green" ? "#52c41a" : statusDisplay.color === "red" ? "#f5222d" : "inherit",
+                  color:
+                    statusDisplay.color === "green"
+                      ? "#52c41a"
+                      : statusDisplay.color === "red"
+                        ? "#f5222d"
+                        : "inherit",
                 }}
               >
                 {statusDisplay.text}
@@ -240,9 +243,9 @@ const DocumentsTable = ({ docs, checklist, getFullUrlUtil }) => {
                 size="small"
                 onClick={() => window.open(getFullUrlUtil(url), "_blank")}
                 style={{
-                  backgroundColor: '#164679',
-                  borderColor: '#164679',
-                  color: '#fff',
+                  backgroundColor: "#ffffff",
+                  borderColor: "#d9d9d9",
+                  color: "#333333",
                   borderRadius: 6,
                 }}
               >

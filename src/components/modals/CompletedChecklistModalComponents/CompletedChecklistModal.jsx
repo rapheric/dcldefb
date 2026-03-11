@@ -2,12 +2,7 @@
 import React, { useState } from "react";
 import { Button, message } from "antd";
 import { Tag } from "antd";
-import {
-  FilePdfOutlined,
-  RightOutlined,
-  LeftOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
+import { FilePdfOutlined, CloseOutlined } from "@ant-design/icons";
 import { useGetChecklistCommentsQuery } from "../../../api/checklistApi";
 import { useChecklistDocuments } from "../../../hooks/useChecklistDocuments";
 import { PRIMARY_BLUE } from "../../../utils/checklistConstants";
@@ -198,8 +193,7 @@ const CompletedChecklistModal = ({
         /* Body styling */
         .completed-modal-body {
           padding: 24px;
-          max-height: calc(100vh - 250px);
-          overflow-y: auto;
+          overflow-y: hidden;
         }
 
         /* Footer styling */
@@ -212,6 +206,59 @@ const CompletedChecklistModal = ({
           background: #f7f9fc;
           border-bottom-left-radius: 12px;
           border-bottom-right-radius: 12px;
+        }
+
+        /* Download PDF Button - White Text */
+        .completed-modal-footer .ant-btn-primary {
+          background-color: #164679 !important;
+          border-color: #164679 !important;
+          color: #ffffff !important;
+        }
+
+        .completed-modal-footer .ant-btn-primary:hover {
+          background-color: #0f3054 !important;
+          border-color: #0f3054 !important;
+          color: #ffffff !important;
+        }
+
+        .completed-modal-footer .ant-btn-primary .anticon {
+          color: #ffffff !important;
+        }
+
+        /* Header View Documents Button - White Text */
+        .completed-modal-header .ant-btn-primary {
+          color: #ffffff !important;
+        }
+
+        .completed-modal-header .ant-btn-primary:hover {
+          color: #ffffff !important;
+        }
+
+        .completed-modal-header .ant-btn-primary .anticon {
+          color: #ffffff !important;
+        }
+
+        /* Header Close Button - White Icon and Default Button */
+        .completed-modal-header .ant-btn-default {
+          color: #ffffff !important;
+        }
+
+        .completed-modal-header .ant-btn-default:hover {
+          color: #ffffff !important;
+          border-color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        .completed-modal-header .ant-btn-default .anticon {
+          color: #ffffff !important;
+        }
+
+        /* Footer Close Button - White Text */
+        .completed-modal-footer .ant-btn {
+          color: #ffffff !important;
+        }
+
+        .completed-modal-footer .ant-btn .anticon {
+          color: #ffffff !important;
         }
         
         /* Responsive adjustments */
@@ -256,7 +303,7 @@ const CompletedChecklistModal = ({
             {/* Header */}
             <div className="completed-modal-header">
               <div
-                style={{ color: "white", fontSize: "15px", fontWeight: 600 }}
+                style={{ color: "#ffffff", fontSize: "15px", fontWeight: 600 }}
               >
                 Completed Checklist -{" "}
                 {checklist?.title || checklist?.dclNo || ""}
@@ -265,9 +312,6 @@ const CompletedChecklistModal = ({
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
                 <Button
-                  icon={
-                    showDocumentSidebar ? <LeftOutlined /> : <RightOutlined />
-                  }
                   onClick={() => setShowDocumentSidebar(!showDocumentSidebar)}
                   size="small"
                   type="primary"
@@ -278,7 +322,7 @@ const CompletedChecklistModal = ({
                     padding: "4px 12px",
                     height: "32px",
                     backgroundColor: PRIMARY_BLUE,
-                    borderColor: PRIMARY_BLUE,
+                    color: "#ffffff !important",
                   }}
                 >
                   View Documents
@@ -300,9 +344,9 @@ const CompletedChecklistModal = ({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "rgba(255, 255, 255, 0.2)",
-                    borderColor: "rgba(255, 255, 255, 0.4)",
-                    color: "#fff",
+                    background: PRIMARY_BLUE,
+                    borderColor: PRIMARY_BLUE,
+                    color: "#ffffff !important",
                     width: "32px",
                     height: "32px",
                     padding: 0,
@@ -342,14 +386,16 @@ const CompletedChecklistModal = ({
                 loading={isGenerating}
                 onClick={handleDownloadPDF}
                 type="primary"
-                style={{
-                  backgroundColor: PRIMARY_BLUE,
-                  borderColor: PRIMARY_BLUE,
-                }}
               >
                 {getPDFButtonText()}
               </Button>
-              <Button key="close" onClick={onClose}>
+              <Button
+                key="close"
+                onClick={onClose}
+                style={{
+                  color: "#ffffff !important",
+                }}
+              >
                 Close
               </Button>
             </div>

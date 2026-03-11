@@ -461,7 +461,7 @@ const DocumentTable = ({
       render: (_, record) =>
         record.fileUrl || record.uploadData?.fileUrl ? (
           <Button
-            type="primary"
+            type="default"
             icon={<EyeOutlined />}
             onClick={() => {
               // ✅ Add null check
@@ -482,6 +482,11 @@ const DocumentTable = ({
             }}
             size="small"
             className="checker-modal-action"
+            style={{
+              backgroundColor: "#ffffff",
+              borderColor: "#d9d9d9",
+              color: "#333333",
+            }}
           >
             View
           </Button>
@@ -608,6 +613,23 @@ const DocumentTable = ({
           border-radius: 2px !important;
           padding: 1px 6px !important;
           font-size: 12px !important;
+        }
+        
+        /* View Button Styling */
+        .checker-modal-action {
+          background-color: #ffffff !important;
+          border-color: #d9d9d9 !important;
+          color: #333333 !important;
+        }
+        .checker-modal-action:hover {
+          background-color: #f5f5f5 !important;
+          border-color: #d9d9d9 !important;
+          color: #333333 !important;
+        }
+        .checker-modal-action:active {
+          background-color: #ffffff !important;
+          border-color: #d9d9d9 !important;
+          color: #333333 !important;
         }
       `}</style>
     </div>
