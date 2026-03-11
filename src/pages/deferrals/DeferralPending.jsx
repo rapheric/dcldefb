@@ -77,7 +77,9 @@ import { getDeferralDocumentBuckets } from "../../utils/deferralDocuments";
 import { getLoanDisplay } from "../../utils/loanUtils";
 import deferralApi from "../../service/deferralApi.js";
 import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 import UniformTag from "../../components/common/UniformTag";
+import ncbaLogoPNG from "../../assets/ncbabanklogo.png";
 // Extension components removed — fresh extension flow will be implemented later
 import { useGetApproversQuery } from "../../api/userApi";
 
@@ -2387,7 +2389,7 @@ const DeferralDetailsModal = ({
     };
   };
 
-  // Download Deferral as PDF - Matching Modal Design
+  // Download Deferral as PDF - Professional NCBA Styling (Matching ReviewChecklistModal)
   const downloadDeferralAsPDF = async () => {
     if (!localDeferral || !localDeferral._id) {
       message.error("No deferral selected");
@@ -2396,562 +2398,382 @@ const DeferralDetailsModal = ({
 
     setActionLoading(true);
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        putOnlyUsedFonts: true,
+        compress: true,
+      });
 
-      // Colors matching modal theme
-      const PRIMARY_BLUE_RGB = [22, 70, 121];
-      const SECONDARY_PURPLE_RGB = [126, 100, 150];
-      const SUCCESS_GREEN_RGB = [82, 196, 26];
-      const WARNING_ORANGE_RGB = [250, 173, 20];
-      const ERROR_RED_RGB = [255, 77, 79];
-      const DARK_GRAY = [51, 51, 51];
-      const LIGHT_GRAY = [102, 102, 102];
-      const BORDER_COLOR = [200, 200, 200];
+      // Professional Setup - Matching pdfGeneratorImproved standards
+      const PRIMARY_BLUE_RGB = [22, 70, 121]; // #164679
+      const BODY_TEXT_RGB = [40, 40, 40];
+      const LIGHT_BLUE_RGB = [230, 240, 250];
+      const PAGE_WIDTH = 210;
+      const MARGIN_LEFT = 15;
+      const MARGIN_RIGHT = 15;
+      const MARGIN_RIGHT_POS = PAGE_WIDTH - MARGIN_RIGHT;
+      const USABLE_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT; // 180mm
 
-      let yPosition = 15;
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 15;
-      const contentWidth = pageWidth - 2 * margin;
+      // Set default font
+      doc.setFont("courier", "normal");
 
-      // Helper function to add a Card-style section matching modal
-      const addCardSection = (title, items) => {
-        if (yPosition > 250) {
-          doc.addPage();
-          yPosition = 15;
+      // Add NCBA Logo - top-right corner
+      try {
+        if (ncbaLogoPNG) {
+          doc.addImage(ncbaLogoPNG, "PNG", MARGIN_RIGHT_POS - 40, 10, 40, 15);
+          console.log("✅ NCBA Logo added successfully");
         }
+      } catch (logoError) {
+        console.warn("⚠️ Could not add logo:", logoError);
+      }
 
-        // Card header with PRIMARY_BLUE background (matching modal Card header)
-        doc.setFillColor(
-          PRIMARY_BLUE_RGB[0],
-          PRIMARY_BLUE_RGB[1],
-          PRIMARY_BLUE_RGB[2],
-        );
-        doc.rect(margin, yPosition, contentWidth, 10, "F");
+      // Professional Header
+      doc.setFontSize(20);
+      doc.setFont("courier", "bold");
+      doc.setTextColor(...PRIMARY_BLUE_RGB);
+      doc.text("Deferral Request", 105, 18, { align: "center" });
 
-        doc.setFontSize(12);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont(undefined, "bold");
-        doc.text(title, margin + 5, yPosition + 7);
-        yPosition += 12;
-
-        // Card content with items
-        const itemHeight = 7;
-        items.forEach((item, index) => {
-          if (yPosition > 260) {
-            doc.addPage();
-            yPosition = 15;
-          }
-
-          // Alternating background for readability
-          if (index % 2 === 0) {
-            doc.setFillColor(250, 250, 250);
-            doc.rect(margin, yPosition - 2, contentWidth, itemHeight, "F");
-          }
-
-          // Label (bold, in SECONDARY_PURPLE like modal)
-          doc.setFontSize(9);
-          doc.setFont(undefined, "bold");
-          doc.setTextColor(
-            SECONDARY_PURPLE_RGB[0],
-            SECONDARY_PURPLE_RGB[1],
-            SECONDARY_PURPLE_RGB[2],
-          );
-          doc.text(item.label + ":", margin + 5, yPosition + 3);
-
-          // Value (bold, in PRIMARY_BLUE like modal)
-          doc.setFont(undefined, "bold");
-          doc.setTextColor(
-            PRIMARY_BLUE_RGB[0],
-            PRIMARY_BLUE_RGB[1],
-            PRIMARY_BLUE_RGB[2],
-          );
-          doc.text(item.value, margin + 50, yPosition + 3, {
-            maxWidth: contentWidth - 55,
-          });
-
-          yPosition += itemHeight;
-        });
-
-        yPosition += 4;
-        return yPosition;
-      };
-
-      // HEADER - matching modal title
-      doc.setFillColor(
-        PRIMARY_BLUE_RGB[0],
-        PRIMARY_BLUE_RGB[1],
-        PRIMARY_BLUE_RGB[2],
-      );
-      doc.rect(0, 0, pageWidth, 15, "F");
-      doc.setFontSize(14);
-      doc.setTextColor(255, 255, 255);
-      doc.setFont(undefined, "bold");
+      // Deferral number and date
+      doc.setFontSize(10);
+      doc.setFont("courier", "normal");
+      doc.setTextColor(...BODY_TEXT_RGB);
       doc.text(
-        `Deferral Request: ${localDeferral.deferralNumber || "N/A"}`,
-        margin,
-        10,
+        `Deferral No: ${localDeferral.deferralNumber || "N/A"}`,
+        MARGIN_LEFT,
+        30,
       );
-      yPosition = 25;
+      doc.text(`Generated: ${dayjs().format("DD/MM/YYYY")}`, MARGIN_LEFT, 36);
 
-      // CUSTOMER INFORMATION CARD
-      const customerItems = [
-        { label: "Customer Name", value: localDeferral.customerName || "N/A" },
-        {
-          label: "Customer Number",
-          value: localDeferral.customerNumber || "N/A",
-        },
-        { label: "Loan Type", value: localDeferral.loanType || "N/A" },
+      // Horizontal line separator
+      doc.setDrawColor(200, 200, 200);
+      doc.line(MARGIN_LEFT, 40, MARGIN_RIGHT_POS, 40);
+
+      let yPos = 50;
+
+      // ===== DEFERRAL INFORMATION SECTION =====
+      doc.setFontSize(14);
+      doc.setFont("courier", "bold");
+      doc.setTextColor(...PRIMARY_BLUE_RGB);
+      doc.text("Deferral Information", MARGIN_LEFT, yPos);
+      yPos += 8;
+
+      const deferralInfoRows = [
+        [
+          "Deferral Number",
+          localDeferral.deferralNumber || "N/A",
+          "Status",
+          localDeferral.status || "N/A",
+        ],
+        [
+          "DCL Number",
+          localDeferral.dclNumber || localDeferral.dclNo || "N/A",
+          "Created Date",
+          dayjs(localDeferral.createdAt).format("DD/MM/YYYY") || "N/A",
+        ],
       ];
-      yPosition = addCardSection("Customer Information", customerItems);
 
-      // DEFERRAL DETAILS CARD
+      if (typeof doc.autoTable === "function") {
+        doc.autoTable({
+          startY: yPos,
+          head: [],
+          body: deferralInfoRows,
+          theme: "plain",
+          styles: {
+            fontSize: 10,
+            cellPadding: 3,
+            lineColor: [220, 220, 220],
+            lineWidth: 0.1,
+            textColor: BODY_TEXT_RGB,
+            font: "courier",
+          },
+          columnStyles: {
+            0: {
+              cellWidth: 44,
+              fontStyle: "bold",
+              textColor: PRIMARY_BLUE_RGB,
+            },
+            1: { cellWidth: 46, textColor: BODY_TEXT_RGB },
+            2: {
+              cellWidth: 44,
+              fontStyle: "bold",
+              textColor: PRIMARY_BLUE_RGB,
+            },
+            3: { cellWidth: 46, textColor: BODY_TEXT_RGB },
+          },
+          margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
+          didDrawCell: (data) => {
+            if (data.column.index % 2 === 0 && data.section === "body") {
+              data.cell.styles.fillColor = LIGHT_BLUE_RGB;
+              data.cell.styles.textColor = PRIMARY_BLUE_RGB;
+            }
+          },
+        });
+        yPos = doc.lastAutoTable.finalY + 10;
+      }
+
+      // ===== CUSTOMER INFORMATION SECTION =====
+      doc.setFontSize(14);
+      doc.setFont("courier", "bold");
+      doc.setTextColor(...PRIMARY_BLUE_RGB);
+      doc.text("Customer Information", MARGIN_LEFT, yPos);
+      yPos += 8;
+
+      const customerRows = [
+        [
+          "Customer Name",
+          localDeferral.customerName || "N/A",
+          "Customer Number",
+          localDeferral.customerNumber || "N/A",
+        ],
+        [
+          "Loan Type",
+          localDeferral.loanType || "N/A",
+          "Loan Amount",
+          localDeferral.loanAmount
+            ? `KES ${new Intl.NumberFormat().format(localDeferral.loanAmount)}`
+            : "N/A",
+        ],
+      ];
+
+      if (typeof doc.autoTable === "function") {
+        doc.autoTable({
+          startY: yPos,
+          head: [],
+          body: customerRows,
+          theme: "plain",
+          styles: {
+            fontSize: 10,
+            cellPadding: 3,
+            lineColor: [220, 220, 220],
+            lineWidth: 0.1,
+            textColor: BODY_TEXT_RGB,
+            font: "courier",
+          },
+          columnStyles: {
+            0: {
+              cellWidth: 44,
+              fontStyle: "bold",
+              textColor: PRIMARY_BLUE_RGB,
+            },
+            1: { cellWidth: 46, textColor: BODY_TEXT_RGB },
+            2: {
+              cellWidth: 44,
+              fontStyle: "bold",
+              textColor: PRIMARY_BLUE_RGB,
+            },
+            3: { cellWidth: 46, textColor: BODY_TEXT_RGB },
+          },
+          margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
+          didDrawCell: (data) => {
+            if (data.column.index % 2 === 0 && data.section === "body") {
+              data.cell.styles.fillColor = LIGHT_BLUE_RGB;
+              data.cell.styles.textColor = PRIMARY_BLUE_RGB;
+            }
+          },
+        });
+        yPos = doc.lastAutoTable.finalY + 10;
+      }
+
+      // ===== APPROVAL STATUS SECTION =====
       const stats = getApproverStats();
-      const deferralDetailsItems = [
-        {
-          label: "Deferral Number",
-          value: localDeferral.deferralNumber || "N/A",
-        },
-        {
-          label: "DCL No",
-          value: localDeferral.dclNo || localDeferral.dclNumber || "N/A",
-        },
-        { label: "Status", value: localDeferral.status || "Pending" },
-        {
-          label: "Creator Status",
-          value: localDeferral.creatorApprovalStatus || "Pending",
-        },
-        {
-          label: "Creator Date",
-          value: localDeferral.creatorApprovalDate
-            ? dayjs(localDeferral.creatorApprovalDate).format("DD/MM/YY")
+      doc.setFontSize(14);
+      doc.setFont("courier", "bold");
+      doc.setTextColor(...PRIMARY_BLUE_RGB);
+      doc.text("Approval Status", MARGIN_LEFT, yPos);
+      yPos += 8;
+
+      const approvalRows = [
+        [
+          "Creator Status",
+          localDeferral.creatorApprovalStatus || "Pending",
+          "Creator Date",
+          localDeferral.creatorApprovalDate
+            ? dayjs(localDeferral.creatorApprovalDate).format("DD/MM/YYYY")
             : "N/A",
-        },
-        {
-          label: "Checker Status",
-          value: localDeferral.checkerApprovalStatus || "Pending",
-        },
-        {
-          label: "Checker Date",
-          value: localDeferral.checkerApprovalDate
-            ? dayjs(localDeferral.checkerApprovalDate).format("DD/MM/YY")
+        ],
+        [
+          "Checker Status",
+          localDeferral.checkerApprovalStatus || "Pending",
+          "Checker Date",
+          localDeferral.checkerApprovalDate
+            ? dayjs(localDeferral.checkerApprovalDate).format("DD/MM/YYYY")
             : "N/A",
-        },
-        {
-          label: "Approvers Status",
-          value: `${stats.approved} of ${stats.total} Approved`,
-        },
-        {
-          label: "Created At",
-          value: dayjs(localDeferral.createdAt).format("DD MMM YYYY HH:mm"),
-        },
+        ],
+        [
+          "Approvers",
+          `${stats.approved} of ${stats.total} Approved`,
+          "Overall Status",
+          localDeferral.overallStatus || "N/A",
+        ],
       ];
-      yPosition = addCardSection("Deferral Details", deferralDetailsItems);
 
-      // LOAN INFORMATION CARD
-      const {
-        amountNumber: _loanAmountNumber,
-        formattedAmount: _formattedLoanAmount,
-        classification: _loanClassification,
-      } = getLoanDisplay(localDeferral || {});
-      const formattedLoanAmount = _formattedLoanAmount;
-      const isUnder75M = _loanClassification === "below 75 million";
-      const daysSoughtColor =
-        localDeferral.daysSought > 45
-          ? "Red"
-          : localDeferral.daysSought > 30
-            ? "Orange"
-            : "Normal";
-
-      const loanItems = [
-        {
-          label: "Loan Amount",
-          value:
-            formattedLoanAmount +
-            (_loanClassification ? ` (${_loanClassification})` : ""),
-        },
-        {
-          label: "Days Sought",
-          value: `${localDeferral.daysSought || 0} days`,
-        },
-        {
-          label: "Deferral Due Date",
-          value:
-            localDeferral.nextDueDate || localDeferral.nextDocumentDueDate
-              ? dayjs(
-                  localDeferral.nextDueDate ||
-                    localDeferral.nextDocumentDueDate,
-                ).format("DD MMM YYYY")
-              : "Not calculated",
-        },
-        {
-          label: "SLA Expiry",
-          value: localDeferral.slaExpiry
-            ? dayjs(localDeferral.slaExpiry).format("DD MMM YYYY")
-            : "Not set",
-        },
-      ];
-      yPosition = addCardSection("Loan Information", loanItems);
-
-      // FACILITIES CARD
-      if (localDeferral.facilities && localDeferral.facilities.length > 0) {
-        if (yPosition > 220) {
-          doc.addPage();
-          yPosition = 15;
-        }
-
-        // Card header
-        doc.setFillColor(
-          PRIMARY_BLUE_RGB[0],
-          PRIMARY_BLUE_RGB[1],
-          PRIMARY_BLUE_RGB[2],
-        );
-        doc.rect(margin, yPosition, contentWidth, 10, "F");
-        doc.setFontSize(12);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont(undefined, "bold");
-        doc.text("Facilities", margin + 5, yPosition + 7);
-        yPosition += 12;
-
-        // Table headers
-        doc.setFillColor(240, 248, 255);
-        doc.rect(margin, yPosition, contentWidth, 8, "F");
-        doc.setFontSize(9);
-        doc.setFont(undefined, "bold");
-        doc.setTextColor(
-          PRIMARY_BLUE_RGB[0],
-          PRIMARY_BLUE_RGB[1],
-          PRIMARY_BLUE_RGB[2],
-        );
-        doc.text("Type", margin + 5, yPosition + 5);
-        doc.text("Sanctioned", margin + 70, yPosition + 5);
-        doc.text("Outstanding", margin + 115, yPosition + 5);
-        doc.text("Headroom", margin + 160, yPosition + 5);
-        yPosition += 10;
-
-        // Table rows
-        localDeferral.facilities.forEach((facility, index) => {
-          if (yPosition > 260) {
-            doc.addPage();
-            yPosition = 15;
-          }
-
-          if (index % 2 === 0) {
-            doc.setFillColor(250, 250, 250);
-            doc.rect(margin, yPosition - 2, contentWidth, 8, "F");
-          }
-
-          doc.setFontSize(9);
-          doc.setFont(undefined, "normal");
-          doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-          const facilityType = facility.type || facility.facilityType || "N/A";
-          doc.text(facilityType, margin + 5, yPosition + 3);
-          doc.text(
-            String(facility.sanctionedAmount || "0"),
-            margin + 70,
-            yPosition + 3,
-          );
-          doc.text(
-            String(facility.outstandingAmount || "0"),
-            margin + 115,
-            yPosition + 3,
-          );
-          doc.text(
-            String(facility.headroom || "0"),
-            margin + 160,
-            yPosition + 3,
-          );
-          yPosition += 8;
+      if (typeof doc.autoTable === "function") {
+        doc.autoTable({
+          startY: yPos,
+          head: [],
+          body: approvalRows,
+          theme: "plain",
+          styles: {
+            fontSize: 10,
+            cellPadding: 3,
+            lineColor: [220, 220, 220],
+            lineWidth: 0.1,
+            textColor: BODY_TEXT_RGB,
+            font: "courier",
+          },
+          columnStyles: {
+            0: {
+              cellWidth: 44,
+              fontStyle: "bold",
+              textColor: PRIMARY_BLUE_RGB,
+            },
+            1: { cellWidth: 46, textColor: BODY_TEXT_RGB },
+            2: {
+              cellWidth: 44,
+              fontStyle: "bold",
+              textColor: PRIMARY_BLUE_RGB,
+            },
+            3: { cellWidth: 46, textColor: BODY_TEXT_RGB },
+          },
+          margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
+          didDrawCell: (data) => {
+            if (data.column.index % 2 === 0 && data.section === "body") {
+              data.cell.styles.fillColor = LIGHT_BLUE_RGB;
+              data.cell.styles.textColor = PRIMARY_BLUE_RGB;
+            }
+          },
         });
-
-        yPosition += 4;
+        yPos = doc.lastAutoTable.finalY + 10;
       }
 
-      // DEFERRAL DESCRIPTION CARD
-      if (
-        localDeferral.dferralDescription ||
-        localDeferral.deferralDescription ||
-        localDeferral.description
-      ) {
-        if (yPosition > 240) {
-          doc.addPage();
-          yPosition = 15;
-        }
+      // ===== DOCUMENTS TO BE DEFERRED (Professional Grid Table) =====
+      if (requestedDocs && requestedDocs.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont("courier", "bold");
+        doc.setTextColor(...PRIMARY_BLUE_RGB);
+        doc.text("Documents to be Deferred", MARGIN_LEFT, yPos);
+        yPos += 8;
 
-        const descText =
-          localDeferral.dferralDescription ||
-          localDeferral.deferralDescription ||
-          localDeferral.description ||
-          "";
-        const descriptionItems = [{ label: "Description", value: descText }];
-        yPosition = addCardSection("Deferral Description", descriptionItems);
-      }
+        const docTableRows = requestedDocs.map((doc_item, idx) => [
+          (idx + 1).toString(),
+          doc_item.name || "N/A",
+          formatDeferralDocumentType(doc_item) || "N/A",
+          typeof doc_item.daysSought !== "undefined"
+            ? `${doc_item.daysSought || 0} days`
+            : "-",
+          doc_item.status === "uploaded"
+            ? "Uploaded"
+            : doc_item.status === "none"
+              ? "Requested"
+              : doc_item.status || "Pending",
+        ]);
 
-      // APPROVAL FLOW CARD
-      if (localDeferral.approverFlow && localDeferral.approverFlow.length > 0) {
-        if (yPosition > 240) {
-          doc.addPage();
-          yPosition = 15;
-        }
-
-        // Card header
-        doc.setFillColor(
-          PRIMARY_BLUE_RGB[0],
-          PRIMARY_BLUE_RGB[1],
-          PRIMARY_BLUE_RGB[2],
-        );
-        doc.rect(margin, yPosition, contentWidth, 10, "F");
-        doc.setFontSize(12);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont(undefined, "bold");
-        doc.text("Approval Flow", margin + 5, yPosition + 7);
-        yPosition += 12;
-
-        localDeferral.approverFlow.forEach((approver, index) => {
-          if (yPosition > 260) {
-            doc.addPage();
-            yPosition = 15;
-          }
-
-          // Alternating background
-          if (index % 2 === 0) {
-            doc.setFillColor(250, 250, 250);
-            doc.rect(margin, yPosition - 2, contentWidth, 12, "F");
-          }
-
-          const approverName =
-            approver.name ||
-            approver.user?.name ||
-            approver.email ||
-            `Approver ${index + 1}`;
-          const status = approver.approved
-            ? "Approved"
-            : approver.rejected
-              ? "Rejected"
-              : approver.returned
-                ? "Returned"
-                : "Pending";
-          const date =
-            approver.approvedDate ||
-            approver.rejectedDate ||
-            approver.returnedDate ||
-            "";
-          const statusColor =
-            status === "Approved"
-              ? SUCCESS_GREEN_RGB
-              : status === "Rejected"
-                ? ERROR_RED_RGB
-                : WARNING_ORANGE_RGB;
-
-          // Numbered badge
-          doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-          doc.circle(margin + 5, yPosition + 3, 3.5, "F");
-          doc.setTextColor(255, 255, 255);
-          doc.setFontSize(8);
-          doc.setFont(undefined, "bold");
-          doc.text(String(index + 1), margin + 2.5, yPosition + 4);
-
-          // Approver details
-          doc.setFontSize(9);
-          doc.setFont(undefined, "bold");
-          doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-          doc.text(approverName, margin + 15, yPosition + 3);
-
-          doc.setFont(undefined, "normal");
-          doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-          doc.text(status, margin + 100, yPosition + 3);
-
-          if (date) {
-            doc.setTextColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2]);
-            doc.setFontSize(8);
-            doc.text(
-              dayjs(date).format("DD MMM YYYY HH:mm"),
-              margin + 135,
-              yPosition + 3,
-            );
-          }
-
-          yPosition += 12;
-        });
-
-        yPosition += 4;
-      }
-
-      // DOCUMENTS CARD
-      if (localDeferral.documents && localDeferral.documents.length > 0) {
-        if (yPosition > 240) {
-          doc.addPage();
-          yPosition = 15;
-        }
-
-        // Card header
-        doc.setFillColor(
-          PRIMARY_BLUE_RGB[0],
-          PRIMARY_BLUE_RGB[1],
-          PRIMARY_BLUE_RGB[2],
-        );
-        doc.rect(margin, yPosition, contentWidth, 10, "F");
-        doc.setFontSize(12);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont(undefined, "bold");
-        doc.text("Attached Documents", margin + 5, yPosition + 7);
-        yPosition += 12;
-
-        localDeferral.documents.forEach((doc_item, index) => {
-          if (yPosition > 260) {
-            doc.addPage();
-            yPosition = 15;
-          }
-
-          // Alternating background
-          if (index % 2 === 0) {
-            doc.setFillColor(250, 250, 250);
-            doc.rect(margin, yPosition - 2, contentWidth, 10, "F");
-          }
-
-          const docName = doc_item.name || `Document ${index + 1}`;
-          const fileExt = docName.split(".").pop().toLowerCase();
-          const fileColor =
-            fileExt === "pdf"
-              ? ERROR_RED_RGB
-              : fileExt === "xlsx" || fileExt === "xls"
-                ? SUCCESS_GREEN_RGB
-                : PRIMARY_BLUE_RGB;
-
-          // File type indicator
-          doc.setFillColor(fileColor[0], fileColor[1], fileColor[2]);
-          doc.circle(margin + 5, yPosition + 3, 2.5, "F");
-
-          // Document name
-          doc.setFontSize(9);
-          doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-          doc.setFont(undefined, "normal");
-          doc.text(docName, margin + 12, yPosition + 3, {
-            maxWidth: contentWidth - 50,
+        if (typeof doc.autoTable === "function") {
+          doc.autoTable({
+            startY: yPos,
+            head: [["#", "Document Name", "Type", "Days Sought", "Status"]],
+            body: docTableRows,
+            theme: "grid",
+            styles: {
+              fontSize: 7,
+              cellPadding: 2,
+              lineColor: PRIMARY_BLUE_RGB,
+              textColor: BODY_TEXT_RGB,
+              font: "courier",
+              valign: "top",
+            },
+            headStyles: {
+              fillColor: PRIMARY_BLUE_RGB,
+              textColor: [255, 255, 255],
+              fontStyle: "bold",
+              fontSize: 7,
+              font: "courier",
+            },
+            columnStyles: {
+              0: { cellWidth: 12 },
+              1: { cellWidth: 80 },
+              2: { cellWidth: 40 },
+              3: { cellWidth: 35 },
+              4: { cellWidth: 33 },
+            },
+            margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
           });
-
-          // File size
-          if (doc_item.fileSize) {
-            doc.setFontSize(8);
-            doc.setTextColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2]);
-            doc.text(
-              `(${(doc_item.fileSize / 1024).toFixed(2)} KB)`,
-              margin + 155,
-              yPosition + 3,
-            );
-          }
-
-          yPosition += 10;
-        });
-
-        yPosition += 4;
+          yPos = doc.lastAutoTable.finalY + 10;
+        }
       }
 
-      // COMMENTS CARD
+      // ===== COMMENT TRAIL (Professional Grid Table) =====
       if (localDeferral.comments && localDeferral.comments.length > 0) {
-        if (yPosition > 230) {
-          doc.addPage();
-          yPosition = 15;
-        }
+        doc.setFontSize(14);
+        doc.setFont("courier", "bold");
+        doc.setTextColor(...PRIMARY_BLUE_RGB);
+        doc.text("Comment Trail", MARGIN_LEFT, yPos);
+        yPos += 8;
 
-        // Card header
-        doc.setFillColor(
-          PRIMARY_BLUE_RGB[0],
-          PRIMARY_BLUE_RGB[1],
-          PRIMARY_BLUE_RGB[2],
-        );
-        doc.rect(margin, yPosition, contentWidth, 10, "F");
-        doc.setFontSize(12);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont(undefined, "bold");
-        doc.text("Comment Trail", margin + 5, yPosition + 7);
-        yPosition += 12;
-
-        localDeferral.comments.forEach((comment, index) => {
+        const commentTableRows = localDeferral.comments.map((comment) => {
           const authorName =
             comment.author?.name || comment.authorName || "User";
-          const authorRole = comment.author?.role || comment.role || "N/A";
           const commentText = comment.text || comment.comment || "";
           const commentDate = comment.createdAt
-            ? dayjs(comment.createdAt).format("DD MMM YYYY HH:mm")
+            ? dayjs(comment.createdAt).format("DD/MM/YYYY HH:mm")
             : "";
 
-          const commentLines = doc.splitTextToSize(
-            commentText,
-            contentWidth - 25,
-          );
-          const commentBoxHeight = commentLines.length * 6 + 18;
-
-          if (yPosition + commentBoxHeight > 270) {
-            doc.addPage();
-            yPosition = 15;
-          }
-
-          // Alternating background
-          if (index % 2 === 0) {
-            doc.setFillColor(250, 252, 255);
-            doc.rect(
-              margin,
-              yPosition - 2,
-              contentWidth,
-              commentBoxHeight,
-              "F",
-            );
-          }
-
-          // Author badge
-          doc.setFillColor(
-            PRIMARY_BLUE_RGB[0],
-            PRIMARY_BLUE_RGB[1],
-            PRIMARY_BLUE_RGB[2],
-          );
-          doc.circle(margin + 5, yPosition + 3, 3, "F");
-          const initials = authorName
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .substring(0, 2)
-            .toUpperCase();
-          doc.setTextColor(255, 255, 255);
-          doc.setFontSize(7);
-          doc.setFont(undefined, "bold");
-          doc.text(initials, margin + 2.3, yPosition + 4);
-
-          // Author and date info
-          doc.setFontSize(9);
-          doc.setFont(undefined, "bold");
-          doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-          doc.text(authorName, margin + 13, yPosition + 3);
-
-          doc.setFontSize(8);
-          doc.setFont(undefined, "normal");
-          doc.setTextColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2]);
-          doc.text(`(${authorRole})`, margin + 60, yPosition + 3);
-          doc.text(commentDate, margin + 115, yPosition + 3);
-
-          // Comment text
-          yPosition += 10;
-          doc.setFontSize(9);
-          doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-          commentLines.forEach((line) => {
-            doc.text(line, margin + 13, yPosition);
-            yPosition += 6;
-          });
-
-          yPosition += 4;
+          return [
+            commentDate,
+            authorName,
+            commentText.substring(0, 100) +
+              (commentText.length > 100 ? "..." : ""),
+          ];
         });
+
+        if (typeof doc.autoTable === "function") {
+          doc.autoTable({
+            startY: yPos,
+            head: [["Date", "User", "Comment"]],
+            body: commentTableRows,
+            theme: "grid",
+            styles: {
+              fontSize: 7,
+              cellPadding: 2,
+              lineColor: PRIMARY_BLUE_RGB,
+              textColor: BODY_TEXT_RGB,
+              font: "courier",
+              valign: "top",
+              overflow: "linebreak",
+            },
+            headStyles: {
+              fillColor: PRIMARY_BLUE_RGB,
+              textColor: [255, 255, 255],
+              fontStyle: "bold",
+              fontSize: 7,
+              font: "courier",
+            },
+            columnStyles: {
+              0: { cellWidth: 42 },
+              1: { cellWidth: 40 },
+              2: { cellWidth: 98 },
+            },
+            margin: { left: MARGIN_LEFT, right: MARGIN_RIGHT },
+          });
+          yPos = doc.lastAutoTable.finalY + 10;
+        }
       }
 
-      // FOOTER
-      yPosition += 8;
-      doc.setFont(undefined, "italic");
-      doc.setFontSize(9);
-      doc.setTextColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2]);
-      doc.text(
-        `Generated on: ${dayjs().format("DD MMM YYYY HH:mm")}`,
-        margin,
-        yPosition,
-      );
-      doc.text("This is a system-generated report.", margin, yPosition + 6);
+      // ===== PROFESSIONAL FOOTER WITH NCBA BRANDING =====
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(
+          `Page ${i} of ${pageCount} • NCBA Bank • Confidential`,
+          PAGE_WIDTH / 2,
+          doc.internal.pageSize.height - 10,
+          { align: "center" },
+        );
+      }
 
       // Save the PDF
       doc.save(
