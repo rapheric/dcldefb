@@ -230,7 +230,7 @@ const CreatorCompletedChecklistModal = ({
           max-width: calc(100vw - 310px);
           box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.15), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
           border: 1px solid #e5e7eb;
-          margin: 0 16px 0 46px;
+          margin: 0 auto;
           position: relative;
           z-index: 1001;
         }

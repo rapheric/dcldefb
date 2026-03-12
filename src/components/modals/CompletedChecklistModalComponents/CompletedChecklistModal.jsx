@@ -82,7 +82,7 @@ const CompletedChecklistModal = ({
     return systemPatterns.some((pattern) => message.includes(pattern));
   };
 
-  // Filter comments to show only user-typed comments (exclude system and RM comments)
+  // Filter comments to show only user-typed comments
   const userComments = React.useMemo(() => {
     if (!comments || !Array.isArray(comments)) return [];
     return comments.filter((item) => {
@@ -91,9 +91,8 @@ const CompletedChecklistModal = ({
       const isSystem = isSystemGeneratedMessage(message);
       const isEmpty = !message.trim();
 
-      // Keep only real user comments - exclude system, RM, and auto-generated
+      // Keep only real user comments
       if (role === "system") return false;
-      if (role === "rm") return false; // Exclude RM comments
       if (isSystem) return false;
       if (isEmpty) return false;
       return true;
@@ -242,7 +241,7 @@ const CompletedChecklistModal = ({
           max-width: calc(100vw - 310px);
           box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.15), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
           border: 1px solid #e5e7eb;
-          margin: 0 16px 0 46px;
+          margin: 0 auto;
           position: relative;
           z-index: 1001;
         }

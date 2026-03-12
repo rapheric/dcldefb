@@ -536,7 +536,7 @@ const CheckerReviewChecklistModal = ({
           max-width: calc(100vw - 310px);
           box-shadow: none;
           border: 1px solid #e5e7eb;
-          margin: 0 16px 0 96px;
+          margin: 0 auto;
           position: relative;
           z-index: 1001;
         }

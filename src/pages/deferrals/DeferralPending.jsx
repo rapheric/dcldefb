@@ -137,7 +137,7 @@ const customStyles = `
     max-height: 100vh;
   }
 
-  /* Deferral Modal Container */
+  /* Deferral Modal Container - Centered with uniform margins */
   .deferral-modal-container {
     background: white;
     border-radius: 12px;
@@ -146,7 +146,7 @@ const customStyles = `
     max-width: calc(100vw - 310px);
     box-shadow: none;
     border: 1px solid #e5e7eb;
-    margin: 0 16px 0 96px;
+    margin: 0 auto;
     position: relative;
     z-index: 1001;
     display: flex;
@@ -172,17 +172,23 @@ const customStyles = `
     margin: 0 !important;
   }
 
-  /* Deferral Modal Body - Full scrolling */
+  /* Deferral Modal Body - Uniform content margins */
   .deferral-modal-body {
-    padding: 24px 24px 0 24px;
+    padding: 24px 0 24px 0;
     overflow: auto;
     flex: 1;
     min-height: 0;
   }
 
-  /* Deferral Modal Footer */
+  /* Ensure all direct children of modal body have consistent horizontal margins */
+  .deferral-modal-body > * {
+    margin-left: 24px !important;
+    margin-right: 24px !important;
+  }
+
+  /* Deferral Modal Footer - Uniform horizontal padding */
   .deferral-modal-footer {
-    padding: 16px 24px;
+    padding: 16px 24px 24px 24px;
     background: #fafafa;
     border-top: 1px solid #e5e7eb;
     display: flex;
