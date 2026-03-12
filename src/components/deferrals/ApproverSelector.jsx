@@ -212,6 +212,8 @@ import {
 const { Title, Text } = Typography;
 const { Option } = Select;
 
+const PRIMARY_BLUE = "#164679";
+
 export default function ApproverSelector({
   slots = [],
   availableApprovers = [],
@@ -556,10 +558,11 @@ export default function ApproverSelector({
 
                 {index < slots.length - 1 && (
                   <Button
-                    type="dashed"
+                    type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => handleAddApproverBetween(index + 1)}
                     style={{ marginTop: 8, width: 36, alignSelf: "center" }}
+                    className="action-button-primary"
                     aria-label="Add approver"
                   />
                 )}
@@ -595,6 +598,7 @@ export default function ApproverSelector({
             loading={isSubmitting}
             size="large"
             type="primary"
+            className="submit-deferral-btn"
             style={{
               width: "100%",
               background: canSubmit ? "#52c41a" : undefined,

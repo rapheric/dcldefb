@@ -63,7 +63,28 @@ const { TextArea } = AntInput;
 
 // Helpers and detailed Deferral modal (matches RM view)
 const customStyles = `
-  .ant-modal-header { background-color: ${PRIMARY_BLUE} !important; padding: 18px 24px !important; }
+  .ant-modal-mask { left: 0 !important; right: 0 !important; }
+  .ant-modal-wrap { 
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+  .ant-modal { 
+    margin: 0 auto !important; 
+    width: 1200px !important;
+    max-width: 90vw !important;
+  }
+  .ant-modal-header { 
+    background-color: ${PRIMARY_BLUE} !important; 
+    padding: 18px 24px !important; 
+    margin: -24px -24px 16px -24px !important; 
+    border-radius: 8px 8px 0 0 !important;
+  }
   .ant-modal-title { color: white !important; font-size: 1.15rem !important; font-weight: 700 !important; letter-spacing: 0.5px; }
   .ant-modal-close-x { color: white !important; }
   .deferral-info-card .ant-card-head { border-bottom: 2px solid ${ACCENT_LIME} !important; }
@@ -572,7 +593,7 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
     );
   }
   footerButtons.push(
-    <Button key="close" onClick={onClose}>
+    <Button key="close" onClick={onClose} className="modal-close-btn">
       Close
     </Button>,
   );
@@ -589,7 +610,7 @@ const DeferralReviewModal = ({ deferral, open, onClose, onDecision }) => {
         }
         open={open}
         onCancel={onClose}
-        width={950}
+        width={1200}
         styles={{ body: { padding: "0 24px 24px" } }}
         footer={footerButtons}
       >

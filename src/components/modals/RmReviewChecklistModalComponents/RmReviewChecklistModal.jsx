@@ -1153,7 +1153,16 @@ const RmReviewChecklistModal = ({
                       0 && (
                       <Tag
                         color="green"
-                        style={{ marginLeft: 6, marginBottom: 0 }}
+                        style={{
+                          marginLeft: 6,
+                          marginBottom: 0,
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          lineHeight: "1.5",
+                          padding: "2px 6px",
+                          color: "#fff",
+                          backgroundColor: "#52c41a",
+                        }}
                       >
                         {docs.filter((d) => d.fileUrl).length +
                           supportingDocs.length}
@@ -1281,14 +1290,7 @@ const RmReviewChecklistModal = ({
               <Button
                 key="close"
                 onClick={onClose}
-                style={{
-                  background: "#CCCCCC !important",
-                  borderColor: "#CCCCCC !important",
-                  color: "#FFFFFF !important",
-                  borderRadius: "6px",
-                  fontWeight: 600,
-                  border: "none !important",
-                }}
+                className="modal-cancel-btn"
               >
                 Close
               </Button>

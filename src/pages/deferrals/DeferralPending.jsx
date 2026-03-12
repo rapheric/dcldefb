@@ -3529,19 +3529,27 @@ const DeferralDetailsModal = ({
         cancelText="Cancel"
         okButtonProps={{
           loading: loadingWithdraw,
-          style: {
-            background: ERROR_RED,
-            borderColor: ERROR_RED,
-            color: "white",
-          },
+          className: "modal-action-btn",
         }}
         cancelButtonProps={{
-          style: {
-            borderColor: "#d9d9d9",
-          },
+          className: "modal-cancel-btn",
         }}
         centered={true}
         maskClosable={false}
+        styles={{
+          header: {
+            backgroundColor: "#164679",
+            padding: "16px 24px",
+            color: "white",
+            margin: "-24px -24px 16px -24px",
+            borderRadius: "8px 8px 0 0",
+          },
+          title: {
+            color: "white",
+            fontSize: "15px",
+            fontWeight: 600,
+          },
+        }}
       >
         <p>Are you sure you want to withdraw this deferral request?</p>
         <p>
@@ -5675,10 +5683,7 @@ const DeferralDetailsModal = ({
                     >
                       Download as PDF
                     </Button>
-                    <Button
-                      onClick={onClose}
-                      style={{ color: "#000 !important" }}
-                    >
+                    <Button onClick={onClose} className="modal-close-btn">
                       Close
                     </Button>
                   </>
@@ -5719,11 +5724,7 @@ const DeferralDetailsModal = ({
                         type="default"
                         onClick={handleWithdrawRequest}
                         loading={loadingWithdraw}
-                        style={{
-                          backgroundColor: `${ERROR_RED} !important`,
-                          borderColor: `${ERROR_RED} !important`,
-                          color: "white !important",
-                        }}
+                        className="withdraw-request-btn"
                       >
                         Withdraw Request
                       </Button>
@@ -5733,13 +5734,8 @@ const DeferralDetailsModal = ({
                       status === "approved") &&
                       !localDeferral?.extensionStatus && (
                         <Button
-                          type="primary"
                           onClick={() => handleApplyForExtension(localDeferral)}
-                          style={{
-                            backgroundColor: `${PRIMARY_BLUE} !important`,
-                            borderColor: `${PRIMARY_BLUE} !important`,
-                            color: "white !important",
-                          }}
+                          className="modal-secondary-action-btn"
                         >
                           Apply Extension
                         </Button>
@@ -5760,10 +5756,7 @@ const DeferralDetailsModal = ({
                       </Button>
                     )}
 
-                    <Button
-                      onClick={onClose}
-                      style={{ color: "#000 !important" }}
-                    >
+                    <Button onClick={onClose} className="modal-close-btn">
                       Close
                     </Button>
                   </>
@@ -6470,13 +6463,14 @@ const DeferralPending = ({ userId = "rm_current" }) => {
           <Col>
             <Button
               type="primary"
+              className="new-deferral-btn"
               onClick={() => {
                 navigate("/rm/deferrals/request");
               }}
               style={{
-                backgroundColor: PRIMARY_BLUE,
-                borderColor: PRIMARY_BLUE,
-                color: "#fff !important",
+                backgroundColor: `${PRIMARY_BLUE} !important`,
+                borderColor: `${PRIMARY_BLUE} !important`,
+                color: "#ffffff !important",
               }}
             >
               + New Deferral Request

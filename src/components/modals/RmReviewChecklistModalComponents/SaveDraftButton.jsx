@@ -60,7 +60,7 @@ const SaveDraftButton = ({
       console.error("Save draft error:", error);
       message.error({
         content: error?.message || "Failed to save draft",
-        key: "saveDraft"
+        key: "saveDraft",
       });
     } finally {
       setIsSavingDraft(false);
@@ -72,7 +72,7 @@ const SaveDraftButton = ({
       key="save-draft"
       onClick={handleSaveDraft}
       loading={isSavingDraft}
-      disabled={!isActionAllowed}
+      disabled={isSavingDraft}
       style={{
         borderColor: ACCENT_LIME,
         color: PRIMARY_BLUE,

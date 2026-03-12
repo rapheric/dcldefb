@@ -675,12 +675,12 @@ export default function FacilityTable({ facilities, setFacilities }) {
       acc.headroom += Number(f.headroom) || 0;
       return acc;
     },
-    { sanctioned: 0, balance: 0, headroom: 0 }
+    { sanctioned: 0, balance: 0, headroom: 0 },
   );
 
   // Filter facility types based on search
   const filteredFacilityTypes = FACILITY_TYPES.filter((type) =>
-    type.toLowerCase().includes(searchTerm.toLowerCase())
+    type.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Define columns for Ant Design Table
@@ -939,8 +939,8 @@ export default function FacilityTable({ facilities, setFacilities }) {
                 subtotals.headroom < 0
                   ? "red"
                   : subtotals.headroom === 0
-                  ? "orange"
-                  : "green"
+                    ? "orange"
+                    : "green"
               }
               style={{
                 fontWeight: "bold",
@@ -1071,10 +1071,7 @@ export default function FacilityTable({ facilities, setFacilities }) {
         <Button
           type="primary"
           onClick={addRow}
-          style={{
-            backgroundColor: PRIMARY_PURPLE,
-            borderColor: PRIMARY_PURPLE,
-          }}
+          className="action-button-primary"
         >
           + Add Row
         </Button>

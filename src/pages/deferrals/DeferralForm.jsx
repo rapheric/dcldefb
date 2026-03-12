@@ -1434,7 +1434,7 @@ export default function DeferralForm({ userId, onSuccess }) {
               style={{
                 display: "flex",
                 justifyContent: "flex-end",
-                marginTop: 8,
+                marginTop: 12,
                 gap: 8,
               }}
             >
@@ -1460,47 +1460,77 @@ export default function DeferralForm({ userId, onSuccess }) {
                   setComments("");
                   message.success("Comment posted");
                 }}
+                className="action-button-primary"
               >
                 Post Comment
               </Button>
             </div>
 
             {postedComments.length > 0 && (
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginTop: 8 }}>
                 <List
                   dataSource={postedComments}
                   itemLayout="horizontal"
                   renderItem={(item) => (
-                    <List.Item>
+                    <List.Item style={{ paddingTop: 4, paddingBottom: 4 }}>
                       <List.Item.Meta
-                        avatar={<Avatar icon={<UserOutlined />} />}
+                        avatar={
+                          <Avatar
+                            icon={<UserOutlined />}
+                            style={{ marginRight: 8 }}
+                          />
+                        }
                         title={
                           <div
                             style={{
                               display: "flex",
-                              justifyContent: "space-between",
                               alignItems: "center",
+                              gap: 12,
+                              width: "100%",
+                              justifyContent: "space-between",
                             }}
                           >
-                            <div>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                flex: "0 0 auto",
+                              }}
+                            >
                               <b>{item.user.name}</b>
                               <Tag
                                 style={{
-                                  marginLeft: 8,
+                                  margin: 0,
                                   textTransform: "uppercase",
                                 }}
                               >
                                 {item.user.role}
                               </Tag>
                             </div>
-                            <div style={{ fontSize: 12, color: "#777" }}>
+                            <Tooltip title={item.message}>
+                              <div
+                                style={{
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  flex: 1,
+                                  fontSize: 13,
+                                  marginRight: 12,
+                                }}
+                              >
+                                - {item.message}
+                              </div>
+                            </Tooltip>
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "#777",
+                                flex: "0 0 auto",
+                              }}
+                            >
                               {new Date(item.createdAt).toLocaleString()}
                             </div>
-                          </div>
-                        }
-                        description={
-                          <div style={{ whiteSpace: "pre-wrap" }}>
-                            {item.message}
                           </div>
                         }
                       />
@@ -1910,377 +1940,541 @@ export default function DeferralForm({ userId, onSuccess }) {
     // Deferred due dates shown per document in the list below
 
     return (
-      <Modal
-        open={showConfirmModal}
-        title={`Confirm submission to approver${approverSlots.filter((s) => s.userId).length > 1 ? "s" : ""}`}
-        onCancel={() => setShowConfirmModal(false)}
-        footer={[
-          <Button key="back" onClick={() => setShowConfirmModal(false)}>
-            Cancel
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            onClick={handleConfirmSubmit}
-            disabled={approverSlots.filter((s) => s.userId).length === 0}
-            loading={isSubmitting}
-          >
-            Confirm & Submit
-          </Button>,
-        ]}
-        width={900}
-        centered
-      >
-        <Descriptions bordered column={1} size="small">
-          <Descriptions.Item label="Deferral Number">
-            {previewDeferralNumber}
-          </Descriptions.Item>
-          <Descriptions.Item label="Customer">
-            {customerName} — {customerNumber}
-          </Descriptions.Item>
-          <Descriptions.Item label="DCL No">{dclNumber}</Descriptions.Item>
+      <>
+        <style>{`
+          /* Confirm Modal Overlay - Full screen with proper z-index */
+          .confirm-modal-overlay {
+            position: fixed;
+            top: 65px;
+            left: var(--sidebar-width, 150px);
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 990;
+            overflow: auto;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+            max-height: 100vh;
+          }
+          
+          /* Confirm Modal Container - Centered */
+          .confirm-modal-container {
+            background: white;
+            border-radius: 12px;
+            overflow: visible;
+            width: 1200px;
+            max-width: calc(100vw - 310px);
+            box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.15), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+          }
+          
+          /* Confirm Modal Header */
+          .confirm-modal-header {
+            background-color: ${PRIMARY_BLUE} !important;
+            padding: 24px 24px !important;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            flex-shrink: 0;
+            min-height: 70px;
+          }
 
-          <Descriptions.Item label="Loan Type">
-            {formatLoanType(loanType)}
-          </Descriptions.Item>
-          <Descriptions.Item label="Loan Amount">
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {formattedLoanAmount === "Not specified" ? (
-                <div>Not specified</div>
-              ) : (
-                <div>
-                  <Tag
-                    color={isAboveThreshold ? "red" : "blue"}
-                    style={{ fontWeight: 700 }}
-                  >
-                    {isAboveThreshold ? "Above 75 million" : "Below 75 million"}
-                  </Tag>
-                </div>
-              )}
-            </div>
-          </Descriptions.Item>
+          .confirm-modal-header h3 {
+            color: white !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+            font-size: 1.15rem;
+            letter-spacing: 0.5px;
+          }
 
-          <Descriptions.Item label="Document(s) to be deferred">
-            {selectedDocuments && selectedDocuments.length > 0 ? (
-              <List
-                size="small"
-                dataSource={selectedDocuments}
-                renderItem={(doc) => {
-                  const docName =
-                    typeof doc === "string"
-                      ? doc
-                      : doc.name || doc.label || "Document";
-                  const docTypeRaw =
-                    typeof doc === "string"
-                      ? ""
-                      : String(doc.type || "")
-                          .trim()
-                          .toLowerCase();
-                  const docType =
-                    docTypeRaw === "primary"
-                      ? "Primary"
-                      : docTypeRaw === "secondary"
-                        ? "Secondary"
-                        : documentCategory;
-                  const uploadedFiles = [
-                    ...(dclFile
-                      ? [{ name: dclFile.name, fileObj: dclFile }]
-                      : []),
-                    ...additionalFiles.map((f) => ({
-                      name: f.name,
-                      fileObj: f,
-                    })),
-                  ];
-                  const uploaded = uploadedFiles.find(
-                    (u) =>
-                      u.name &&
-                      docName &&
-                      u.name.toLowerCase().includes(docName.toLowerCase()),
-                  );
-                  const docKey = (doc && (doc._id || doc.name)) || docName;
-                  const docDays = Number(perDocumentDays[docKey]) || 0;
-                  const docNextDate = docDays
-                    ? dayjs().add(docDays, "day").format("DD MMM YYYY")
-                    : "-";
+          /* Confirm Modal Body */
+          .confirm-modal-body {
+            padding: 24px;
+            overflow: auto;
+            flex: 1;
+          }
 
-                  return (
-                    <List.Item>
+          /* Confirm Modal Footer */
+          .confirm-modal-footer {
+            padding: 16px 24px 24px 24px;
+            background: #fafafa;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            border-radius: 0 0 12px 12px;
+            flex-shrink: 0;
+          }
+
+          /* Responsive adjustments */
+          @media (min-width: 768px) and (max-width: 1099px) {
+            .confirm-modal-overlay {
+              left: var(--sidebar-width, 40px);
+              transition: left 0.2s cubic-bezier(0.2, 0, 0, 1);
+            }
+          }
+
+          @media (max-width: 767px) {
+            .confirm-modal-overlay {
+              left: 0;
+              padding-left: 0;
+              padding-right: 16px;
+            }
+            .confirm-modal-container {
+              width: calc(100vw - 32px) !important;
+              max-width: calc(100vw - 32px) !important;
+              margin: 0 !important;
+            }
+          }
+        `}</style>
+
+        <div
+          className="confirm-modal-overlay"
+          style={{
+            display: showConfirmModal ? "flex" : "none",
+          }}
+          onClick={() => setShowConfirmModal(false)}
+        >
+          {showConfirmModal && (
+            <div
+              className="confirm-modal-container"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="confirm-modal-header">
+                <h3>
+                  {`Confirm submission to approver${approverSlots.filter((s) => s.userId).length > 1 ? "s" : ""}`}
+                </h3>
+              </div>
+
+              {/* Body */}
+              <div className="confirm-modal-body">
+                <Descriptions bordered column={1} size="small">
+                  <Descriptions.Item label="Deferral Number">
+                    {previewDeferralNumber}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Customer">
+                    {customerName} — {customerNumber}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="DCL No">
+                    {dclNumber}
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Loan Type">
+                    {formatLoanType(loanType)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Loan Amount">
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      {formattedLoanAmount === "Not specified" ? (
+                        <div>Not specified</div>
+                      ) : (
+                        <div>
+                          <Tag
+                            color={isAboveThreshold ? "red" : "blue"}
+                            style={{ fontWeight: 700 }}
+                          >
+                            {isAboveThreshold
+                              ? "Above 75 million"
+                              : "Below 75 million"}
+                          </Tag>
+                        </div>
+                      )}
+                    </div>
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Document(s) to be deferred">
+                    {selectedDocuments && selectedDocuments.length > 0 ? (
+                      <List
+                        size="small"
+                        dataSource={selectedDocuments}
+                        renderItem={(doc) => {
+                          const docName =
+                            typeof doc === "string"
+                              ? doc
+                              : doc.name || doc.label || "Document";
+                          const docTypeRaw =
+                            typeof doc === "string"
+                              ? ""
+                              : String(doc.type || "")
+                                  .trim()
+                                  .toLowerCase();
+                          const docType =
+                            docTypeRaw === "primary"
+                              ? "Primary"
+                              : docTypeRaw === "secondary"
+                                ? "Secondary"
+                                : documentCategory;
+                          const uploadedFiles = [
+                            ...(dclFile
+                              ? [{ name: dclFile.name, fileObj: dclFile }]
+                              : []),
+                            ...additionalFiles.map((f) => ({
+                              name: f.name,
+                              fileObj: f,
+                            })),
+                          ];
+                          const uploaded = uploadedFiles.find(
+                            (u) =>
+                              u.name &&
+                              docName &&
+                              u.name
+                                .toLowerCase()
+                                .includes(docName.toLowerCase()),
+                          );
+                          const docKey =
+                            (doc && (doc._id || doc.name)) || docName;
+                          const docDays = Number(perDocumentDays[docKey]) || 0;
+                          const docNextDate = docDays
+                            ? dayjs().add(docDays, "day").format("DD MMM YYYY")
+                            : "-";
+
+                          return (
+                            <List.Item>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  width: "100%",
+                                }}
+                              >
+                                <div>
+                                  <div style={{ fontWeight: 600 }}>
+                                    {docName}
+                                  </div>
+                                  <div style={{ marginTop: 4 }}>
+                                    <Tag
+                                      style={{
+                                        margin: 0,
+                                        backgroundColor: "#ffffff",
+                                        color: "#000000",
+                                        border: "1px solid #d9d9d9",
+                                      }}
+                                    >
+                                      {docType}
+                                    </Tag>
+                                  </div>
+                                  {uploaded && (
+                                    <div
+                                      style={{ fontSize: 12, color: "#666" }}
+                                    >
+                                      Uploaded as: {uploaded.name}
+                                    </div>
+                                  )}
+                                  <div
+                                    style={{
+                                      fontSize: 12,
+                                      color: "#444",
+                                      marginTop: 6,
+                                    }}
+                                  >
+                                    <strong>Requested days:</strong>{" "}
+                                    {docDays || "-"} &nbsp; • &nbsp;{" "}
+                                    <strong>New due date:</strong> {docNextDate}
+                                  </div>
+                                </div>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                  }}
+                                >
+                                  <Tag
+                                    style={{
+                                      alignSelf: "center",
+                                      backgroundColor: "#ffffff",
+                                      color: "#000000",
+                                      border: "1px solid #d9d9d9",
+                                    }}
+                                  >
+                                    {uploaded ? "Uploaded" : "Requested"}
+                                  </Tag>
+                                  {uploaded ? (
+                                    <>
+                                      <Button
+                                        type="link"
+                                        size="small"
+                                        onClick={() =>
+                                          uploaded.fileObj
+                                            ? handleViewDocument(
+                                                uploaded.fileObj,
+                                              )
+                                            : uploaded.url &&
+                                              window.open(
+                                                uploaded.url,
+                                                "_blank",
+                                              )
+                                        }
+                                      >
+                                        View
+                                      </Button>
+                                      <Button
+                                        type="link"
+                                        size="small"
+                                        onClick={() => handleDownload(uploaded)}
+                                      >
+                                        Download
+                                      </Button>
+                                    </>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </List.Item>
+                          );
+                        }}
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </Descriptions.Item>
+
+                  {deferralDescription && (
+                    <Descriptions.Item label="Deferral Description">
                       <div
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          width: "100%",
+                          padding: 8,
+                          backgroundColor: "#f8f9fa",
+                          borderRadius: 6,
                         }}
                       >
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{docName}</div>
-                          <div style={{ marginTop: 4 }}>
-                            <Tag
-                              style={{
-                                margin: 0,
-                                backgroundColor: "#ffffff",
-                                color: "#000000",
-                                border: "1px solid #d9d9d9",
-                              }}
-                            >
-                              {docType}
-                            </Tag>
-                          </div>
-                          {uploaded && (
-                            <div style={{ fontSize: 12, color: "#666" }}>
-                              Uploaded as: {uploaded.name}
-                            </div>
-                          )}
+                        {deferralDescription}
+                      </div>
+                    </Descriptions.Item>
+                  )}
+
+                  <Descriptions.Item label="Approvers">
+                    <List
+                      size="small"
+                      dataSource={approverSlots.filter((s) => s.userId)}
+                      renderItem={(s) => {
+                        const user = approverList.find(
+                          (a) => a._id === s.userId,
+                        );
+                        return (
+                          <List.Item>
+                            {user
+                              ? `${user.name} — ${user.position || user.role || ""}`
+                              : s.userId}
+                          </List.Item>
+                        );
+                      }}
+                    />
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Facilities">
+                    <Table
+                      size="small"
+                      dataSource={facilities.map((f, i) => ({ ...f, key: i }))}
+                      pagination={false}
+                      columns={[
+                        {
+                          title: "Facility Type",
+                          dataIndex: "type",
+                          key: "type",
+                          render: (t, record) => (
+                            <Text strong>
+                              {t || record.facilityType || record.name || "N/A"}
+                            </Text>
+                          ),
+                        },
+                        {
+                          title: "Sanctioned (KES '000)",
+                          dataIndex: "sanctioned",
+                          key: "sanctioned",
+                          align: "right",
+                          render: (v, r) =>
+                            Number(v ?? r.amount ?? 0).toLocaleString(),
+                        },
+                        {
+                          title: "Balance (KES '000)",
+                          dataIndex: "balance",
+                          key: "balance",
+                          align: "right",
+                          render: (v, r) =>
+                            Number(v ?? r.balance ?? 0).toLocaleString(),
+                        },
+                        {
+                          title: "Headroom (KES '000)",
+                          dataIndex: "headroom",
+                          key: "headroom",
+                          align: "right",
+                          render: (v, r) =>
+                            Number(
+                              v ??
+                                r.headroom ??
+                                Math.max(0, (r.amount || 0) - (r.balance || 0)),
+                            ).toLocaleString(),
+                        },
+                      ]}
+                    />
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Uploaded Documents">
+                    <List
+                      size="small"
+                      dataSource={[
+                        ...(dclFile
+                          ? [{ name: dclFile.name, fileObj: dclFile }]
+                          : []),
+                        ...additionalFiles.map((f) => ({
+                          name: f.name,
+                          fileObj: f,
+                        })),
+                      ]}
+                      renderItem={(it) => (
+                        <List.Item>
                           <div
                             style={{
-                              fontSize: 12,
-                              color: "#444",
-                              marginTop: 6,
+                              display: "flex",
+                              justifyContent: "space-between",
+                              width: "100%",
                             }}
                           >
-                            <strong>Requested days:</strong> {docDays || "-"}{" "}
-                            &nbsp; • &nbsp; <strong>New due date:</strong>{" "}
-                            {docNextDate}
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <Tag
-                            style={{
-                              alignSelf: "center",
-                              backgroundColor: "#ffffff",
-                              color: "#000000",
-                              border: "1px solid #d9d9d9",
-                            }}
-                          >
-                            {uploaded ? "Uploaded" : "Requested"}
-                          </Tag>
-                          {uploaded ? (
-                            <>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 12,
+                              }}
+                            >
+                              {getFileIcon(it.name)}
+                              <div>
+                                <div>{it.name}</div>
+                                <div style={{ fontSize: 12, color: "#666" }}>
+                                  {it.fileObj && it.fileObj.size
+                                    ? `${(it.fileObj.size / 1024).toFixed(2)} KB`
+                                    : ""}
+                                </div>
+                              </div>
+                            </div>
+                            <div>
                               <Button
                                 type="link"
-                                size="small"
                                 onClick={() =>
-                                  uploaded.fileObj
-                                    ? handleViewDocument(uploaded.fileObj)
-                                    : uploaded.url &&
-                                      window.open(uploaded.url, "_blank")
+                                  it.fileObj
+                                    ? handleViewDocument(it.fileObj)
+                                    : it.url && window.open(it.url, "_blank")
                                 }
                               >
                                 View
                               </Button>
                               <Button
                                 type="link"
-                                size="small"
-                                onClick={() => handleDownload(uploaded)}
+                                onClick={() => handleDownload(it)}
                               >
                                 Download
                               </Button>
-                            </>
-                          ) : null}
-                        </div>
-                      </div>
-                    </List.Item>
-                  );
-                }}
-              />
-            ) : (
-              "-"
-            )}
-          </Descriptions.Item>
+                            </div>
+                          </div>
+                        </List.Item>
+                      )}
+                    />
+                  </Descriptions.Item>
 
-          {deferralDescription && (
-            <Descriptions.Item label="Deferral Description">
-              <div
-                style={{
-                  padding: 8,
-                  backgroundColor: "#f8f9fa",
-                  borderRadius: 6,
-                }}
-              >
-                {deferralDescription}
-              </div>
-            </Descriptions.Item>
-          )}
-
-          <Descriptions.Item label="Approvers">
-            <List
-              size="small"
-              dataSource={approverSlots.filter((s) => s.userId)}
-              renderItem={(s) => {
-                const user = approverList.find((a) => a._id === s.userId);
-                return (
-                  <List.Item>
-                    {user
-                      ? `${user.name} — ${user.position || user.role || ""}`
-                      : s.userId}
-                  </List.Item>
-                );
-              }}
-            />
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Facilities">
-            <Table
-              size="small"
-              dataSource={facilities.map((f, i) => ({ ...f, key: i }))}
-              pagination={false}
-              columns={[
-                {
-                  title: "Facility Type",
-                  dataIndex: "type",
-                  key: "type",
-                  render: (t, record) => (
-                    <Text strong>
-                      {t || record.facilityType || record.name || "N/A"}
-                    </Text>
-                  ),
-                },
-                {
-                  title: "Sanctioned (KES '000)",
-                  dataIndex: "sanctioned",
-                  key: "sanctioned",
-                  align: "right",
-                  render: (v, r) => Number(v ?? r.amount ?? 0).toLocaleString(),
-                },
-                {
-                  title: "Balance (KES '000)",
-                  dataIndex: "balance",
-                  key: "balance",
-                  align: "right",
-                  render: (v, r) =>
-                    Number(v ?? r.balance ?? 0).toLocaleString(),
-                },
-                {
-                  title: "Headroom (KES '000)",
-                  dataIndex: "headroom",
-                  key: "headroom",
-                  align: "right",
-                  render: (v, r) =>
-                    Number(
-                      v ??
-                        r.headroom ??
-                        Math.max(0, (r.amount || 0) - (r.balance || 0)),
-                    ).toLocaleString(),
-                },
-              ]}
-            />
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Uploaded Documents">
-            <List
-              size="small"
-              dataSource={[
-                ...(dclFile ? [{ name: dclFile.name, fileObj: dclFile }] : []),
-                ...additionalFiles.map((f) => ({ name: f.name, fileObj: f })),
-              ]}
-              renderItem={(it) => (
-                <List.Item>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      width: "100%",
-                    }}
-                  >
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 12 }}
-                    >
-                      {getFileIcon(it.name)}
-                      <div>
-                        <div>{it.name}</div>
-                        <div style={{ fontSize: 12, color: "#666" }}>
-                          {it.fileObj && it.fileObj.size
-                            ? `${(it.fileObj.size / 1024).toFixed(2)} KB`
-                            : ""}
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          it.fileObj
-                            ? handleViewDocument(it.fileObj)
-                            : it.url && window.open(it.url, "_blank")
-                        }
-                      >
-                        View
-                      </Button>
-                      <Button type="link" onClick={() => handleDownload(it)}>
-                        Download
-                      </Button>
-                    </div>
-                  </div>
-                </List.Item>
-              )}
-            />
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Comment Trail & History">
-            {postedComments && postedComments.length > 0 ? (
-              <List
-                dataSource={postedComments}
-                itemLayout="horizontal"
-                renderItem={(item) => (
-                  <List.Item>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        width: "100%",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                        }}
-                      >
-                        <Avatar icon={<UserOutlined />} />
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <b>{item.user?.name || "Unknown"}</b>
-                          {item.user?.role && (
-                            <Tag
-                              style={{ textTransform: "uppercase", margin: 0 }}
+                  <Descriptions.Item label="Comment Trail & History">
+                    {postedComments && postedComments.length > 0 ? (
+                      <List
+                        dataSource={postedComments}
+                        itemLayout="horizontal"
+                        renderItem={(item) => (
+                          <List.Item>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                width: "100%",
+                                alignItems: "center",
+                              }}
                             >
-                              {item.user.role}
-                            </Tag>
-                          )}
-                          <span style={{ color: "#4a4a4a" }}>
-                            {item.message}
-                          </span>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 12, color: "#777" }}>
-                        {item.createdAt
-                          ? new Date(item.createdAt).toLocaleString()
-                          : ""}
-                      </div>
-                    </div>
-                  </List.Item>
-                )}
-              />
-            ) : (
-              "-"
-            )}
-          </Descriptions.Item>
-        </Descriptions>
-      </Modal>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 10,
+                                }}
+                              >
+                                <Avatar icon={<UserOutlined />} />
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  <b>{item.user?.name || "Unknown"}</b>
+                                  {item.user?.role && (
+                                    <Tag
+                                      style={{
+                                        textTransform: "uppercase",
+                                        margin: 0,
+                                      }}
+                                    >
+                                      {item.user.role}
+                                    </Tag>
+                                  )}
+                                  <span style={{ color: "#4a4a4a" }}>
+                                    {item.message}
+                                  </span>
+                                </div>
+                              </div>
+                              <div style={{ fontSize: 12, color: "#777" }}>
+                                {item.createdAt
+                                  ? new Date(item.createdAt).toLocaleString()
+                                  : ""}
+                              </div>
+                            </div>
+                          </List.Item>
+                        )}
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </Descriptions.Item>
+                </Descriptions>
+              </div>
+
+              {/* Footer */}
+              <div className="confirm-modal-footer">
+                <Button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="confirm-cancel-btn"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={handleConfirmSubmit}
+                  disabled={approverSlots.filter((s) => s.userId).length === 0}
+                  loading={isSubmitting}
+                  className="confirm-submit-btn"
+                >
+                  {isSubmitting ? "Submitting..." : "Confirm & Submit"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </>
     );
   };
 
@@ -2321,24 +2515,27 @@ export default function DeferralForm({ userId, onSuccess }) {
         <Card
           style={{
             maxWidth: 600,
-            margin: "100px auto",
+            margin: "40px auto",
             textAlign: "center",
             borderRadius: 12,
             boxShadow: "0 4px 20px rgba(43, 28, 103, 0.1)",
             borderTop: `4px solid ${ACCENT_LIME}`,
+            minHeight: showSearchForm ? "auto" : "450px",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <BankOutlined
-            style={{ fontSize: 64, color: PRIMARY_PURPLE, marginBottom: 24 }}
+            style={{ fontSize: 64, color: PRIMARY_PURPLE, marginBottom: 16 }}
           />
 
-          <Title level={3} style={{ color: PRIMARY_PURPLE, marginBottom: 8 }}>
+          <Title level={3} style={{ color: PRIMARY_PURPLE, marginBottom: 10 }}>
             Start New Deferral Request
           </Title>
 
           <Text
             type="secondary"
-            style={{ display: "block", marginBottom: 32, fontSize: 16 }}
+            style={{ display: "block", marginBottom: 20, fontSize: 14 }}
           >
             Please search for a customer to begin the deferral request process
           </Text>
@@ -2359,7 +2556,6 @@ export default function DeferralForm({ userId, onSuccess }) {
               >
                 <Button
                   type={searchMode === "customer" ? "primary" : "default"}
-                  className="deferral-btn"
                   onClick={() => {
                     setSearchMode("customer");
                     setSearchDclNumber("");
@@ -2368,11 +2564,11 @@ export default function DeferralForm({ userId, onSuccess }) {
                   style={{
                     backgroundColor:
                       searchMode === "customer" ? PRIMARY_BLUE : "transparent",
-                    borderColor: PRIMARY_BLUE,
+
                     color:
                       searchMode === "customer"
                         ? "#fff !important"
-                        : PRIMARY_BLUE,
+                        : `${PRIMARY_BLUE} !important`,
                     fontWeight: 600,
                   }}
                 >
@@ -2380,7 +2576,6 @@ export default function DeferralForm({ userId, onSuccess }) {
                 </Button>
                 <Button
                   type={searchMode === "dcl" ? "primary" : "default"}
-                  className="deferral-btn"
                   onClick={() => {
                     setSearchMode("dcl");
                     setSearchCustomerNumber("");
@@ -2390,9 +2585,11 @@ export default function DeferralForm({ userId, onSuccess }) {
                   style={{
                     backgroundColor:
                       searchMode === "dcl" ? PRIMARY_BLUE : "transparent",
-                    borderColor: PRIMARY_BLUE,
+
                     color:
-                      searchMode === "dcl" ? "#fff !important" : PRIMARY_BLUE,
+                      searchMode === "dcl"
+                        ? "#fff !important"
+                        : `${PRIMARY_BLUE} !important`,
                     fontWeight: 600,
                   }}
                 >
